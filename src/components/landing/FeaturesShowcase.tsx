@@ -9,49 +9,49 @@ const features = [
     title: "الخريطة الذهنية والملف المخطط",
     description: "احصل على خريطة شاملة تربط المفاهيم وتبرز لك هيكل المحاضرة مع تخطيط ذكي للملف الأصلي.",
     icon: <BrainCircuit className="w-6 h-6" />,
-    image: "/features/mindmap.jpg"
+    images: ["/features/mindmap.png"]
   },
   {
     id: "notes",
     title: "ملاحظات الدكتور بدقة",
     description: "نلتقط كل تعليق وملاحظة جانبية ذكرها الدكتور أثناء الشرح ونربطها بمكانها الصحيح.",
     icon: <BookOpen className="w-6 h-6" />,
-    image: "/features/notes.jpg"
+    images: ["/features/notes.png"]
   },
   {
     id: "slides",
     title: "شرح السلايدات",
     description: "شرح مفصل لكل شريحة (Slide) مع تفريغ النص المحكي وربطه بالمحتوى المرئي.",
     icon: <Layers className="w-6 h-6" />,
-    image: "/features/slides.jpg"
+    images: ["/features/slides.png"]
   },
   {
     id: "important",
     title: "النقاط المهمة جداً",
     description: "قسم خاص يسلط الضوء على النقاط التي أكد عليها الدكتور وقال أنها هامة للامتحان.",
     icon: <Target className="w-6 h-6" />,
-    image: "/features/important.jpg"
+    images: ["/features/important.png"]
   },
   {
     id: "terms",
     title: "المصطلحات والترجمة",
     description: "استخراج جميع المصطلحات العلمية والطبية، ترجمتها، وتقديم شرح مبسط لها في سياق المحاضرة.",
     icon: <Languages className="w-6 h-6" />,
-    image: "/features/terms.jpg"
+    images: ["/features/terms1.png", "/features/terms2.png"]
   },
   {
     id: "questions",
     title: "الأسئلة المولدة",
     description: "اختبر نفسك مع أسئلة ذكية (MCQ وغيرها) تم توليدها تلقائياً من محتوى المحاضرة الفعلي.",
     icon: <HelpCircle className="w-6 h-6" />,
-    image: "/features/questions.jpg"
+    images: ["/features/questions1.png", "/features/questions2.png"]
   },
   {
     id: "chat",
     title: "محادثة ذكية تفاعلية",
     description: "اسأل الشات بوت أي سؤال حول المحاضرة، وسيجيبك بناءً على ما تم شرحه مع إعادة الصياغة لتسهيل الفهم.",
     icon: <MessageSquare className="w-6 h-6" />,
-    image: "/features/chat.jpg"
+    images: ["/features/chat1.png", "/features/chat2.png"]
   }
 ];
 
@@ -67,9 +67,9 @@ export default function FeaturesShowcase() {
         </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-12 items-center">
+      <div className="flex flex-col lg:flex-row gap-12 items-start">
         {/* Features List (Right Side - RTL) */}
-        <div className="w-full lg:w-1/3 flex flex-col gap-3">
+        <div className="w-full lg:w-1/3 flex flex-col gap-3 sticky top-24">
           {features.map((feature) => {
             const isActive = activeFeature.id === feature.id;
             return (
@@ -107,31 +107,29 @@ export default function FeaturesShowcase() {
         </div>
 
         {/* Image Showcase (Left Side - RTL) */}
-        <div className="w-full lg:w-2/3 h-[500px] lg:h-[600px] relative rounded-[2rem] overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl flex items-center justify-center group">
-          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 via-transparent to-purple-500/10 z-0"></div>
+        <div className="w-full lg:w-2/3 min-h-[500px] lg:min-h-[600px] relative rounded-[2.5rem] overflow-hidden bg-slate-900/50 border border-slate-800 shadow-2xl flex items-center justify-center group p-4 sm:p-8">
+          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/5 via-transparent to-purple-500/5 z-0"></div>
           
           <AnimatePresence mode="wait">
             <motion.div
               key={activeFeature.id}
-              initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
-              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-              exit={{ opacity: 0, scale: 1.05, filter: "blur(10px)" }}
-              transition={{ duration: 0.4 }}
-              className="absolute inset-0 z-10 flex items-center justify-center p-8"
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 1.02 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="relative z-10 w-full h-full flex items-center justify-center"
             >
-              {/* Fallback styling for when images don't exist yet */}
-              <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-slate-700/50 bg-slate-800/80 flex flex-col items-center justify-center text-center">
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900/90 z-10"></div>
-                {/* Simulated Image Placeholder */}
-                <div className="relative z-20 p-8">
-                  <div className="w-20 h-20 bg-indigo-500/20 text-indigo-400 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-md border border-indigo-500/30">
-                    {activeFeature.icon}
+              <div className={`grid gap-4 w-full h-full ${activeFeature.images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                {activeFeature.images.map((img, i) => (
+                  <div key={i} className="relative group/img overflow-hidden rounded-2xl border border-slate-700/50 shadow-2xl bg-slate-800">
+                    <img 
+                      src={img} 
+                      alt={activeFeature.title} 
+                      className="w-full h-full object-contain object-top transition-transform duration-700 group-hover/img:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity" />
                   </div>
-                  <h4 className="text-3xl font-black mb-4 text-white drop-shadow-lg">{activeFeature.title}</h4>
-                  <p className="text-slate-300 max-w-md mx-auto text-lg leading-relaxed font-medium">
-                    (سيتم إدراج صورة احترافية توضح "{activeFeature.title}" هنا قريباً)
-                  </p>
-                </div>
+                ))}
               </div>
             </motion.div>
           </AnimatePresence>

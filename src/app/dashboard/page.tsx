@@ -709,6 +709,15 @@ function DashboardContent() {
               )}
             </AnimatePresence>
 
+            {/* Processing Time Notice */}
+            <div className="flex items-start gap-3 bg-amber-500/8 border border-amber-500/25 rounded-2xl px-5 py-4 mb-2">
+              <Clock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-amber-300 mb-0.5">⏱️ وقت الاستخراج المتوقع: من 11 إلى 15 دقيقة</p>
+                <p className="text-xs text-slate-400 font-medium leading-relaxed">يتفاوت الوقت حسب حجم الملفات وعدد الطلبات. يمكنك تمرير سبحتك أثناء الانتظار 😊</p>
+              </div>
+            </div>
+
             <button onClick={() => handleProcess()} disabled={isProcessing || !audioFile || isAudioUploading || isPdfUploading}
               className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-5 rounded-2xl shadow-xl hover:shadow-indigo-500/30 transition-all disabled:opacity-50">
               {isProcessing ? <span className="flex items-center justify-center"><Loader2 className="w-6 h-6 ml-3 animate-spin" />جاري المعالجة...</span> : 
