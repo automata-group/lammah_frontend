@@ -117,13 +117,13 @@ export default function FeaturesShowcase() {
               transition={{ duration: 0.4, ease: "easeOut" }}
               className="relative z-10 w-full h-full flex items-center justify-center"
             >
-              <div className={`grid gap-4 w-full items-center justify-center ${activeFeature.images.length > 1 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+              <div className={`grid gap-6 w-full items-center justify-center ${activeFeature.images.length > 1 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                 {activeFeature.images.map((img, i) => (
-                  <div key={i} className="relative group/img rounded-2xl border border-slate-700/50 shadow-2xl bg-slate-800/80 p-4 sm:p-8 flex items-center justify-center h-[350px] lg:h-[450px] overflow-hidden">
+                  <div key={i} className="relative group/img rounded-3xl border border-slate-700/50 shadow-2xl bg-slate-800/40 p-8 lg:p-12 flex items-center justify-center h-[280px] lg:h-[380px] overflow-hidden">
                     <img
                       src={img}
                       alt={activeFeature.title}
-                      className="w-full h-full object-contain transition-transform duration-700 group-hover/img:scale-105 drop-shadow-2xl rounded-lg"
+                      className="w-auto h-auto max-w-[95%] max-h-[95%] object-contain transition-transform duration-700 group-hover/img:scale-105 drop-shadow-2xl rounded-lg"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity pointer-events-none" />
                   </div>
