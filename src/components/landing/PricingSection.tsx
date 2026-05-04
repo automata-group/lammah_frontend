@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Zap, Crown, Star, Clock, Check, X, Sparkles } from "lucide-react";
+import { Loader2, Zap, Crown, Star, Clock, Check, X, Sparkles, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function PricingSection() {
@@ -32,78 +32,93 @@ export default function PricingSection() {
   ];
 
   return (
-    <section id="pricing" className="relative z-10 py-32 px-6 border-t border-slate-800/50 overflow-hidden">
-      {/* Background glow */}
+    <section id="pricing" className="relative z-10 py-32 px-6 overflow-hidden">
+      {/* Background elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-indigo-600/5 rounded-full blur-[120px]" />
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
       <div className="max-w-7xl mx-auto relative">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <div className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 px-4 py-2 rounded-full mb-6">
+        <div className="text-center mb-20">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-full mb-6 backdrop-blur-md"
+          >
             <Sparkles className="w-4 h-4 text-indigo-400" />
-            <span className="text-xs font-black text-indigo-300 uppercase tracking-widest">خطط الاشتراك</span>
-          </div>
-          <h2 className="text-4xl md:text-5xl font-black mb-4">خطط تناسب طموحك</h2>
-          <p className="text-slate-500 font-medium max-w-xl mx-auto">استثمر في مستقبلك الأكاديمي بأسعار مدروسة تناسب الجميع.</p>
-        </motion.div>
+            <span className="text-xs font-black text-indigo-300 uppercase tracking-widest">اختر خطتك المثالية</span>
+          </motion.div>
+          
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-5xl md:text-6xl font-black mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-500"
+          >
+            استثمر في نجاحك
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-slate-400 text-lg max-w-xl mx-auto font-medium"
+          >
+            وفر وقتك وجهدك مع لمّاح. اختر الباقة التي تناسب حجم دراستك وطموحك الأكاديمي.
+          </motion.p>
+        </div>
 
         {/* Tab Switcher */}
-        <div className="flex justify-center mb-14">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-1.5 flex gap-1 shadow-xl">
-            <button onClick={() => setTab("monthly")}
-              className={`px-8 py-3 rounded-xl font-bold text-sm transition-all ${tab === "monthly" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "text-slate-400 hover:text-white"}`}>
-              <Clock className="w-4 h-4 inline ml-2" />شهري
-            </button>
-            <button onClick={() => setTab("weekly")}
-              className={`px-8 py-3 rounded-xl font-bold text-sm transition-all ${tab === "weekly" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "text-slate-400 hover:text-white"}`}>
-              <Clock className="w-4 h-4 inline ml-2" />أسبوعي
-            </button>
+        <div className="flex justify-center mb-20">
+          <div className="bg-slate-900/50 backdrop-blur-xl border border-white/5 p-1.5 rounded-3xl flex gap-1 shadow-2xl">
+            {["monthly", "weekly"].map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t as any)}
+                className={`relative px-10 py-3.5 rounded-2xl font-black text-sm transition-all duration-500 ${
+                  tab === t ? "text-white" : "text-slate-500 hover:text-slate-300"
+                }`}
+              >
+                {tab === t && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-2xl shadow-lg shadow-indigo-600/20"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  {t === "monthly" ? "اشتراك شهري" : "اشتراك أسبوعي"}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
 
         {loadingPlans ? (
-          <div className="text-center py-20"><Loader2 className="w-10 h-10 text-indigo-400 animate-spin mx-auto" /></div>
-        ) : activePlans && activePlans.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-start pt-6">
+          <div className="flex flex-col items-center justify-center py-24">
+            <Loader2 className="w-12 h-12 text-indigo-500 animate-spin mb-4" />
+            <p className="text-slate-500 font-bold animate-pulse">جاري تحميل العروض...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
             {activePlans.map((plan: any, idx: number) => {
               const isFree = plan.id === "free_tier";
-              const isBasic = plan.name.includes("أساسي") || plan.name.includes("طالب");
-              const isPro = plan.name.includes("متقدم");
-              const isVip = plan.name.includes("برو") || plan.name.includes("VIP") || plan.name.includes("غير محدود");
+              const isPro = plan.name.includes("أسبوعي - متقدم") || plan.name.includes("شهري - متقدم");
+              const isVip = plan.name.includes("VIP") || plan.name.includes("برو");
               const Icon = isVip ? Crown : isPro ? Zap : Star;
 
-              // Build features list for paid plans
-              let featuresList: { text: string; included: boolean; highlight?: boolean }[] = [];
-              if (isFree) {
-                featuresList = plan.features;
-              } else {
-                const raw = Array.isArray(plan.features)
-                  ? plan.features
-                  : (() => { try { return JSON.parse(plan.features); } catch { return []; } })();
+              // Features processing
+              let featuresList = isFree ? plan.features : [];
+              if (!isFree) {
+                const raw = Array.isArray(plan.features) ? plan.features : JSON.parse(plan.features || "[]");
                 featuresList = raw.map((f: string) => ({ text: f, included: true }));
-                if (!isBasic) {
-                  featuresList.push({
-                    text: isPro ? "40 رسالة ذكية لكل محاضرة" : "رسائل ذكية غير محدودة",
-                    included: true,
-                    highlight: true,
-                  });
+                if (isPro || isVip) {
+                  featuresList.push({ text: isVip ? "رسائل ذكية غير محدودة" : "40 رسالة ذكية / محاضرة", included: true, highlight: true });
                 }
               }
-
-              const gradientBorder = isPro
-                ? "bg-gradient-to-b from-purple-500 via-indigo-500 to-purple-900 shadow-[0_0_50px_rgba(168,85,247,0.25)]"
-                : isVip
-                ? "bg-gradient-to-b from-amber-400 via-orange-500 to-amber-800 shadow-[0_0_50px_rgba(245,158,11,0.2)]"
-                : isBasic
-                ? "bg-gradient-to-b from-indigo-500/40 to-slate-800/20"
-                : "bg-slate-800/40";
 
               return (
                 <motion.div
@@ -112,90 +127,64 @@ export default function PricingSection() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.1 }}
-                  className={`relative rounded-[2rem] p-[1px] ${gradientBorder} ${isPro ? "scale-[1.04] z-10" : ""}`}
+                  whileHover={{ y: -10 }}
+                  className="relative h-full"
                 >
-                  {/* Badges */}
-                  {isPro && (
-                    <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-black px-5 py-1.5 rounded-full shadow-lg shadow-purple-500/30 border border-purple-300/20 whitespace-nowrap z-20">
-                      🔥 الأكثر طلباً
-                    </div>
-                  )}
-                  {isVip && (
-                    <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-black px-5 py-1.5 rounded-full shadow-lg shadow-amber-500/30 border border-amber-300/20 whitespace-nowrap z-20">
-                      👑 أفضل قيمة
-                    </div>
-                  )}
-
-                  {/* Card body */}
-                  <div className="rounded-[1.9rem] p-8 h-full flex flex-col bg-slate-900/90 backdrop-blur-xl">
+                  <div className={`h-full flex flex-col glass rounded-[2.5rem] p-8 transition-all duration-500 ${
+                    isVip ? 'border-amber-500/30 shadow-[0_20px_50px_rgba(245,158,11,0.1)]' :
+                    isPro ? 'border-indigo-500/30 shadow-[0_20px_50px_rgba(99,102,241,0.1)]' :
+                    'border-white/5 hover:border-white/10'
+                  }`}>
+                    
+                    {/* Badge */}
+                    {isVip && (
+                      <div className="absolute -top-4 right-10 bg-gradient-to-r from-amber-400 to-orange-600 text-slate-900 text-[10px] font-black px-4 py-1.5 rounded-full shadow-xl uppercase tracking-tighter">
+                        الملكـي
+                      </div>
+                    )}
+                    {isPro && (
+                      <div className="absolute -top-4 right-10 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-xl uppercase tracking-tighter">
+                        الأكثر تميزاً
+                      </div>
+                    )}
 
                     {/* Icon */}
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${
-                      isPro ? "bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30" :
-                      isVip ? "bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30" :
-                      isBasic ? "bg-indigo-500/10 border border-indigo-500/20" :
-                      "bg-slate-800 border border-slate-700"
+                    <div className={`w-16 h-16 rounded-3xl flex items-center justify-center mb-8 transition-transform group-hover:rotate-12 ${
+                      isVip ? 'bg-amber-500/20 text-amber-400' :
+                      isPro ? 'bg-indigo-500/20 text-indigo-400' :
+                      'bg-white/5 text-slate-400'
                     }`}>
-                      <Icon className={`w-7 h-7 ${
-                        isPro ? "text-purple-400" :
-                        isVip ? "text-amber-400" :
-                        isBasic ? "text-indigo-400" :
-                        "text-slate-500"
-                      }`} />
+                      <Icon className="w-8 h-8" />
                     </div>
 
-                    {/* Name */}
-                    <h3 className="text-2xl font-black mb-3 text-white">{plan.name}</h3>
-
-                    {/* Price */}
-                    <div className="flex items-baseline mb-8">
-                      {isFree ? (
-                        <span className="text-4xl font-black text-white">مجاناً</span>
-                      ) : (
-                        <>
-                          <span className={`text-5xl font-black ${isPro ? "text-purple-300" : isVip ? "text-amber-300" : "text-white"}`}>
-                            ₪{plan.price_ils}
-                          </span>
-                          <span className="text-slate-500 text-sm mr-2 font-bold">/{tab === "monthly" ? "شهر" : "أسبوع"}</span>
-                        </>
-                      )}
+                    <h3 className="text-2xl font-black text-white mb-2">{plan.name}</h3>
+                    
+                    <div className="flex items-baseline gap-1 mb-8">
+                      <span className="text-4xl font-black text-white">
+                        {isFree ? '0' : `₪${plan.price_ils}`}
+                      </span>
+                      {!isFree && <span className="text-slate-500 text-sm font-bold">/ {tab === "monthly" ? "شهر" : "أسبوع"}</span>}
                     </div>
 
-                    {/* Divider */}
-                    <div className={`h-px mb-6 ${isPro ? "bg-purple-500/20" : isVip ? "bg-amber-500/20" : "bg-slate-800"}`} />
-
-                    {/* Quota */}
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        isFree ? "bg-slate-800 border border-slate-700" : "bg-emerald-500/20 border border-emerald-500/30"
-                      }`}>
-                        <Check className={`w-3 h-3 ${isFree ? "text-slate-500" : "text-emerald-400"}`} />
+                    <div className="space-y-4 mb-10 flex-1">
+                      <div className="flex items-center gap-3 text-sm font-bold text-slate-200">
+                        <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                          <Check className="w-3 h-3 text-emerald-400" />
+                        </div>
+                        {plan.lecture_quota} محاضرات ذكية
                       </div>
-                      <span className="text-sm font-bold text-white">{plan.lecture_quota} محاضرة</span>
-                    </div>
-
-                    {/* Features */}
-                    <div className="space-y-3 mb-8 flex-1">
-                      {featuresList.map((f, i) => (
-                        <div key={i} className="flex items-center gap-3">
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            !f.included ? "bg-slate-800/50 border border-slate-800" :
-                            f.highlight
-                              ? isPro ? "bg-purple-500/20 border border-purple-500/30" : "bg-amber-500/20 border border-amber-500/30"
-                              : isFree ? "bg-slate-800 border border-slate-700" : "bg-emerald-500/20 border border-emerald-500/30"
+                      
+                      {featuresList.map((f: any, i: number) => (
+                        <div key={i} className="flex items-start gap-3">
+                          <div className={`mt-1 w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                            !f.included ? 'bg-white/5 opacity-30' :
+                            f.highlight ? 'bg-indigo-500/20' : 'bg-white/5'
                           }`}>
-                            {f.included
-                              ? <Check className={`w-3 h-3 ${
-                                  f.highlight ? (isPro ? "text-purple-400" : "text-amber-400") :
-                                  isFree ? "text-slate-500" : "text-emerald-400"
-                                }`} />
-                              : <X className="w-3 h-3 text-slate-700" />
-                            }
+                            {f.included ? <Check className={`w-3 h-3 ${f.highlight ? 'text-indigo-400' : 'text-slate-400'}`} /> : <X className="w-3 h-3 text-slate-600" />}
                           </div>
-                          <span className={`text-sm font-medium ${
-                            !f.included ? "text-slate-600 line-through" :
-                            f.highlight ? (isPro ? "text-purple-300 font-bold" : "text-amber-300 font-bold") :
-                            isFree ? "text-slate-500" : "text-slate-300"
+                          <span className={`text-sm ${
+                            !f.included ? 'text-slate-600 line-through' :
+                            f.highlight ? 'text-indigo-300 font-bold' : 'text-slate-400'
                           }`}>
                             {f.text}
                           </span>
@@ -203,30 +192,35 @@ export default function PricingSection() {
                       ))}
                     </div>
 
-                    {/* CTA Button */}
                     <button
-                      onClick={() => router.push(isFree ? "/register" : "/login")}
+                      onClick={() => isFree ? router.push("/register") : router.push("/login")}
                       disabled={isFree}
-                      className={`w-full py-4 rounded-2xl font-black text-sm transition-all active:scale-[0.98] ${
-                        isFree
-                          ? "bg-slate-800/50 text-slate-600 cursor-default border border-slate-800"
-                          : isPro
-                          ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
-                          : isVip
-                          ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white shadow-lg shadow-amber-500/25"
-                          : "bg-slate-800 hover:bg-slate-700 text-white border border-slate-700"
+                      className={`w-full py-5 rounded-[1.5rem] font-black text-sm flex items-center justify-center gap-3 transition-all active:scale-[0.98] ${
+                        isFree ? 'bg-white/5 text-slate-500 cursor-default' :
+                        isVip ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/20 hover:opacity-90' :
+                        isPro ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/40' :
+                        'bg-white/10 hover:bg-white/15 text-white'
                       }`}
                     >
-                      {isFree ? "مفعلة تلقائياً للمسجلين" : "ابدأ الآن ←"}
+                      {isFree ? "باقة افتراضية" : (
+                        <>
+                          اشترك الآن
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
                     </button>
                   </div>
                 </motion.div>
               );
             })}
           </div>
-        ) : (
-          <div className="text-center text-slate-500">لا توجد خطط متاحة حالياً.</div>
         )}
+
+        <div className="mt-20 text-center">
+          <p className="text-slate-500 text-sm font-medium">
+            لديك مؤسسة تعليمية؟ <button className="text-indigo-400 font-black hover:underline">تواصل معنا لطلب عرض مخصص ←</button>
+          </p>
+        </div>
       </div>
     </section>
   );

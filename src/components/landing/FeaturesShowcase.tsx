@@ -6,7 +6,7 @@ import { BrainCircuit, BookOpen, Layers, Target, Languages, HelpCircle, MessageS
 const features = [
   {
     id: "mindmap",
-    title: "الخريطة الذهنية والملف المخطط",
+    title: "  الملف المخطط",
     description: "احصل على خريطة شاملة تربط المفاهيم وتبرز لك هيكل المحاضرة مع تخطيط ذكي للملف الأصلي.",
     icon: <BrainCircuit className="w-6 h-6" />,
     images: ["/features/mindmap.png"]
@@ -76,15 +76,13 @@ export default function FeaturesShowcase() {
               <button
                 key={feature.id}
                 onClick={() => setActiveFeature(feature)}
-                className={`flex items-start gap-4 p-4 rounded-2xl text-right transition-all duration-300 ${
-                  isActive 
-                    ? "bg-indigo-600/10 border border-indigo-500/30 shadow-lg shadow-indigo-500/5" 
+                className={`flex items-start gap-4 p-4 rounded-2xl text-right transition-all duration-300 ${isActive
+                    ? "bg-indigo-600/10 border border-indigo-500/30 shadow-lg shadow-indigo-500/5"
                     : "bg-slate-900/30 border border-transparent hover:bg-slate-800/50 hover:border-slate-700/50"
-                }`}
+                  }`}
               >
-                <div className={`mt-1 flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
-                  isActive ? "bg-indigo-500 text-white shadow-md" : "bg-slate-800 text-slate-400"
-                }`}>
+                <div className={`mt-1 flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isActive ? "bg-indigo-500 text-white shadow-md" : "bg-slate-800 text-slate-400"
+                  }`}>
                   {feature.icon}
                 </div>
                 <div>
@@ -92,7 +90,7 @@ export default function FeaturesShowcase() {
                     {feature.title}
                   </h3>
                   {isActive && (
-                    <motion.p 
+                    <motion.p
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       className="text-sm text-slate-400 leading-relaxed font-medium mt-2"
@@ -109,7 +107,7 @@ export default function FeaturesShowcase() {
         {/* Image Showcase (Left Side - RTL) */}
         <div className="w-full lg:w-2/3 min-h-[500px] lg:min-h-[600px] relative rounded-[2.5rem] overflow-hidden bg-slate-900/50 border border-slate-800 shadow-2xl flex items-center justify-center group p-4 sm:p-8">
           <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/5 via-transparent to-purple-500/5 z-0"></div>
-          
+
           <AnimatePresence mode="wait">
             <motion.div
               key={activeFeature.id}
@@ -119,15 +117,15 @@ export default function FeaturesShowcase() {
               transition={{ duration: 0.4, ease: "easeOut" }}
               className="relative z-10 w-full h-full flex items-center justify-center"
             >
-              <div className={`grid gap-4 w-full h-full ${activeFeature.images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              <div className={`grid gap-4 w-full items-center justify-center ${activeFeature.images.length > 1 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                 {activeFeature.images.map((img, i) => (
-                  <div key={i} className="relative group/img overflow-hidden rounded-2xl border border-slate-700/50 shadow-2xl bg-slate-800">
-                    <img 
-                      src={img} 
-                      alt={activeFeature.title} 
-                      className="w-full h-full object-contain object-top transition-transform duration-700 group-hover/img:scale-105"
+                  <div key={i} className="relative group/img rounded-2xl border border-slate-700/50 shadow-2xl bg-slate-800/80 p-4 sm:p-8 flex items-center justify-center h-[350px] lg:h-[450px] overflow-hidden">
+                    <img
+                      src={img}
+                      alt={activeFeature.title}
+                      className="w-full h-full object-contain transition-transform duration-700 group-hover/img:scale-105 drop-shadow-2xl rounded-lg"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity pointer-events-none" />
                   </div>
                 ))}
               </div>

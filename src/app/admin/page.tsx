@@ -2,7 +2,28 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Loader2, Check, AlertCircle, X, MessageCircle, Users, Zap, BarChart3, Activity, Package, LayoutDashboard, Megaphone } from "lucide-react";
+import { Loader2, Check, AlertCircle, X, MessageCircle, Users, Zap, BarChart3, Activity, Package, LayoutDashboard, Megaphone, Clock, AlertTriangle } from "lucide-react";
+
+// Helper: Arabic relative time
+function getArabicRelativeTime(dateStr: string): { label: string; isOld: boolean } {
+  if (!dateStr) return { label: "غير محدد", isOld: false };
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  const isOld = diffHours >= 24;
+
+  let label = "";
+  if (diffMins < 1) label = "الآن";
+  else if (diffMins < 60) label = `منذ ${diffMins} دقيقة`;
+  else if (diffHours < 24) label = `منذ ${diffHours} ساعة`;
+  else if (diffDays === 1) label = "منذ يوم";
+  else label = `منذ ${diffDays} أيام`;
+
+  return { label, isOld };
+}
 import UserManagement from "@/components/admin/UserManagement";
 import FinancialAnalytics from "@/components/admin/FinancialAnalytics";
 import AnnouncementsManager from "@/components/admin/AnnouncementsManager";
@@ -194,34 +215,54 @@ export default function AdminPage() {
                           <th className="p-4 font-semibold">الهاتف</th>
                           <th className="p-4 font-semibold">الباقة</th>
                           <th className="p-4 font-semibold">المبلغ</th>
+                          <th className="p-4 font-semibold">وقت الطلب</th>
                           <th className="p-4 font-semibold text-center w-48">إجراءات</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-700/50 text-sm">
-                        {transactions.map(tx => (
-                          <tr key={tx.id} className="hover:bg-slate-700/30 transition-colors">
-                            <td className="p-4 font-mono text-indigo-300">{tx.short_order_id}</td>
-                            <td className="p-4 font-medium text-white">{tx.profiles?.full_name || 'غير مجدول'}</td>
-                            <td className="p-4 dir-ltr text-left text-slate-300">
-                              <div className="flex items-center justify-end gap-3">
-                                {tx.profiles?.phone_number && (
-                                  <a href={`https://wa.me/${tx.profiles.phone_number.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-400 transition-colors bg-green-500/10 p-1.5 rounded-full" title="مراسلة الطالب">
-                                    <MessageCircle className="w-4 h-4" />
-                                  </a>
-                                )}
-                                <span>{tx.profiles?.phone_number || '---'}</span>
-                              </div>
-                            </td>
-                            <td className="p-4">{tx.subscription_plans?.name || '---'}</td>
-                            <td className="p-4 font-bold text-green-400">{tx.amount} ₪</td>
-                            <td className="p-4 text-center">
-                              <div className="flex items-center justify-center gap-2">
-                                <button onClick={() => handleApprove(tx.id)} disabled={processing === tx.id} className="bg-green-600/90 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-medium flex-1">تأكيد</button>
-                                <button onClick={() => handleReject(tx.id)} disabled={processing === tx.id} className="bg-slate-700 hover:bg-red-500 border border-slate-600 hover:border-red-500 text-white px-3 py-2 rounded-lg"><X className="w-4 h-4" /></button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                        {transactions.map(tx => {
+                          const { label: timeLabel, isOld } = getArabicRelativeTime(tx.created_at);
+                          return (
+                            <tr key={tx.id} className={`hover:bg-slate-700/30 transition-colors ${isOld ? 'bg-red-950/10' : ''}`}>
+                              <td className="p-4 font-mono text-indigo-300">{tx.short_order_id}</td>
+                              <td className="p-4 font-medium text-white">{tx.profiles?.full_name || 'غير مجدول'}</td>
+                              <td className="p-4 dir-ltr text-left text-slate-300">
+                                <div className="flex items-center justify-end gap-3">
+                                  {tx.profiles?.phone_number && (
+                                    <a href={`https://wa.me/${tx.profiles.phone_number.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-400 transition-colors bg-green-500/10 p-1.5 rounded-full" title="مراسلة الطالب">
+                                      <MessageCircle className="w-4 h-4" />
+                                    </a>
+                                  )}
+                                  <span>{tx.profiles?.phone_number || '---'}</span>
+                                </div>
+                              </td>
+                              <td className="p-4">{tx.subscription_plans?.name || '---'}</td>
+                              <td className="p-4 font-bold text-green-400">{tx.amount} ₪</td>
+                              <td className="p-4">
+                                <div className="flex flex-col gap-1">
+                                  <div className={`flex items-center gap-1.5 text-xs font-bold ${isOld ? 'text-red-400' : 'text-slate-400'}`}>
+                                    {isOld
+                                      ? <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                                      : <Clock className="w-3.5 h-3.5 shrink-0" />
+                                    }
+                                    {timeLabel}
+                                  </div>
+                                  {tx.created_at && (
+                                    <div className="text-[10px] text-slate-600 font-mono" dir="ltr">
+                                      {new Date(tx.created_at).toLocaleString('ar-SA', { dateStyle: 'short', timeStyle: 'short' })}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="p-4 text-center">
+                                <div className="flex items-center justify-center gap-2">
+                                  <button onClick={() => handleApprove(tx.id)} disabled={processing === tx.id} className="bg-green-600/90 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-medium flex-1">تأكيد</button>
+                                  <button onClick={() => handleReject(tx.id)} disabled={processing === tx.id} className="bg-slate-700 hover:bg-red-500 border border-slate-600 hover:border-red-500 text-white px-3 py-2 rounded-lg"><X className="w-4 h-4" /></button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

@@ -291,7 +291,7 @@ export default function Home() {
 
       {/* Hero Video Section */}
       <section className="relative z-10 px-6 max-w-5xl mx-auto -mt-10 mb-24">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -299,8 +299,8 @@ export default function Home() {
           className="relative w-full aspect-video rounded-[2.5rem] overflow-hidden bg-slate-900 border border-slate-700/50 shadow-[0_0_50px_rgba(99,102,241,0.15)] group"
         >
           <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 via-transparent to-purple-500/20 z-0 pointer-events-none"></div>
-          
-          <video 
+
+          <video
             ref={videoRef}
             className="w-full h-full object-cover relative z-10"
             controls={isPlaying}
@@ -314,7 +314,7 @@ export default function Home() {
 
           {/* Custom Play Overlay */}
           {!isPlaying && (
-            <div 
+            <div
               onClick={handlePlayDemo}
               className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 z-20 bg-slate-950/40 backdrop-blur-[2px] cursor-pointer group-hover:bg-slate-950/30 transition-all"
             >
@@ -341,7 +341,7 @@ export default function Home() {
             {
               icon: <Zap className="w-6 h-6 text-amber-400" />,
               title: "تلخيص فائق السرعة",
-              desc: "حوّل ساعة من التسجيل إلى ملخص في أقل من دقيقة واحدة."
+              desc: "حوّل ساعة من التسجيل إلى ملخص خلال 15 دقيقة."
             },
             {
               icon: <MessageSquare className="w-6 h-6 text-indigo-400" />,
