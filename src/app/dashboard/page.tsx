@@ -58,6 +58,31 @@ function DashboardContent() {
   const summaryRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Dhikr / Istighfar Counter
+  const dhikrPhrases = [
+    "أستغفر الله العظيم",
+    "لا إله إلا الله",
+    "الحمد لله",
+    "سبحان الله وبحمده",
+    "الله أكبر",
+    "اللهم صلِّ على سيدنا محمد",
+    "لا حول ولا قوة إلا بالله"
+  ];
+  const [dhikrTotal, setDhikrTotal] = useState(0);
+  const [dhikrCurrentPhaseCount, setDhikrCurrentPhaseCount] = useState(0);
+  const [currentDhikrIndex, setCurrentDhikrIndex] = useState(0);
+
+  const handleDhikrClick = () => {
+    setDhikrTotal(prev => prev + 1);
+    const newPhaseCount = dhikrCurrentPhaseCount + 1;
+    if (newPhaseCount >= 10) {
+      setDhikrCurrentPhaseCount(0);
+      setCurrentDhikrIndex(prev => (prev + 1) % dhikrPhrases.length);
+    } else {
+      setDhikrCurrentPhaseCount(newPhaseCount);
+    }
+  };
+
   // -- FINGERPRINTING LOGIC --
   const getFingerprint = async () => {
     if (typeof window === "undefined") return "";
@@ -458,55 +483,62 @@ function DashboardContent() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-100 flex flex-col" dir="rtl">
       {/* Top Nav */}
-      <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 px-6 py-3">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 px-3 sm:px-6 py-3">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
+          {/* Logo & Home */}
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             <div className="flex items-center cursor-pointer group" onClick={() => router.push("/")} title="العودة للصفحة الرئيسية">
-              <img src="/lammah-logo.png" alt="Lammah" className="w-8 h-8 ml-2 object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
-              <span className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-l from-indigo-300 to-purple-300 group-hover:from-indigo-200 group-hover:to-purple-200 transition-all">لمّاح</span>
+              <img src="/lammah-logo.png" alt="Lammah" className="w-7 h-7 sm:w-8 sm:h-8 ml-1 sm:ml-2 object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
+              <span className="font-bold text-base sm:text-lg bg-clip-text text-transparent bg-gradient-to-l from-indigo-300 to-purple-300 hidden md:inline-block">لمّاح</span>
             </div>
             
-            {/* New Back to Home Button */}
             <button 
               onClick={() => router.push("/")} 
-              className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700 transition-all flex items-center gap-1"
+              className="text-[10px] sm:text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-slate-700 transition-all flex items-center gap-1"
             >
-              <Home className="w-3.5 h-3.5" />
-              الرئيسية
+              <Home className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">الرئيسية</span>
             </button>
           </div>
-          <div className="flex items-center gap-3">
+
+          {/* Quota & Actions */}
+          <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
             {quota !== null && (
-              <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-full px-4 py-1.5 text-sm">
-                <span className="text-slate-400">متبقي: </span>
+              <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-full px-2 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-sm flex items-center gap-1">
+                <Package className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-400" />
+                <span className="text-slate-400 hidden sm:inline">متبقي: </span>
                 <span className={`font-bold ${quota > 0 ? "text-green-400" : "text-red-400"}`}>{quota}</span>
-                <span className="text-slate-500 text-xs mr-1">محاضرة</span>
+                <span className="text-slate-500 hidden sm:inline">محاضرة</span>
               </div>
             )}
-            <button onClick={() => router.push("/plans")} className="text-slate-400 hover:text-indigo-300 transition-colors p-2" title="الباقات"><Package className="w-5 h-5" /></button>
-            <button onClick={() => router.push("/history")} className="text-slate-400 hover:text-indigo-300 transition-colors p-2" title="السجل"><History className="w-5 h-5" /></button>
-            <button onClick={() => router.push("/profile")} className="text-slate-400 hover:text-indigo-300 transition-colors p-2" title="حسابي"><User className="w-5 h-5" /></button>
-            <button onClick={async () => { await signOut(); router.replace("/login"); }} className="text-slate-400 hover:text-red-300 transition-colors p-2" title="خروج"><LogOut className="w-5 h-5" /></button>
+            
+            <div className="flex items-center gap-1 sm:gap-2">
+              <button onClick={() => router.push("/plans")} className="text-slate-400 hover:text-indigo-300 transition-colors p-1.5 sm:p-2 bg-slate-800/50 hover:bg-slate-800 rounded-lg" title="الباقات"><Crown className="w-4 h-4 sm:w-5 sm:h-5" /></button>
+              <button onClick={() => router.push("/history")} className="text-slate-400 hover:text-indigo-300 transition-colors p-1.5 sm:p-2 bg-slate-800/50 hover:bg-slate-800 rounded-lg" title="السجل"><History className="w-4 h-4 sm:w-5 sm:h-5" /></button>
+              <button onClick={() => router.push("/profile")} className="text-slate-400 hover:text-indigo-300 transition-colors p-1.5 sm:p-2 bg-slate-800/50 hover:bg-slate-800 rounded-lg" title="حسابي"><User className="w-4 h-4 sm:w-5 sm:h-5" /></button>
+              <button onClick={async () => { await signOut(); router.replace("/login"); }} className="text-slate-400 hover:text-red-300 transition-colors p-1.5 sm:p-2 bg-slate-800/50 hover:bg-slate-800 rounded-lg" title="خروج"><LogOut className="w-4 h-4 sm:w-5 sm:h-5" /></button>
+            </div>
           </div>
         </div>
       </nav>
 
       <div className="flex-1 flex flex-col items-center p-8 overflow-x-hidden relative">
-        {/* Parallel Loading Progress Indicator */}
+        {/* Parallel Loading Progress Indicator & Dhikr */}
         <AnimatePresence>
           {(isStreaming || isProcessing) && !result?.annotations && (
             <motion.div 
               initial={{ opacity: 0, y: -50 }} 
               animate={{ opacity: 1, y: 0 }} 
               exit={{ opacity: 0, y: -50 }} 
-              className="fixed top-24 left-1/2 -translate-x-1/2 z-40 w-full max-w-md px-4"
+              className="fixed top-24 left-1/2 -translate-x-1/2 z-40 w-full max-w-md px-4 flex flex-col gap-3"
             >
-              <div className="bg-slate-900/90 backdrop-blur-xl border border-indigo-500/30 rounded-2xl p-4 shadow-2xl flex items-center gap-4">
-                <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center border border-indigo-500/30">
+              {/* Progress Banner */}
+              <div className="bg-slate-900/95 backdrop-blur-xl border border-indigo-500/30 rounded-2xl p-4 shadow-2xl flex items-center gap-4">
+                <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center border border-indigo-500/30 shrink-0">
                   <Loader2 className="w-5 h-5 text-indigo-400 animate-spin" />
                 </div>
-                <div className="flex-1">
-                  <h4 className="text-sm font-bold text-indigo-300 mb-1">
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-bold text-indigo-300 mb-1 truncate">
                     {queuePosition > 0 ? "أنت في قائمة الانتظار" : "لمّاح يعمل على محاضرتك ✨"}
                   </h4>
                   <p className="text-xs text-slate-400 font-medium truncate">
@@ -514,13 +546,45 @@ function DashboardContent() {
                   </p>
                 </div>
                 {timeLeft !== null && queuePosition === 0 && (
-                  <div className="bg-indigo-500/10 px-3 py-1 rounded-lg border border-indigo-500/20">
-                    <span className="text-[10px] font-bold text-indigo-300">
+                  <div className="bg-indigo-500/10 px-3 py-1 rounded-lg border border-indigo-500/20 shrink-0">
+                    <span className="text-[10px] font-bold text-indigo-300 tabular-nums">
                       ~ {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
                     </span>
                   </div>
                 )}
               </div>
+
+              {/* Interactive Dhikr Counter */}
+              <motion.button
+                onClick={handleDhikrClick}
+                whileTap={{ scale: 0.95 }}
+                className="bg-emerald-900/40 backdrop-blur-md border border-emerald-500/30 rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-emerald-800/50 transition-colors w-full group overflow-hidden relative"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-slate-800">
+                   <motion.div 
+                     className="h-full bg-emerald-500" 
+                     initial={{ width: 0 }} 
+                     animate={{ width: `${(dhikrCurrentPhaseCount / 10) * 100}%` }} 
+                     transition={{ duration: 0.2 }}
+                   />
+                </div>
+                <p className="text-xs text-emerald-200/60 font-medium tracking-wide">
+                  رطّب لسانك بذكر الله أثناء الانتظار
+                </p>
+                <h3 className="text-xl md:text-2xl font-black text-emerald-400 tracking-tight select-none">
+                  {dhikrPhrases[currentDhikrIndex]}
+                </h3>
+                <div className="flex items-center gap-4 mt-1">
+                   <div className="text-xs font-bold text-emerald-300/80 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                     الحالي: {dhikrCurrentPhaseCount} / 10
+                   </div>
+                   {dhikrTotal > 0 && (
+                     <div className="text-xs font-bold text-slate-300 bg-slate-800/80 px-3 py-1 rounded-full border border-slate-600">
+                       الإجمالي: {dhikrTotal}
+                     </div>
+                   )}
+                </div>
+              </motion.button>
             </motion.div>
           )}
         </AnimatePresence>
