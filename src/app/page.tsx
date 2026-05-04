@@ -1,7 +1,7 @@
 "use client";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import {
   Loader2,
@@ -37,11 +37,21 @@ export default function Home() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [localSuccess, setLocalSuccess] = useState("");
 
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   useEffect(() => {
     if (!loading && user) {
       router.replace("/dashboard");
     }
   }, [user, loading]);
+
+  const handlePlayDemo = () => {
+    if (videoRef.current) {
+      videoRef.current.play();
+      setIsPlaying(true);
+    }
+  };
 
   const handleGoogleLogin = async () => {
     setSubmitting(true);
@@ -279,25 +289,42 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Hero Video Placeholder */}
+      {/* Hero Video Section */}
       <section className="relative z-10 px-6 max-w-5xl mx-auto -mt-10 mb-24">
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="relative w-full aspect-video rounded-[2.5rem] overflow-hidden bg-slate-900 border border-slate-700/50 shadow-[0_0_50px_rgba(99,102,241,0.15)] group cursor-pointer"
+          className="relative w-full aspect-video rounded-[2.5rem] overflow-hidden bg-slate-900 border border-slate-700/50 shadow-[0_0_50px_rgba(99,102,241,0.15)] group"
         >
-          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 via-transparent to-purple-500/20 z-0 group-hover:scale-105 transition-transform duration-700"></div>
+          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 via-transparent to-purple-500/20 z-0 pointer-events-none"></div>
           
-          {/* Simulated Video Thumbnail / Placeholder */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 z-10 bg-slate-950/40 backdrop-blur-[2px]">
-            <div className="w-20 h-20 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mb-6 border border-white/10 shadow-2xl transition-all group-hover:scale-110">
-              <Play className="w-8 h-8 text-white translate-x-1" fill="currentColor" />
+          <video 
+            ref={videoRef}
+            className="w-full h-full object-cover relative z-10"
+            controls={isPlaying}
+            onPause={() => setIsPlaying(false)}
+            onPlay={() => setIsPlaying(true)}
+            preload="metadata"
+          >
+            <source src="/demo/DemoLammah.mp4" type="video/mp4" />
+            متصفحك لا يدعم تشغيل الفيديو.
+          </video>
+
+          {/* Custom Play Overlay */}
+          {!isPlaying && (
+            <div 
+              onClick={handlePlayDemo}
+              className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 z-20 bg-slate-950/40 backdrop-blur-[2px] cursor-pointer group-hover:bg-slate-950/30 transition-all"
+            >
+              <div className="w-20 h-20 bg-white/10 hover:bg-indigo-500/80 backdrop-blur-md rounded-full flex items-center justify-center mb-6 border border-white/20 shadow-[0_0_30px_rgba(99,102,241,0.3)] transition-all transform group-hover:scale-110 duration-300">
+                <Play className="w-8 h-8 text-white translate-x-1" fill="currentColor" />
+              </div>
+              <h3 className="text-2xl font-black text-white mb-2 drop-shadow-lg">شاهد كيف يعمل "لمّاح"</h3>
+              <p className="text-slate-200 font-medium max-w-md mx-auto drop-shadow-md">انقر لتشغيل الفيديو التعريفي القصير واكتشف كيف ستغير المنصة طريقتك في المذاكرة للأبد.</p>
             </div>
-            <h3 className="text-2xl font-black text-white mb-2 drop-shadow-md">شاهد كيف يعمل "لمّاح"</h3>
-            <p className="text-slate-300 font-medium max-w-md mx-auto drop-shadow-md">فيديو تعريفي قصير يوضح لك قوة المنصة وكيف ستغير طريقتك في المذاكرة للأبد.</p>
-          </div>
+          )}
         </motion.div>
       </section>
 
