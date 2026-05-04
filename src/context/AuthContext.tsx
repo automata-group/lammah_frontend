@@ -41,12 +41,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const getURL = () => {
-    // 1. أولاً: المتغير البيئي (يُحرق وقت البناء)
-    let url = process.env.NEXT_PUBLIC_SITE_URL;
-    // 2. ثانياً: من عنوان المتصفح الحالي
-    if (!url && typeof window !== 'undefined') url = window.location.origin;
-    // 3. أخيراً: الدومين الثابت للإنتاج (بدلاً من localhost!)
-    if (!url) url = 'https://lammah.site';
+    let url = "";
+    
+    // 1. الأولوية للعنوان الحالي في المتصفح (الأكثر دقة وقت التشغيل)
+    if (typeof window !== 'undefined') {
+      url = window.location.origin;
+    } 
+    // 2. إذا لم يكن متصفحاً، استخدم المتغير البيئي
+    else {
+      url = process.env.NEXT_PUBLIC_SITE_URL || 'https://lammah.site';
+    }
+
+    // تنظيف الرابط
     if (!url.startsWith('http')) url = `https://${url}`;
     return url.endsWith('/') ? url.slice(0, -1) : url;
   };

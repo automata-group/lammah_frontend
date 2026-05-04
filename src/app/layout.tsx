@@ -3,8 +3,8 @@ import { Tajawal } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 
-const tajawal = Tajawal({ 
-  subsets: ["arabic"], 
+const tajawal = Tajawal({
+  subsets: ["arabic"],
   weight: ["300", "400", "500", "700", "800", "900"],
   variable: '--font-tajawal'
 });

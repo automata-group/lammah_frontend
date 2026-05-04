@@ -4,9 +4,14 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/dashboard'
+  
+  // تحديد الأصل (Origin) بشكل ديناميكي من الهيدرز لتجنب مشاكل البروكسي
+  const host = request.headers.get('host')
+  const protocol = request.headers.get('x-forwarded-proto') || 'https'
+  const origin = `${protocol}://${host}`
 
   console.log("📥 Callback received:", { code: code ? "exists" : "missing", origin, next });
 
