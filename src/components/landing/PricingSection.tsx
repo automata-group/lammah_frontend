@@ -27,7 +27,21 @@ export default function PricingSection() {
     "أسبوعي - VIP": "amber", "شهري - برو": "amber", "شهري - غير محدود": "amber" 
   };
 
-  const activePlans = tab === "monthly" ? plans.monthly : plans.weekly;
+  const activePlans = [
+    {
+      id: "free_tier",
+      name: "التجربة المجانية",
+      price_ils: 0,
+      lecture_quota: 1,
+      features: [
+        "تلخيص أول 15 دقيقة فقط",
+        "تفريغ حوالي 5 سلايدات",
+        "شرح السلايدات ونقاط تركيز",
+        "الميزات المتقدمة مغلقة (غير متاحة)"
+      ]
+    },
+    ...(tab === "monthly" ? plans.monthly : plans.weekly)
+  ];
 
   return (
     <section id="pricing" className="relative z-10 py-24 px-6 max-w-7xl mx-auto border-t border-slate-800/50">
@@ -101,9 +115,11 @@ export default function PricingSection() {
                   )}
                 </div>
 
-                <button onClick={() => router.push("/login")}
-                  className={`w-full py-4 rounded-2xl font-black transition-all ${isPopular ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:shadow-lg hover:shadow-purple-500/25 active:scale-[0.98]" : "bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-[0.98]"}`}>
-                  ابدأ الآن
+                <button onClick={() => router.push(plan.id === "free_tier" ? "/register" : "/login")}
+                  className={`w-full py-4 rounded-2xl font-black transition-all ${isPopular ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:shadow-lg hover:shadow-purple-500/25 active:scale-[0.98]" : plan.id === "free_tier" ? "bg-slate-800/50 text-slate-400 cursor-default" : "bg-slate-800 text-slate-300 hover:bg-slate-700 active:scale-[0.98]"}`}
+                  disabled={plan.id === "free_tier"}
+                >
+                  {plan.id === "free_tier" ? "مفعلة تلقائياً" : "ابدأ الآن"}
                 </button>
               </motion.div>
             );

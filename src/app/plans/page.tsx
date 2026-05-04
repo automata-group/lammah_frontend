@@ -42,7 +42,21 @@ export default function PlansPage() {
 
   if (loading || !user) return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-400 animate-spin" /></div>;
 
-  const activePlans = tab === "monthly" ? plans.monthly : plans.weekly;
+  const activePlans = [
+    {
+      id: "free_tier",
+      name: "التجربة المجانية",
+      price_ils: 0,
+      lecture_quota: 2,
+      features: [
+        "تلخيص أول 15 دقيقة فقط",
+        "تفريغ حوالي 5 سلايدات",
+        "شرح السلايدات ونقاط تركيز",
+        "الميزات المتقدمة مغلقة (غير متاحة)"
+      ]
+    },
+    ...(tab === "monthly" ? plans.monthly : plans.weekly)
+  ];
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-100 p-8" dir="rtl">
@@ -130,9 +144,9 @@ export default function PlansPage() {
                     )}
                   </div>
 
-                  <button onClick={() => handleSubscribe(plan.id)} disabled={!!subscribing}
-                    className={`w-full py-4 rounded-xl font-bold transition-all ${isPopular ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg hover:shadow-purple-500/30" : "bg-slate-700 text-slate-200 hover:bg-slate-600"} disabled:opacity-50`}>
-                    {subscribing === plan.id ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "اشترك الآن"}
+                  <button onClick={() => plan.id !== "free_tier" && handleSubscribe(plan.id)} disabled={!!subscribing || plan.id === "free_tier"}
+                    className={`w-full py-4 rounded-xl font-bold transition-all ${isPopular ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg hover:shadow-purple-500/30" : plan.id === "free_tier" ? "bg-slate-800/50 text-slate-400 cursor-default" : "bg-slate-700 text-slate-200 hover:bg-slate-600"} disabled:opacity-50`}>
+                    {subscribing === plan.id ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : plan.id === "free_tier" ? "مفعلة تلقائياً" : "اشترك الآن"}
                   </button>
                 </motion.div>
               );
