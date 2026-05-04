@@ -89,14 +89,16 @@ export default function PricingSection() {
                       <span>{f}</span>
                     </div>
                   ))}
-                  <div className="flex items-center text-sm text-slate-400 font-medium">
-                    <Check className="w-5 h-5 text-amber-400 ml-3 flex-shrink-0" />
-                    <span>
-                      {plan.name.includes("متقدم") ? "40 رسالة ذكية لكل محاضرة" : 
-                       (plan.name.includes("VIP") || plan.name.includes("برو") || plan.name.includes("غير محدود")) ? "رسائل غير محدودة للمحاضرة" : 
-                       "15 رسالة ذكية لكل محاضرة"}
-                    </span>
-                  </div>
+                  {(!plan.name.includes("أساسي") && !plan.name.includes("طالب")) && (
+                    <div className="flex items-center text-sm text-slate-400 font-medium">
+                      <Check className="w-5 h-5 text-amber-400 ml-3 flex-shrink-0" />
+                      <span>
+                        {plan.name.includes("متقدم") ? "40 رسالة ذكية لكل محاضرة" : 
+                         (plan.name.includes("VIP") || plan.name.includes("برو") || plan.name.includes("غير محدود")) ? "رسائل غير محدودة للمحاضرة" : 
+                         "15 رسالة ذكية لكل محاضرة"}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <button onClick={() => router.push("/login")}

@@ -114,18 +114,20 @@ export default function PlansPage() {
                     ))}
                     
                     {/* Integrated Chat Limit (More clear and context-aware) */}
-                    <div className="mt-4 pt-4 border-t border-slate-700/50">
-                      <div className="flex items-center text-xs font-bold text-indigo-300 uppercase tracking-widest mb-2">
-                        <Zap className="w-3 h-3 ml-1" /> حدود الذكاء الاصطناعي
+                    {(!plan.name.includes("أساسي") && !plan.name.includes("طالب")) && (
+                      <div className="mt-4 pt-4 border-t border-slate-700/50">
+                        <div className="flex items-center text-xs font-bold text-indigo-300 uppercase tracking-widest mb-2">
+                          <Zap className="w-3 h-3 ml-1" /> حدود الذكاء الاصطناعي
+                        </div>
+                        <div className="text-xs text-slate-400 leading-relaxed">
+                          يتضمن هذا الاشتراك {
+                            plan.name.includes("متقدم") ? "40 رسالة ذكية لكل محاضرة" : 
+                            (plan.name.includes("VIP") || plan.name.includes("برو") || plan.name.includes("غير محدود")) ? "رسائل غير محدودة (100+) لكل محاضرة" : 
+                            "15 رسالة ذكية لكل محاضرة"
+                          } لمساعدتك في فهم أدق التفاصيل.
+                        </div>
                       </div>
-                      <div className="text-xs text-slate-400 leading-relaxed">
-                        يتضمن هذا الاشتراك {
-                          plan.name.includes("متقدم") ? "40 رسالة ذكية لكل محاضرة" : 
-                          (plan.name.includes("VIP") || plan.name.includes("برو") || plan.name.includes("غير محدود")) ? "رسائل غير محدودة (100+) لكل محاضرة" : 
-                          "15 رسالة ذكية لكل محاضرة"
-                        } لمساعدتك في فهم أدق التفاصيل.
-                      </div>
-                    </div>
+                    )}
                   </div>
 
                   <button onClick={() => handleSubscribe(plan.id)} disabled={!!subscribing}
