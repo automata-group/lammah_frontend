@@ -18,9 +18,12 @@ import {
   User,
   ChevronDown,
   ArrowRight,
-  Star
+  Star,
+  Play
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import FeaturesShowcase from "@/components/landing/FeaturesShowcase";
+import PricingSection from "@/components/landing/PricingSection";
 
 export default function Home() {
   const { user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, isLocalDev } = useAuth();
@@ -276,6 +279,29 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Hero Video Placeholder */}
+      <section className="relative z-10 px-6 max-w-5xl mx-auto -mt-10 mb-24">
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="relative w-full aspect-video rounded-[2.5rem] overflow-hidden bg-slate-900 border border-slate-700/50 shadow-[0_0_50px_rgba(99,102,241,0.15)] group cursor-pointer"
+        >
+          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 via-transparent to-purple-500/20 z-0 group-hover:scale-105 transition-transform duration-700"></div>
+          
+          {/* Simulated Video Thumbnail / Placeholder */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 z-10 bg-slate-950/40 backdrop-blur-[2px]">
+            <div className="w-20 h-20 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mb-6 border border-white/10 shadow-2xl transition-all group-hover:scale-110">
+              <Play className="w-8 h-8 text-white translate-x-1" fill="currentColor" />
+            </div>
+            <h3 className="text-2xl font-black text-white mb-2 drop-shadow-md">شاهد كيف يعمل "لمّاح"</h3>
+            <p className="text-slate-300 font-medium max-w-md mx-auto drop-shadow-md">فيديو تعريفي قصير يوضح لك قوة المنصة وكيف ستغير طريقتك في المذاكرة للأبد.</p>
+          </div>
+        </motion.div>
+      </section>
+
+
       {/* Features Grid */}
       <section id="features" className="relative z-10 py-24 px-6 max-w-7xl mx-auto border-t border-slate-800/50">
         <div className="text-center mb-16">
@@ -320,6 +346,10 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <FeaturesShowcase />
+
+      <PricingSection />
 
       {/* Footer */}
       <footer className="relative z-10 py-12 px-6 border-t border-slate-800/50 bg-slate-950/50 backdrop-blur-md">
