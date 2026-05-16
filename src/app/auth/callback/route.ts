@@ -10,7 +10,8 @@ export async function GET(request: NextRequest) {
   
   // تحديد الأصل (Origin) بشكل ديناميكي من الهيدرز لتجنب مشاكل البروكسي
   const host = request.headers.get('host')
-  const protocol = request.headers.get('x-forwarded-proto') || 'https'
+  const isLocalHost = !!host && (host.includes('localhost') || host.includes('127.0.0.1'))
+  const protocol = request.headers.get('x-forwarded-proto') || (isLocalHost ? 'http' : 'https')
   const origin = `${protocol}://${host}`
 
   console.log("📥 Callback received:", { code: code ? "exists" : "missing", origin, next });

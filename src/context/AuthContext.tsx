@@ -59,8 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     const base = getURL();
-    const isLocal = base.includes('localhost') || base.includes('127.0.0.1');
-    const redirectPath = isLocal ? '/dashboard' : '/auth/callback?next=/dashboard';
+    const redirectPath = '/auth/callback?next=/dashboard';
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

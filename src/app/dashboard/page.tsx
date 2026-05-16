@@ -17,6 +17,8 @@ function DashboardContent() {
 
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
+  const [lectureUrl, setLectureUrl] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -269,7 +271,12 @@ function DashboardContent() {
   }, [session]);
 
   const handleProcess = async (forceRawFiles: boolean = false) => {
-    if (!audioFile) { setError("يرجى إرفاق الملف الصوتي أولاً."); return; }
+    const hasAudioFile = !!audioFile;
+    const hasLectureUrl = uploadMode === "url" && lectureUrl.trim().length > 0;
+    if (!hasAudioFile && !hasLectureUrl) {
+      setError(uploadMode === "url" ? "يرجى إدخال رابط المحاضرة أولاً." : "يرجى إرفاق الملف الصوتي أولاً.");
+      return;
+    }
     if (!session) { router.replace("/login"); return; }
 
     setIsProcessing(true); setError(null); setResult(null);
@@ -280,8 +287,13 @@ function DashboardContent() {
     const formData = new FormData();
     formData.append("metadata", await getDeviceMetadata());
 
-    if (!forceRawFiles && audioTempId) formData.append("audio_temp_id", audioTempId);
-    else if (audioFile) formData.append("audio_file", audioFile);
+    if (uploadMode === "url" && lectureUrl.trim()) {
+      formData.append("lecture_url", lectureUrl.trim());
+    } else if (!forceRawFiles && audioTempId) {
+      formData.append("audio_temp_id", audioTempId);
+    } else if (audioFile) {
+      formData.append("audio_file", audioFile);
+    }
 
     if (!forceRawFiles && pdfTempId) formData.append("pdf_temp_id", pdfTempId);
     else if (pdfFile) formData.append("pdf_file", pdfFile);
@@ -632,8 +644,50 @@ function DashboardContent() {
 
               {/* Upload Card */}
               <div className="w-full max-w-3xl bg-slate-800/40 border border-slate-700/50 rounded-3xl p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+                <div className="mb-6">
+                  <div className="inline-flex bg-slate-900/70 border border-slate-700 rounded-2xl p-1 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUploadMode("file");
+                        setLectureUrl("");
+                      }}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${uploadMode === "file" ? "bg-indigo-600 text-white" : "text-slate-300 hover:bg-slate-800"}`}
+                    >
+                      رفع ملف
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUploadMode("url");
+                        setAudioFile(null);
+                        setAudioTempId(null);
+                        setAudioUploadProgress(0);
+                      }}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${uploadMode === "url" ? "bg-indigo-600 text-white" : "text-slate-300 hover:bg-slate-800"}`}
+                    >
+                      رابط محاضرة
+                    </button>
+                  </div>
+                  {uploadMode === "url" && (
+                    <div className="mt-4">
+                      <input
+                        type="url"
+                        value={lectureUrl}
+                        onChange={(e) => setLectureUrl(e.target.value)}
+                        placeholder="ألصق رابط Zoom أو YouTube أو Google Drive هنا"
+                        className="w-full bg-slate-900 border border-slate-700 text-slate-100 p-4 rounded-xl focus:outline-none focus:border-indigo-500"
+                        dir="ltr"
+                      />
+                      <p className="text-xs text-slate-400 mt-2">
+                        يجب أن يكون الرابط عامًا وقابلًا للوصول بدون تسجيل دخول.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid md:grid-cols-2 gap-6 mb-8">
-                  <div className={`relative group border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center transition-all ${audioFile ? 'border-indigo-500 bg-indigo-500/10' : 'border-slate-600 hover:border-indigo-400 cursor-pointer'}`}>
+                  <div className={`relative group border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center transition-all ${audioFile ? 'border-indigo-500 bg-indigo-500/10' : 'border-slate-600 hover:border-indigo-400 cursor-pointer'} ${uploadMode === "url" ? "opacity-50 pointer-events-none" : ""}`}>
                     <input type="file" accept="audio/*" onChange={(e) => {
                       const file = e.target.files?.[0] || null;
                       setAudioFile(file);
@@ -737,7 +791,7 @@ function DashboardContent() {
                   )}
                 </AnimatePresence>
 
-                <button onClick={() => handleProcess()} disabled={isProcessing || !audioFile || isAudioUploading || isPdfUploading}
+                <button onClick={() => handleProcess()} disabled={isProcessing || (uploadMode === "file" ? !audioFile : !lectureUrl.trim()) || isAudioUploading || isPdfUploading}
                   className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black py-5 rounded-2xl shadow-xl hover:shadow-indigo-500/30 transition-all disabled:opacity-50">
                   {isProcessing ? <span className="flex items-center justify-center"><Loader2 className="w-6 h-6 ml-3 animate-spin" />جاري المعالجة...</span> :
                     (isAudioUploading || isPdfUploading) ? <span className="flex items-center justify-center"><Loader2 className="w-6 h-6 ml-3 animate-spin" />جاري رفع الملفات...</span> :
