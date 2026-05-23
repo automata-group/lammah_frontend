@@ -2,7 +2,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Loader2, Check, AlertCircle, X, MessageCircle, Users, Zap, BarChart3, Activity, Package, LayoutDashboard, Megaphone, Clock, AlertTriangle } from "lucide-react";
+import { Loader2, Check, AlertCircle, X, MessageCircle, Users, Zap, BarChart3, Activity, Package, LayoutDashboard, Megaphone, Clock, AlertTriangle, CheckSquare, Square, Trash2, CheckCheck, XCircle } from "lucide-react";
 
 // Helper: Arabic relative time
 function getArabicRelativeTime(dateStr: string): { label: string; isOld: boolean } {
@@ -28,6 +28,8 @@ import UserManagement from "@/components/admin/UserManagement";
 import FinancialAnalytics from "@/components/admin/FinancialAnalytics";
 import AnnouncementsManager from "@/components/admin/AnnouncementsManager";
 
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+
 export default function AdminPage() {
   const { user, session, loading } = useAuth();
   const router = useRouter();
@@ -41,6 +43,11 @@ export default function AdminPage() {
   const [stats, setStats] = useState<any>(null);
   const [usageStats, setUsageStats] = useState<any>(null);
 
+  // ── Bulk selection state ──────────────────────────────────
+  const [selectedTxIds, setSelectedTxIds] = useState<Set<string>>(new Set());
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [bulkProcessing, setBulkProcessing] = useState(false);
+
   useEffect(() => {
     if (!loading && !user) {
       router.replace("/login");
@@ -51,7 +58,7 @@ export default function AdminPage() {
   
   const fetchOverview = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/transactions/admin/pending`, {
+      const res = await fetch(`${API}/api/v1/transactions/admin/pending`, {
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
       const data = await res.json();
@@ -59,13 +66,13 @@ export default function AdminPage() {
       setTransactions(data);
 
       try {
-        const usageRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/admin/stats`, {
+        const usageRes = await fetch(`${API}/api/v1/admin/stats`, {
            headers: { "Authorization": `Bearer ${session?.access_token}` }
         });
         const usageData = await usageRes.json();
         if (usageRes.ok) {
           setUsageStats(usageData);
-          setStats({ system_health: usageData.system_health, errors: usageData.errors }); // Adjusting based on backend output
+          setStats({ system_health: usageData.system_health, errors: usageData.errors });
         }
       } catch (err) {
         console.error("Failed to fetch usage stats:", err);
@@ -77,18 +84,19 @@ export default function AdminPage() {
     }
   };
   
+  // ── Individual actions ────────────────────────────────────
   const handleApprove = async (txId: string) => {
     if (!confirm("هل أنت متأكد من تأكيد هذا الدفع وتفعيل الاشتراك؟")) return;
     setProcessing(txId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/transactions/admin/${txId}/approve`, {
+      const res = await fetch(`${API}/api/v1/transactions/admin/${txId}/approve`, {
          method: "POST",
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail?.user_message || "فشل التأكيد");
-      
       setTransactions(prev => prev.filter(t => t.id !== txId));
+      setSelectedTxIds(prev => { const s = new Set(prev); s.delete(txId); return s; });
       alert("تمت الموافقة بنجاح وتفعيل الباقة!");
     } catch (e: any) {
       alert(`خطأ: ${e.message}`);
@@ -101,14 +109,14 @@ export default function AdminPage() {
     if (!confirm("هل أنت متأكد من رفض هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.")) return;
     setProcessing(txId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/transactions/admin/${txId}/reject`, {
+      const res = await fetch(`${API}/api/v1/transactions/admin/${txId}/reject`, {
          method: "POST",
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail?.user_message || "فشل الرفض");
-      
       setTransactions(prev => prev.filter(t => t.id !== txId));
+      setSelectedTxIds(prev => { const s = new Set(prev); s.delete(txId); return s; });
       alert("تم رفض الطلب وإزالته بنجاح.");
     } catch (e: any) {
       alert(`خطأ: ${e.message}`);
@@ -121,19 +129,125 @@ export default function AdminPage() {
     if (!confirm(`هل أنت متأكد من إلغاء خطة المستخدم (${userName})؟ سيتم تصفير حصته وإعادته للتجربة المجانية.`)) return;
     setProcessing(userId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/admin/users/${userId}/cancel-plan`, {
+      const res = await fetch(`${API}/api/v1/admin/users/${userId}/cancel-plan`, {
          method: "POST",
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "فشل إلغاء الخطة");
-      
       alert(data.message || "تم إلغاء الخطة بنجاح!");
       fetchOverview();
     } catch (e: any) {
       alert(`خطأ: ${e.message}`);
     } finally {
       setProcessing(null);
+    }
+  };
+
+  // ── Bulk transaction actions ──────────────────────────────
+  const toggleTxSelection = (id: string) => {
+    setSelectedTxIds(prev => {
+      const s = new Set(prev);
+      s.has(id) ? s.delete(id) : s.add(id);
+      return s;
+    });
+  };
+
+  const toggleAllTx = () => {
+    if (selectedTxIds.size === transactions.length) {
+      setSelectedTxIds(new Set());
+    } else {
+      setSelectedTxIds(new Set(transactions.map(t => t.id)));
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedTxIds.size === 0) return;
+    if (!confirm(`هل أنت متأكد من تأكيد ${selectedTxIds.size} طلب وتفعيل الاشتراكات؟`)) return;
+    setBulkProcessing(true);
+    try {
+      const res = await fetch(`${API}/api/v1/transactions/admin/bulk-approve`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${session?.access_token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ transaction_ids: Array.from(selectedTxIds) })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail?.user_message || "فشل التأكيد الجماعي");
+      const approved: string[] = data.results?.approved || [];
+      const failed: any[] = data.results?.failed || [];
+      setTransactions(prev => prev.filter(t => !approved.includes(t.id)));
+      setSelectedTxIds(new Set());
+      let msg = `✅ تم تأكيد ${approved.length} طلب بنجاح.`;
+      if (failed.length > 0) msg += `\n⚠️ فشل ${failed.length} طلب.`;
+      alert(msg);
+      fetchOverview();
+    } catch (e: any) {
+      alert(`خطأ: ${e.message}`);
+    } finally {
+      setBulkProcessing(false);
+    }
+  };
+
+  const handleBulkReject = async () => {
+    if (selectedTxIds.size === 0) return;
+    if (!confirm(`هل أنت متأكد من رفض ${selectedTxIds.size} طلب؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
+    setBulkProcessing(true);
+    try {
+      const res = await fetch(`${API}/api/v1/transactions/admin/bulk-reject`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${session?.access_token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ transaction_ids: Array.from(selectedTxIds) })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail?.user_message || "فشل الرفض الجماعي");
+      const rejectedIds = Array.from(selectedTxIds);
+      setTransactions(prev => prev.filter(t => !rejectedIds.includes(t.id)));
+      setSelectedTxIds(new Set());
+      alert(`✅ تم رفض ${rejectedIds.length} طلب بنجاح.`);
+    } catch (e: any) {
+      alert(`خطأ: ${e.message}`);
+    } finally {
+      setBulkProcessing(false);
+    }
+  };
+
+  // ── Bulk plan cancellation ────────────────────────────────
+  const toggleUserSelection = (id: string) => {
+    setSelectedUserIds(prev => {
+      const s = new Set(prev);
+      s.has(id) ? s.delete(id) : s.add(id);
+      return s;
+    });
+  };
+
+  const toggleAllUsers = () => {
+    const allIds = (usageStats?.active_subscriptions || []).map((s: any) => s.user_id);
+    if (selectedUserIds.size === allIds.length) {
+      setSelectedUserIds(new Set());
+    } else {
+      setSelectedUserIds(new Set(allIds));
+    }
+  };
+
+  const handleBulkCancelPlans = async () => {
+    if (selectedUserIds.size === 0) return;
+    if (!confirm(`هل أنت متأكد من إلغاء خطط ${selectedUserIds.size} مستخدم؟ سيتم تصفير حصصهم وإعادتهم للتجربة المجانية.`)) return;
+    setBulkProcessing(true);
+    try {
+      const res = await fetch(`${API}/api/v1/admin/users/bulk-cancel-plan`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${session?.access_token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ user_ids: Array.from(selectedUserIds) })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "فشل الإلغاء الجماعي");
+      setSelectedUserIds(new Set());
+      alert(data.message || `✅ تم إلغاء خطط ${selectedUserIds.size} مستخدم بنجاح.`);
+      fetchOverview();
+    } catch (e: any) {
+      alert(`خطأ: ${e.message}`);
+    } finally {
+      setBulkProcessing(false);
     }
   };
 
@@ -149,6 +263,13 @@ export default function AdminPage() {
       </div>
     );
   }
+
+  const allTxSelected = transactions.length > 0 && selectedTxIds.size === transactions.length;
+  const someTxSelected = selectedTxIds.size > 0;
+
+  const activeSubs = usageStats?.active_subscriptions || [];
+  const allUsersSelected = activeSubs.length > 0 && selectedUserIds.size === activeSubs.length;
+  const someUsersSelected = selectedUserIds.size > 0;
 
   return (
     <main className="min-h-screen bg-[#020617] text-slate-100 p-8 flex justify-center selection:bg-indigo-500/30 font-sans" dir="rtl">
@@ -197,10 +318,49 @@ export default function AdminPage() {
         <div className="flex-1 bg-slate-900/40 border border-slate-800 rounded-[2rem] p-8 backdrop-blur-xl">
           {activeTab === "overview" && (
             <div className="space-y-12">
+
+              {/* ── Pending Transactions Section ──────────────────── */}
               <div>
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-white">الطلبات المعلقة (Pending)</h2>
+                  <h2 className="text-2xl font-bold text-white">الطلبات المعلقة (Pending)</h2>
+                  {transactions.length > 0 && (
+                    <span className="text-sm text-slate-400 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
+                      {transactions.length} طلب
+                    </span>
+                  )}
                 </div>
+
+                {/* Bulk Actions Bar - Transactions */}
+                {someTxSelected && (
+                  <div className="mb-4 flex items-center gap-3 bg-indigo-950/80 border border-indigo-500/30 rounded-2xl px-5 py-3.5 backdrop-blur-xl animate-in slide-in-from-top-2 duration-300">
+                    <span className="text-indigo-300 font-bold text-sm flex-1">
+                      تم تحديد {selectedTxIds.size} طلب
+                    </span>
+                    <button
+                      onClick={handleBulkApprove}
+                      disabled={bulkProcessing}
+                      className="flex items-center gap-2 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-green-900/30"
+                    >
+                      {bulkProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCheck className="w-4 h-4" />}
+                      تأكيد المحدد ({selectedTxIds.size})
+                    </button>
+                    <button
+                      onClick={handleBulkReject}
+                      disabled={bulkProcessing}
+                      className="flex items-center gap-2 bg-red-600/80 hover:bg-red-500 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all border border-red-500/30"
+                    >
+                      {bulkProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                      رفض المحدد ({selectedTxIds.size})
+                    </button>
+                    <button
+                      onClick={() => setSelectedTxIds(new Set())}
+                      className="text-slate-500 hover:text-slate-300 transition-colors p-2"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
                 {transactions.length === 0 ? (
                   <div className="bg-slate-800/50 rounded-2xl p-12 text-center text-slate-400 border border-slate-700/50">
                     لا توجد طلبات مدفوعات معلقة حالياً.
@@ -210,6 +370,15 @@ export default function AdminPage() {
                     <table className="w-full text-right border-collapse">
                       <thead>
                         <tr className="bg-slate-800/50 border-b border-slate-700 text-slate-300 text-sm">
+                          <th className="p-4 w-10">
+                            <button onClick={toggleAllTx} className="text-slate-400 hover:text-indigo-400 transition-colors">
+                              {allTxSelected
+                                ? <CheckSquare className="w-5 h-5 text-indigo-400" />
+                                : someTxSelected
+                                  ? <CheckSquare className="w-5 h-5 text-indigo-300 opacity-60" />
+                                  : <Square className="w-5 h-5" />}
+                            </button>
+                          </th>
                           <th className="p-4 font-semibold">رقم الطلب</th>
                           <th className="p-4 font-semibold">الطالب</th>
                           <th className="p-4 font-semibold">الهاتف</th>
@@ -222,14 +391,24 @@ export default function AdminPage() {
                       <tbody className="divide-y divide-slate-700/50 text-sm">
                         {transactions.map(tx => {
                           const { label: timeLabel, isOld } = getArabicRelativeTime(tx.created_at);
+                          const isSelected = selectedTxIds.has(tx.id);
                           return (
-                            <tr key={tx.id} className={`hover:bg-slate-700/30 transition-colors ${isOld ? 'bg-red-950/10' : ''}`}>
+                            <tr
+                              key={tx.id}
+                              onClick={() => toggleTxSelection(tx.id)}
+                              className={`hover:bg-slate-700/30 transition-colors cursor-pointer ${isOld ? 'bg-red-950/10' : ''} ${isSelected ? 'bg-indigo-900/20 ring-1 ring-inset ring-indigo-500/30' : ''}`}
+                            >
+                              <td className="p-4">
+                                {isSelected
+                                  ? <CheckSquare className="w-5 h-5 text-indigo-400" />
+                                  : <Square className="w-5 h-5 text-slate-600" />}
+                              </td>
                               <td className="p-4 font-mono text-indigo-300">{tx.short_order_id}</td>
                               <td className="p-4 font-medium text-white">{tx.profiles?.full_name || 'غير مجدول'}</td>
                               <td className="p-4 dir-ltr text-left text-slate-300">
                                 <div className="flex items-center justify-end gap-3">
                                   {tx.profiles?.phone_number && (
-                                    <a href={`https://wa.me/${tx.profiles.phone_number.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-green-500 hover:text-green-400 transition-colors bg-green-500/10 p-1.5 rounded-full" title="مراسلة الطالب">
+                                    <a href={`https://wa.me/${tx.profiles.phone_number.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-green-500 hover:text-green-400 transition-colors bg-green-500/10 p-1.5 rounded-full" title="مراسلة الطالب">
                                       <MessageCircle className="w-4 h-4" />
                                     </a>
                                   )}
@@ -254,10 +433,10 @@ export default function AdminPage() {
                                   )}
                                 </div>
                               </td>
-                              <td className="p-4 text-center">
+                              <td className="p-4 text-center" onClick={e => e.stopPropagation()}>
                                 <div className="flex items-center justify-center gap-2">
-                                  <button onClick={() => handleApprove(tx.id)} disabled={processing === tx.id} className="bg-green-600/90 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-medium flex-1">تأكيد</button>
-                                  <button onClick={() => handleReject(tx.id)} disabled={processing === tx.id} className="bg-slate-700 hover:bg-red-500 border border-slate-600 hover:border-red-500 text-white px-3 py-2 rounded-lg"><X className="w-4 h-4" /></button>
+                                  <button onClick={() => handleApprove(tx.id)} disabled={processing === tx.id || bulkProcessing} className="bg-green-600/90 hover:bg-green-500 disabled:opacity-40 text-white px-4 py-2 rounded-lg font-medium flex-1 transition-all">تأكيد</button>
+                                  <button onClick={() => handleReject(tx.id)} disabled={processing === tx.id || bulkProcessing} className="bg-slate-700 hover:bg-red-500 disabled:opacity-40 border border-slate-600 hover:border-red-500 text-white px-3 py-2 rounded-lg transition-all"><X className="w-4 h-4" /></button>
                                 </div>
                               </td>
                             </tr>
@@ -269,6 +448,7 @@ export default function AdminPage() {
                 )}
               </div>
 
+              {/* ── Active Subscriptions Section ──────────────────── */}
               {usageStats && (
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-6">إحصائيات النظام</h2>
@@ -288,13 +468,53 @@ export default function AdminPage() {
                   </div>
 
                   <div className="bg-slate-800/80 rounded-2xl border border-slate-700 overflow-hidden mt-6">
-                    <div className="p-6 border-b border-slate-700 bg-slate-900/50">
+                    <div className="p-6 border-b border-slate-700 bg-slate-900/50 flex items-center justify-between">
                       <h3 className="text-lg font-bold text-white flex items-center"><Package className="w-5 h-5 ml-2 text-indigo-400" /> متابعة المشتركين النشطين</h3>
+                      {activeSubs.length > 0 && (
+                        <span className="text-sm text-slate-400 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
+                          {activeSubs.length} مشترك
+                        </span>
+                      )}
                     </div>
+
+                    {/* Bulk Actions Bar - Plans */}
+                    {someUsersSelected && (
+                      <div className="mx-4 my-3 flex items-center gap-3 bg-red-950/80 border border-red-500/30 rounded-xl px-5 py-3 backdrop-blur-xl animate-in slide-in-from-top-2 duration-300">
+                        <span className="text-red-300 font-bold text-sm flex-1">
+                          تم تحديد {selectedUserIds.size} مشترك
+                        </span>
+                        <button
+                          onClick={handleBulkCancelPlans}
+                          disabled={bulkProcessing}
+                          className="flex items-center gap-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-red-900/30"
+                        >
+                          {bulkProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                          إلغاء الخطط المحددة ({selectedUserIds.size})
+                        </button>
+                        <button
+                          onClick={() => setSelectedUserIds(new Set())}
+                          className="text-slate-500 hover:text-slate-300 transition-colors p-2"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+
                     <div className="overflow-x-auto">
                       <table className="w-full text-right border-collapse">
                         <thead>
                           <tr className="bg-slate-800/50 border-b border-slate-700 text-slate-300 text-sm">
+                            <th className="p-4 w-10">
+                              {activeSubs.length > 0 && (
+                                <button onClick={toggleAllUsers} className="text-slate-400 hover:text-red-400 transition-colors">
+                                  {allUsersSelected
+                                    ? <CheckSquare className="w-5 h-5 text-red-400" />
+                                    : someUsersSelected
+                                      ? <CheckSquare className="w-5 h-5 text-red-300 opacity-60" />
+                                      : <Square className="w-5 h-5" />}
+                                </button>
+                              )}
+                            </th>
                             <th className="p-4 font-semibold">المشترك</th>
                             <th className="p-4 font-semibold">الباقة</th>
                             <th className="p-4 font-semibold">الاستهلاك</th>
@@ -304,27 +524,39 @@ export default function AdminPage() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-700/50 text-sm">
-                          {usageStats.active_subscriptions?.map((sub: any, idx: number) => (
-                            <tr key={idx} className="hover:bg-slate-700/30 transition-colors">
-                              <td className="p-4"><div className="font-bold text-white">{sub.user_name}</div><div className="text-xs text-slate-500">{sub.phone}</div></td>
-                              <td className="p-4"><span className="bg-indigo-500/10 text-indigo-300 px-3 py-1 rounded-full text-xs font-bold border border-indigo-500/20">{sub.plan}</span></td>
-                              <td className="p-4">
-                                 <div className="flex flex-col gap-1">
-                                    <div className="text-slate-300 font-medium">{sub.used} / {sub.quota}</div>
-                                    <div className="w-24 h-1.5 bg-slate-950 rounded-full overflow-hidden">
-                                       <div className="bg-indigo-500 h-full" style={{ width: `${(sub.used / sub.quota) * 100}%` }}></div>
-                                    </div>
-                                 </div>
-                              </td>
-                              <td className="p-4 text-center font-bold text-green-400">{sub.remaining}</td>
-                              <td className="p-4 text-center"><div className="text-[10px] text-slate-500 truncate w-24 mx-auto" title={sub.fingerprint}>{sub.fingerprint || '---'}</div></td>
-                              <td className="p-4 text-center">
-                                <button onClick={() => handleCancelPlan(sub.user_id, sub.user_name)} disabled={processing === sub.user_id} className="text-red-500 hover:bg-red-500/10 p-2 rounded-lg text-xs font-bold border border-transparent hover:border-red-500/20">
-                                  {processing === sub.user_id ? <Loader2 className="w-3 h-3 animate-spin" /> : "إلغاء الخطة"}
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
+                          {activeSubs.map((sub: any, idx: number) => {
+                            const isSelected = selectedUserIds.has(sub.user_id);
+                            return (
+                              <tr
+                                key={idx}
+                                onClick={() => toggleUserSelection(sub.user_id)}
+                                className={`hover:bg-slate-700/30 transition-colors cursor-pointer ${isSelected ? 'bg-red-900/10 ring-1 ring-inset ring-red-500/20' : ''}`}
+                              >
+                                <td className="p-4">
+                                  {isSelected
+                                    ? <CheckSquare className="w-5 h-5 text-red-400" />
+                                    : <Square className="w-5 h-5 text-slate-600" />}
+                                </td>
+                                <td className="p-4"><div className="font-bold text-white">{sub.user_name}</div><div className="text-xs text-slate-500">{sub.phone}</div></td>
+                                <td className="p-4"><span className="bg-indigo-500/10 text-indigo-300 px-3 py-1 rounded-full text-xs font-bold border border-indigo-500/20">{sub.plan}</span></td>
+                                <td className="p-4">
+                                   <div className="flex flex-col gap-1">
+                                      <div className="text-slate-300 font-medium">{sub.used} / {sub.quota}</div>
+                                      <div className="w-24 h-1.5 bg-slate-950 rounded-full overflow-hidden">
+                                         <div className="bg-indigo-500 h-full" style={{ width: `${(sub.used / sub.quota) * 100}%` }}></div>
+                                      </div>
+                                   </div>
+                                </td>
+                                <td className="p-4 text-center font-bold text-green-400">{sub.remaining}</td>
+                                <td className="p-4 text-center"><div className="text-[10px] text-slate-500 truncate w-24 mx-auto" title={sub.fingerprint}>{sub.fingerprint || '---'}</div></td>
+                                <td className="p-4 text-center" onClick={e => e.stopPropagation()}>
+                                  <button onClick={() => handleCancelPlan(sub.user_id, sub.user_name)} disabled={processing === sub.user_id || bulkProcessing} className="text-red-500 hover:bg-red-500/10 disabled:opacity-40 p-2 rounded-lg text-xs font-bold border border-transparent hover:border-red-500/20 transition-all">
+                                    {processing === sub.user_id ? <Loader2 className="w-3 h-3 animate-spin" /> : "إلغاء الخطة"}
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
