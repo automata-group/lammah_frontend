@@ -1,62 +1,60 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Zap, Crown, Star, Clock, Check, X, Sparkles, ArrowRight } from "lucide-react";
+import { Loader2, Crown, Zap, Sparkles, Check, ArrowRight, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function PricingSection() {
   const router = useRouter();
   const [plans, setPlans] = useState<any>({ weekly: [], monthly: [] });
   const [loadingPlans, setLoadingPlans] = useState(true);
-  const [tab, setTab] = useState<"monthly" | "weekly">("monthly");
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://api.lammah.site"}/api/v1/subscription/plans`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/plans`)
       .then(r => r.json())
       .then(data => { setPlans(data); setLoadingPlans(false); })
       .catch(() => setLoadingPlans(false));
   }, []);
 
-  const freePlanFeatures = [
-    { text: "تلخيص أول 15 دقيقة فقط", included: true },
-    { text: "تفريغ حوالي 5 سلايدات", included: true },
-    { text: "شرح السلايدات ونقاط تركيز", included: true },
-    { text: "الشات الذكي مع المحاضرة", included: false },
-    { text: "تحميل الملزمة الذكية PDF", included: false },
-    { text: "الميزات المتقدمة", included: false },
-  ];
+  const getFriendlyPlanName = (name: string) => {
+    if (!name || name === "مجاني") return "الباقة المجانية (Free)";
+    if (name.includes("الذهبية") || name === "الباقة الذهبية") return "باقة النخبة (Elite)";
+    if (name.includes("الميدتيرم") || name === "باقة الميدتيرم") return "باقة التفوق (Premium)";
+    if (name.includes("الإنقاذ") || name === "باقة الإنقاذ") return "الباقة الأساسية (Essential)";
+    return name;
+  };
 
   const activePlans = [
-    { id: "free_tier", name: "التجربة المجانية", price_ils: 0, lecture_quota: 1, features: freePlanFeatures },
-    ...(tab === "monthly" ? plans.monthly : plans.weekly)
-  ];
+    ...[...(plans.weekly || []), ...(plans.monthly || [])].filter((p: any) => p.name.includes("باقة"))
+  ].sort((a: any, b: any) => a.price_ils - b.price_ils);
 
   return (
     <section id="pricing" className="relative z-10 py-32 px-6 overflow-hidden">
-      {/* Background elements */}
+      {/* Background glowing elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-amber-500/[0.04] rounded-full blur-[160px]" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-500/[0.04] rounded-full blur-[160px]" />
       </div>
 
-      <div className="max-w-7xl mx-auto relative">
+      <div className="max-w-7xl mx-auto relative z-10">
+        
         {/* Header */}
         <div className="text-center mb-20">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-full mb-6 backdrop-blur-md"
+            className="inline-flex items-center gap-2 bg-white/[0.03] border border-white/[0.08] px-4 py-2 rounded-full mb-6 backdrop-blur-md"
           >
-            <Sparkles className="w-4 h-4 text-indigo-400" />
-            <span className="text-xs font-black text-indigo-300 uppercase tracking-widest">اختر خطتك المثالية</span>
+            <Sparkles className="w-4 h-4 text-amber-400" />
+            <span className="text-xs font-black text-amber-300 uppercase tracking-widest">باقات شحن الدقائق ⏱️</span>
           </motion.div>
           
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-5xl md:text-6xl font-black mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-500"
+            className="text-5xl md:text-6xl font-black mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-400 tracking-tight leading-tight"
           >
             استثمر في نجاحك
           </motion.h2>
@@ -66,150 +64,135 @@ export default function PricingSection() {
             viewport={{ once: true }}
             className="text-slate-400 text-lg max-w-xl mx-auto font-medium"
           >
-            وفر وقتك وجهدك مع لمّاح. اختر الباقة التي تناسب حجم دراستك وطموحك الأكاديمي.
+            اختر الباقة المناسبة لتفريغ محاضراتك وتوليد ملازمك الذكية بسهولة وسرعة. وفر وقتك وجهدك مع لمّاح.
           </motion.p>
-        </div>
-
-        {/* Tab Switcher */}
-        <div className="flex justify-center mb-20">
-          <div className="bg-slate-900/50 backdrop-blur-xl border border-white/5 p-1.5 rounded-3xl flex gap-1 shadow-2xl">
-            {["monthly", "weekly"].map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t as any)}
-                className={`relative px-10 py-3.5 rounded-2xl font-black text-sm transition-all duration-500 ${
-                  tab === t ? "text-white" : "text-slate-500 hover:text-slate-300"
-                }`}
-              >
-                {tab === t && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-2xl shadow-lg shadow-indigo-600/20"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <span className="relative z-10 flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  {t === "monthly" ? "اشتراك شهري" : "اشتراك أسبوعي"}
-                </span>
-              </button>
-            ))}
-          </div>
         </div>
 
         {loadingPlans ? (
           <div className="flex flex-col items-center justify-center py-24">
-            <Loader2 className="w-12 h-12 text-indigo-500 animate-spin mb-4" />
-            <p className="text-slate-500 font-bold animate-pulse">جاري تحميل العروض...</p>
+            <Loader2 className="w-12 h-12 text-amber-500 animate-spin mb-4" />
+            <p className="text-slate-500 font-bold animate-pulse">جاري تحميل الباقات...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
             {activePlans.map((plan: any, idx: number) => {
-              const isFree = plan.id === "free_tier";
-              const isPro = plan.name.includes("أسبوعي - متقدم") || plan.name.includes("شهري - متقدم");
-              const isVip = plan.name.includes("VIP") || plan.name.includes("برو");
-              const Icon = isVip ? Crown : isPro ? Zap : Star;
-
-              // Features processing
-              let featuresList = isFree ? plan.features : [];
-              if (!isFree) {
-                const raw = Array.isArray(plan.features) ? plan.features : JSON.parse(plan.features || "[]");
-                featuresList = raw.map((f: string) => ({ text: f, included: true }));
-                if (isPro || isVip) {
-                  featuresList.push({ text: isVip ? "رسائل ذكية غير محدودة" : "40 رسالة ذكية / محاضرة", included: true, highlight: true });
-                }
+              const isGoldPlan = plan.price_ils === 100 || plan.name.includes("الذهبية");
+              const isMidPlan = plan.price_ils === 60 || plan.name.includes("الميدتيرم");
+              const isRescuePlan = plan.price_ils === 25 || plan.name.includes("الإنقاذ");
+              
+              let subtitle = "لتصفح المتجر والمذاكرة السريعة.";
+              if (isGoldPlan) {
+                subtitle = "باقة البائع الكاملة! توليد غير محدود لدفاتر البيع مع طباعة حقوق ملكيتك.";
+              } else if (isMidPlan) {
+                subtitle = "شحنة دقائق متكاملة للمذاكرة الفائقة وتصفح المتجر طوال الفصل الدراسي.";
+              } else if (isRescuePlan) {
+                subtitle = "مثالية لشحن دقائقك سريعاً عند اقتراب الامتحانات وتصفح المتجر.";
               }
 
+              const Icon = isGoldPlan ? Crown : isMidPlan ? Zap : isRescuePlan ? Sparkles : Star;
+
               return (
-                <motion.div
+                <motion.div 
                   key={plan.id}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  whileHover={{ y: -10 }}
-                  className="relative h-full"
+                  transition={{ delay: idx * 0.1, duration: 0.5 }}
+                  className={`relative bg-[#0A0D14]/80 backdrop-blur-xl rounded-[2.5rem] p-8 flex flex-col justify-between transition-all duration-300 group h-full shadow-[0_20px_80px_rgba(0,0,0,0.4)] ${
+                    isGoldPlan 
+                      ? "border border-amber-500/30 bg-gradient-to-b from-[#0A0D14] to-amber-950/10 scale-100 lg:scale-[1.03] ring-1 ring-amber-500/20" 
+                      : isMidPlan
+                        ? "border border-purple-500/20 hover:border-purple-500/40 ring-1 ring-white/5"
+                        : "border border-white/5 hover:border-white/10 ring-1 ring-white/5"
+                  }`}
                 >
-                  <div className={`h-full flex flex-col glass rounded-[2.5rem] p-8 transition-all duration-500 ${
-                    isVip ? 'border-amber-500/30 shadow-[0_20px_50px_rgba(245,158,11,0.1)]' :
-                    isPro ? 'border-indigo-500/30 shadow-[0_20px_50px_rgba(99,102,241,0.1)]' :
-                    'border-white/5 hover:border-white/10'
-                  }`}>
-                    
-                    {/* Badge */}
-                    {isVip && (
-                      <div className="absolute -top-4 right-10 bg-gradient-to-r from-amber-400 to-orange-600 text-slate-900 text-[10px] font-black px-4 py-1.5 rounded-full shadow-xl uppercase tracking-tighter">
-                        الملكـي
-                      </div>
-                    )}
-                    {isPro && (
-                      <div className="absolute -top-4 right-10 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-xl uppercase tracking-tighter">
-                        الأكثر تميزاً
-                      </div>
-                    )}
+                  
+                  {isGoldPlan && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 text-[11px] font-black px-5 py-1.5 rounded-full shadow-lg flex items-center gap-1 whitespace-nowrap uppercase tracking-widest">
+                      ⭐ باقة البائعين المتكاملة
+                    </div>
+                  )}
 
-                    {/* Icon */}
-                    <div className={`w-16 h-16 rounded-3xl flex items-center justify-center mb-8 transition-transform group-hover:rotate-12 ${
-                      isVip ? 'bg-amber-500/20 text-amber-400' :
-                      isPro ? 'bg-indigo-500/20 text-indigo-400' :
+                  {isMidPlan && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[11px] font-black px-5 py-1.5 rounded-full shadow-lg whitespace-nowrap uppercase tracking-widest">
+                      🔥 الأكثر اختياراً
+                    </div>
+                  )}
+
+                  <div>
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 ${
+                      isGoldPlan ? 'bg-amber-500/20 text-amber-400' :
+                      isMidPlan ? 'bg-purple-500/20 text-purple-400' :
                       'bg-white/5 text-slate-400'
                     }`}>
-                      <Icon className="w-8 h-8" />
+                      <Icon className="w-7 h-7" />
                     </div>
 
-                    <h3 className="text-2xl font-black text-white mb-2">{plan.name}</h3>
-                    
-                    <div className="flex items-baseline gap-1 mb-8">
-                      <span className="text-4xl font-black text-white">
-                        {isFree ? '0' : `₪${plan.price_ils}`}
-                      </span>
-                      {!isFree && <span className="text-slate-500 text-sm font-bold">/ {tab === "monthly" ? "شهر" : "أسبوع"}</span>}
+                    <h3 className="text-2xl font-black text-white mb-2">{getFriendlyPlanName(plan.name)}</h3>
+                    <p className="text-xs text-slate-400 font-bold mb-8 leading-relaxed h-10">{subtitle}</p>
+
+                    <div className="flex items-baseline mb-8">
+                      <span className="text-5xl font-black text-white tracking-tight">₪{plan.price_ils}</span>
+                      <span className="text-slate-500 text-xs font-bold mr-2">/ دفعة لمرة واحدة</span>
                     </div>
+
+                    <div className="w-full h-px bg-white/10 mb-8" />
 
                     <div className="space-y-4 mb-10 flex-1">
-                      <div className="flex items-center gap-3 text-sm font-bold text-slate-200">
-                        <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <div className="flex items-start text-xs font-bold text-slate-200 gap-3">
+                        <div className="mt-0.5 w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
                           <Check className="w-3 h-3 text-emerald-400" />
                         </div>
-                        {plan.lecture_quota} محاضرات ذكية
+                        <span><span className="text-emerald-400">⏱️ {plan.lecture_quota} دقيقة</span> تفريغ ومعالجة ذكية</span>
                       </div>
-                      
-                      {featuresList.map((f: any, i: number) => (
-                        <div key={i} className="flex items-start gap-3">
-                          <div className={`mt-1 w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
-                            !f.included ? 'bg-white/5 opacity-30' :
-                            f.highlight ? 'bg-indigo-500/20' : 'bg-white/5'
-                          }`}>
-                            {f.included ? <Check className={`w-3 h-3 ${f.highlight ? 'text-indigo-400' : 'text-slate-400'}`} /> : <X className="w-3 h-3 text-slate-600" />}
-                          </div>
-                          <span className={`text-sm ${
-                            !f.included ? 'text-slate-600 line-through' :
-                            f.highlight ? 'text-indigo-300 font-bold' : 'text-slate-400'
-                          }`}>
-                            {f.text}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
 
-                    <button
-                      onClick={() => isFree ? router.push("/register") : router.push("/login")}
-                      disabled={isFree}
-                      className={`w-full py-5 rounded-[1.5rem] font-black text-sm flex items-center justify-center gap-3 transition-all active:scale-[0.98] ${
-                        isFree ? 'bg-white/5 text-slate-500 cursor-default' :
-                        isVip ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/20 hover:opacity-90' :
-                        isPro ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/40' :
-                        'bg-white/10 hover:bg-white/15 text-white'
-                      }`}
-                    >
-                      {isFree ? "باقة افتراضية" : (
-                        <>
-                          اشترك الآن
-                          <ArrowRight className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
+                      <div className="flex items-start text-xs font-bold text-slate-200 gap-3">
+                        <div className="mt-0.5 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                          <Check className="w-3 h-3 text-slate-300" />
+                        </div>
+                        <span>📚 تصفح كامل المتجر وشراء الملازم</span>
+                      </div>
+
+                      <div className="flex items-start text-xs font-bold text-slate-200 gap-3">
+                        <div className="mt-0.5 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                          <Check className="w-3 h-3 text-slate-300" />
+                        </div>
+                        <span>✨ توليد تلقائي: بطاقات، امتحان، نقاط التركيز</span>
+                      </div>
+
+                      <div className="flex items-start text-xs font-bold text-slate-200 gap-3">
+                        <div className="mt-0.5 w-5 h-5 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                          <Check className="w-3 h-3 text-slate-300" />
+                        </div>
+                        <span>
+                          {isGoldPlan ? "💬 محادثة ذكية (100 رسالة إجمالاً لكافة محاضراتك)" : isMidPlan ? "💬 محادثة ذكية (25 رسالة إجمالاً لكافة محاضراتك)" : "💬 محادثة ذكية (5 رسائل إجمالاً لكافة محاضراتك)"}
+                        </span>
+                      </div>
+
+                      <div className="flex items-start text-xs font-bold gap-3">
+                        <div className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${isGoldPlan ? 'bg-amber-500/20' : 'bg-white/10'}`}>
+                          <Check className={`w-3 h-3 ${isGoldPlan ? 'text-amber-400' : 'text-slate-500'}`} />
+                        </div>
+                        <span className={isGoldPlan ? "text-amber-300" : "text-slate-500 line-through opacity-70"}>
+                          💰 نشر وبيع ملازمك لجني أرباح حقيقية 🔓
+                        </span>
+                      </div>
+                    </div>
                   </div>
+
+                  <button 
+                    onClick={() => router.push("/register")}
+                    className={`w-full py-4 rounded-2xl font-black text-sm transition-all duration-300 mt-auto flex items-center justify-center gap-2 shadow-md ${
+                        isGoldPlan 
+                          ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950" 
+                          : isMidPlan
+                            ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white"
+                            : "bg-white/10 hover:bg-white/15 text-white"
+                      }`}
+                  >
+                    {isGoldPlan ? "ابدأ كبائع الآن" : "اشترك الآن"}
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 </motion.div>
               );
             })}
@@ -218,7 +201,7 @@ export default function PricingSection() {
 
         <div className="mt-20 text-center">
           <p className="text-slate-500 text-sm font-medium">
-            لديك مؤسسة تعليمية؟ <button className="text-indigo-400 font-black hover:underline">تواصل معنا لطلب عرض مخصص ←</button>
+            لديك مؤسسة تعليمية؟ <a href="mailto:support@lammah.site" className="text-indigo-400 font-black hover:underline transition-colors">تواصل معنا لطلب عرض مخصص ←</a>
           </p>
         </div>
       </div>

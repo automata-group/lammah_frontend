@@ -12,7 +12,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
 
   const fetchFinancials = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}/api/v1/admin/analytics/financial`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/admin/analytics/financial`, {
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
       const json = await res.json();

@@ -14,7 +14,7 @@ export default function AnnouncementsManager({ session }: { session: any }) {
 
   const fetchAnnouncement = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}/api/v1/admin/announcements`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/admin/announcements`);
       const data = await res.json();
       if (res.ok) {
         setMessage(data.message || "");
@@ -30,7 +30,7 @@ export default function AnnouncementsManager({ session }: { session: any }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}/api/v1/admin/announcements`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/admin/announcements`, {
          method: "POST",
          headers: { 
            "Authorization": `Bearer ${session?.access_token}`,

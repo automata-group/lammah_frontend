@@ -51,7 +51,7 @@ export default function AdminPage() {
   
   const fetchOverview = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}/api/v1/transactions/admin/pending`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/transactions/admin/pending`, {
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
       const data = await res.json();
@@ -59,7 +59,7 @@ export default function AdminPage() {
       setTransactions(data);
 
       try {
-        const usageRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}/api/v1/admin/stats`, {
+        const usageRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/admin/stats`, {
            headers: { "Authorization": `Bearer ${session?.access_token}` }
         });
         const usageData = await usageRes.json();
@@ -81,7 +81,7 @@ export default function AdminPage() {
     if (!confirm("هل أنت متأكد من تأكيد هذا الدفع وتفعيل الاشتراك؟")) return;
     setProcessing(txId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}/api/v1/transactions/admin/${txId}/approve`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/transactions/admin/${txId}/approve`, {
          method: "POST",
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
@@ -101,7 +101,7 @@ export default function AdminPage() {
     if (!confirm("هل أنت متأكد من رفض هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.")) return;
     setProcessing(txId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}/api/v1/transactions/admin/${txId}/reject`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/transactions/admin/${txId}/reject`, {
          method: "POST",
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
@@ -121,7 +121,7 @@ export default function AdminPage() {
     if (!confirm(`هل أنت متأكد من إلغاء خطة المستخدم (${userName})؟ سيتم تصفير حصته وإعادته للتجربة المجانية.`)) return;
     setProcessing(userId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}/api/v1/admin/users/${userId}/cancel-plan`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/admin/users/${userId}/cancel-plan`, {
          method: "POST",
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });

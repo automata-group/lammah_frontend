@@ -14,7 +14,7 @@ export default function UserManagement({ session }: { session: any }) {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}/api/v1/admin/users`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/admin/users`, {
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
       const data = await res.json();
@@ -31,7 +31,7 @@ export default function UserManagement({ session }: { session: any }) {
     setProcessing(userId);
     try {
       const endpoint = currentlyBanned ? "unban" : "ban";
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}/api/v1/admin/users/${userId}/${endpoint}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/admin/users/${userId}/${endpoint}`, {
          method: "POST",
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });

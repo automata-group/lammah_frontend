@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { getFingerprint as getThumbmark } from '@thumbmarkjs/thumbmarkjs';
-import { Loader2, Upload, FileAudio, FileText, CheckCircle, AlertCircle, Sparkles, ChevronLeft, History, User, Package, Crown, Lock, ChevronRight, Menu, X, Info, Download, Share2, Printer, Copy, Check, MessageCircle, Home, LogOut, Clock, Target, BrainCircuit, BookOpen, Lightbulb, ListTodo, Quote, Eye, Send } from "lucide-react";
+import { Loader2, Upload, FileAudio, FileText, CheckCircle, AlertCircle, Sparkles, ChevronLeft, History, User, Package, Crown, Lock, ChevronRight, Menu, X, Info, Download, Share2, Printer, Copy, Check, MessageCircle, Home, LogOut, Clock, Target, BrainCircuit, BookOpen, Lightbulb, ListTodo, Quote, Eye, Send, Plus, Search, Pencil, Store } from "lucide-react";
 import ResultSkeleton from "@/components/ResultSkeleton";
 
 function DashboardContent() {
@@ -19,6 +19,21 @@ function DashboardContent() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
   const [lectureUrl, setLectureUrl] = useState("");
+  
+  // For multi-upload
+  interface UploadedAudio {
+    id: string;
+    file: File;
+    tempId?: string;
+    progress: number;
+    isUploading: boolean;
+  }
+  const [multiAudioFiles, setMultiAudioFiles] = useState<UploadedAudio[]>([]);
+  const [lectureUrls, setLectureUrls] = useState<string[]>([""]);
+  const [lectureTitle, setLectureTitle] = useState("");
+  const [isEditingDashboardTitle, setIsEditingDashboardTitle] = useState(false);
+  const [dashboardTitleInput, setDashboardTitleInput] = useState("");
+  const [transcriptSearchQuery, setTranscriptSearchQuery] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -186,6 +201,44 @@ function DashboardContent() {
     xhr.send(formData);
   };
 
+  const uploadSingleMultiAudio = (id: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const xhr = new XMLHttpRequest();
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+    const uploaderUrl = process.env.NEXT_PUBLIC_UPLOADER_URL || apiUrl;
+
+    xhr.open('POST', `${uploaderUrl}/api/v1/summarize/upload-temp`, true);
+    if (session?.access_token) {
+      xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
+    }
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percent = Math.round((event.loaded / event.total) * 100);
+        setMultiAudioFiles(prev => prev.map(item => item.id === id ? { ...item, progress: percent } : item));
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        const data = JSON.parse(xhr.responseText);
+        setMultiAudioFiles(prev => prev.map(item => item.id === id ? { ...item, tempId: data.temp_id, isUploading: false, progress: 100 } : item));
+      } else {
+        setError(`فشل رفع الملف ${file.name}: ${xhr.statusText}`);
+        setMultiAudioFiles(prev => prev.filter(item => item.id !== id));
+      }
+    };
+
+    xhr.onerror = () => {
+      setError(`حدث خطأ أثناء رفع الملف ${file.name}`);
+      setMultiAudioFiles(prev => prev.filter(item => item.id !== id));
+    };
+
+    xhr.send(formData);
+  };
+
   useEffect(() => {
     if (!loading && !user) router.replace("/login");
   }, [user, loading]);
@@ -206,7 +259,7 @@ function DashboardContent() {
 
           const fp = await getFingerprint();
           const meta = await getDeviceMetadata();
-          fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}/api/v1/subscription/history/${historyId}`, {
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/history/${historyId}`, {
             headers: {
               "Authorization": `Bearer ${session.access_token}`,
               "X-Fingerprint": fp,
@@ -218,9 +271,14 @@ function DashboardContent() {
               const data = await r.json();
               if (data?.metadata?.job_id) {
                 setChatCount(data.chat_count || 0);
+                setLectureTitle(data.metadata.title || "محاضرة بدون عنوان");
+                const hasPdf = data.metadata.has_pdf !== undefined
+                  ? data.metadata.has_pdf
+                  : (data.metadata.annotations?.slide_explanations?.length > 0);
+                
                 setResult({
                   transcript: data.metadata.transcript || "",
-                  downloadUrl: `/api/v1/summarize/download/${data.metadata.job_id}.pdf`,
+                  downloadUrl: hasPdf ? `/api/v1/summarize/download/${data.metadata.job_id}.pdf` : null,
                   annotations: data.metadata.annotations
                 });
               } else {
@@ -239,12 +297,49 @@ function DashboardContent() {
   }, [session]);
 
   // Fetch quota on load - SHOW ERRORS
+  const [userFullName, setUserFullName] = useState<string | null>(null);
+  const [showNameOnboarding, setShowNameOnboarding] = useState(false);
+  const [onboardNameInput, setOnboardNameInput] = useState("");
+  const [isOnboardUpdating, setIsOnboardUpdating] = useState(false);
+  const [onboardError, setOnboardError] = useState("");
+
+  const handleSaveOnboardName = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!onboardNameInput.trim()) {
+      setOnboardError("يرجى إدخال اسمك أولاً.");
+      return;
+    }
+    setIsOnboardUpdating(true);
+    setOnboardError("");
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/transactions/update-name`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({ full_name: onboardNameInput.trim() })
+      });
+      const resData = await response.json();
+      if (response.ok) {
+        setUserFullName(onboardNameInput.trim());
+        setShowNameOnboarding(false);
+      } else {
+        setOnboardError(resData.detail?.user_message || "فشل حفظ الاسم.");
+      }
+    } catch (err) {
+      setOnboardError("فشل الاتصال بالخادم لحفظ الاسم.");
+    } finally {
+      setIsOnboardUpdating(false);
+    }
+  };
+
   useEffect(() => {
     const fetchQuota = async () => {
       if (session) {
         const fp = await getFingerprint();
         const meta = await getDeviceMetadata();
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}/api/v1/subscription/quota`, {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/quota`, {
           headers: {
             "Authorization": `Bearer ${session.access_token}`,
             "X-Fingerprint": fp,
@@ -259,6 +354,10 @@ function DashboardContent() {
           } else {
             setQuota(data.quota_remaining);
             setPlanName(data.plan_name);
+            setUserFullName(data.full_name || null);
+            if (!data.full_name || data.full_name.trim() === "" || data.full_name === "طالب متميز") {
+              setShowNameOnboarding(true);
+            }
             setError(null);
           }
         }).catch(e => {
@@ -271,28 +370,64 @@ function DashboardContent() {
   }, [session]);
 
   const handleProcess = async (forceRawFiles: boolean = false) => {
-    const hasAudioFile = !!audioFile;
-    const hasLectureUrl = uploadMode === "url" && lectureUrl.trim().length > 0;
+    const hasAudioFile = !!audioFile || multiAudioFiles.length > 0;
+    const hasLectureUrl = (uploadMode === "url" && lectureUrl.trim().length > 0) || (uploadMode === "url" && lectureUrls.filter(u => u.trim()).length > 0);
     if (!hasAudioFile && !hasLectureUrl) {
       setError(uploadMode === "url" ? "يرجى إدخال رابط المحاضرة أولاً." : "يرجى إرفاق الملف الصوتي أولاً.");
       return;
     }
     if (!session) { router.replace("/login"); return; }
 
+    if (uploadMode === "url") {
+      const urlsToCheck = [];
+      if (lectureUrl.trim()) urlsToCheck.push(lectureUrl.trim());
+      lectureUrls.filter(u => u.trim()).forEach(u => urlsToCheck.push(u.trim()));
+
+      for (const url of urlsToCheck) {
+        const lowerUrl = url.toLowerCase();
+        if (lowerUrl.includes("drive.google.com") || lowerUrl.includes("google.com/drive")) {
+          setError("🚫 عذراً، روابط Google Drive غير مدعومة حالياً لأسباب أمنية. يرجى استخدام روابط يوتيوب فقط! 🎥");
+          return;
+        }
+        if (lowerUrl.includes("zoom.us") || lowerUrl.includes("zoom.com")) {
+          setError("🚫 عذراً، روابط Zoom غير مدعومة حالياً لأسباب أمنية. يرجى استخدام روابط يوتيوب فقط! 🎥");
+          return;
+        }
+      }
+    }
+
     setIsProcessing(true); setError(null); setResult(null);
     setIsStreaming(false); setQueuePosition(0); setProgressStep("جاري المعالجة...");
 
-    const endpoint = `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}/api/v1/summarize/process-lecture`;
+    const isBatch = (uploadMode === "file" && multiAudioFiles.length > 1) || (uploadMode === "url" && lectureUrls.filter(u => u.trim()).length > 1);
+    const endpoint = isBatch
+      ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/summarize/process-batch-lectures`
+      : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/summarize/process-lecture`;
 
     const formData = new FormData();
     formData.append("metadata", await getDeviceMetadata());
 
-    if (uploadMode === "url" && lectureUrl.trim()) {
-      formData.append("lecture_url", lectureUrl.trim());
-    } else if (!forceRawFiles && audioTempId) {
-      formData.append("audio_temp_id", audioTempId);
-    } else if (audioFile) {
-      formData.append("audio_file", audioFile);
+    if (isBatch) {
+      if (uploadMode === "url") {
+        const urls = lectureUrls.filter(u => u.trim());
+        formData.append("lecture_urls", urls.join(","));
+      } else {
+        const tempIds = multiAudioFiles.map(item => item.tempId).filter(Boolean);
+        formData.append("audio_temp_ids", tempIds.join(","));
+      }
+    } else {
+      if (uploadMode === "url") {
+        const activeUrl = lectureUrl.trim() || lectureUrls.filter(u => u.trim())[0] || "";
+        formData.append("lecture_url", activeUrl);
+      } else {
+        const activeTempId = audioTempId || multiAudioFiles[0]?.tempId || null;
+        const activeFile = audioFile || multiAudioFiles[0]?.file || null;
+        if (!forceRawFiles && activeTempId) {
+          formData.append("audio_temp_id", activeTempId);
+        } else if (activeFile) {
+          formData.append("audio_file", activeFile);
+        }
+      }
     }
 
     if (!forceRawFiles && pdfTempId) formData.append("pdf_temp_id", pdfTempId);
@@ -380,9 +515,24 @@ function DashboardContent() {
                 case "done":
                   setChatCount(0);
                   setResult({ transcript: metadata?.transcript || "", downloadUrl: p.download_url, annotations: metadata?.annotations });
+                  if (p.title && !lectureTitle.trim()) {
+                    setLectureTitle(p.title);
+                  }
                   if (p.history_id) {
                     setCurrentHistoryId(p.history_id);
+                    // Save title if user typed one
+                    if (lectureTitle.trim() && session) {
+                      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/history/${p.history_id}/title`, {
+                        method: "PATCH",
+                        headers: { "Authorization": `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+                        body: JSON.stringify({ title: lectureTitle.trim() })
+                      }).catch(() => {});
+                    }
                   }
+                  setIsStreaming(false); setProgressStep(""); break;
+                case "complete":
+                  setChatCount(0);
+                  setResult({ transcript: p.data.transcript || "", downloadUrl: p.data.downloadUrl, annotations: p.data.annotations });
                   setIsStreaming(false); setProgressStep(""); break;
                 case "error": setError(p.message); setIsStreaming(false); break;
               }
@@ -398,7 +548,7 @@ function DashboardContent() {
     if (!result?.transcript || !session) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}/api/v1/transcript/export-pdf`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/transcript/export-pdf`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
@@ -437,7 +587,7 @@ function DashboardContent() {
     try {
       const fp = await getFingerprint();
       const meta = await getDeviceMetadata();
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}/api/v1/chat/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/chat/`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
@@ -494,45 +644,48 @@ function DashboardContent() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-100 flex flex-col" dir="rtl">
-      {/* Top Nav */}
-      <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 px-3 sm:px-6 py-3">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
-          {/* Logo & Home */}
-          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+      {/* Top Floating Luxurious Nav */}
+      <div className="sticky top-0 z-50 w-full px-4 pt-4 pb-2">
+        <nav className="bg-slate-950/60 backdrop-blur-xl border border-indigo-500/15 rounded-[2rem] px-4 sm:px-6 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.4)] max-w-6xl mx-auto transition-all duration-300">
+          <div className="flex items-center justify-between gap-2">
+            {/* Logo & Home */}
             <div className="flex items-center cursor-pointer group" onClick={() => router.push("/")} title="العودة للصفحة الرئيسية">
-              <img src="/lammah-logo.png" alt="Lammah" className="w-7 h-7 sm:w-8 sm:h-8 ml-1 sm:ml-2 object-contain drop-shadow-md group-hover:scale-110 transition-transform" />
-              <span className="font-bold text-base sm:text-lg bg-clip-text text-transparent bg-gradient-to-l from-indigo-300 to-purple-300 hidden md:inline-block">لمّاح</span>
+              <img src="/lammah-logo.png" alt="Lammah" className="w-8 h-8 ml-2 object-contain drop-shadow-[0_0_8px_rgba(99,102,241,0.6)] group-hover:scale-110 transition-transform duration-300" />
+              <span className="font-black text-lg bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 hidden md:inline-block tracking-tight">لمّاح</span>
             </div>
 
-            <button
-              onClick={() => router.push("/")}
-              className="text-[10px] sm:text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-slate-700 transition-all flex items-center gap-1"
-            >
-              <Home className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              <span className="hidden sm:inline">الرئيسية</span>
-            </button>
-          </div>
+            {/* Quota & Actions */}
+            <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
+              {quota !== null && (
+                <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-2xl px-3 sm:px-4 py-1.5 text-[10px] sm:text-xs flex items-center gap-1.5 shadow-inner">
+                  <Package className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="text-slate-400 hidden lg:inline">رصيدك: </span>
+                  <span className={`font-black ${quota > 0 ? "text-emerald-450" : "text-rose-500"}`}>{quota}</span>
+                  <span className="text-slate-500 hidden sm:inline">دقيقة</span>
+                </div>
+              )}
 
-          {/* Quota & Actions */}
-          <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
-            {quota !== null && (
-              <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-full px-2 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-sm flex items-center gap-1">
-                <Package className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-400" />
-                <span className="text-slate-400 hidden sm:inline">متبقي: </span>
-                <span className={`font-bold ${quota > 0 ? "text-green-400" : "text-red-400"}`}>{quota}</span>
-                <span className="text-slate-500 hidden sm:inline">محاضرة</span>
+              <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-900/40 p-1 rounded-[1.2rem] border border-slate-800/80">
+                <button onClick={() => router.push("/marketplace")} className="text-indigo-300 hover:text-white transition-all duration-300 px-3 py-2 bg-indigo-500/10 hover:bg-indigo-500/25 rounded-xl flex items-center gap-1.5 font-black text-xs border border-indigo-500/20" title="متجر الملازم">
+                  <Store className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>المتجر</span>
+                </button>
+                <button onClick={() => router.push("/notebook")} className="text-purple-350 hover:text-white transition-all duration-300 px-3 py-2 bg-purple-500/10 hover:bg-purple-500/25 rounded-xl flex items-center gap-1.5 font-black text-xs border border-purple-500/20" title="صانع الدفاتر الذكية">
+                  <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+                  <span>الدفتر</span>
+                </button>
+                
+                <div className="w-px h-5 bg-slate-800 mx-1 hidden sm:block"></div>
+                
+                <button onClick={() => router.push("/plans")} className="text-slate-450 hover:text-indigo-400 hover:bg-slate-900/60 transition-all p-2 rounded-xl" title="الباقات"><Crown className="w-4 h-4 sm:w-5 sm:h-5" /></button>
+                <button onClick={() => router.push("/history")} className="text-slate-450 hover:text-indigo-400 hover:bg-slate-900/60 transition-all p-2 rounded-xl" title="السجل"><History className="w-4 h-4 sm:w-5 sm:h-5" /></button>
+                <button onClick={() => router.push("/profile")} className="text-slate-450 hover:text-indigo-400 hover:bg-slate-900/60 transition-all p-2 rounded-xl" title="حسابي"><User className="w-4 h-4 sm:w-5 sm:h-5" /></button>
+                <button onClick={async () => { await signOut(); router.replace("/login"); }} className="text-slate-500 hover:text-rose-450 hover:bg-rose-500/5 transition-all p-2 rounded-xl" title="تسجيل خروج"><LogOut className="w-4 h-4 sm:w-5 sm:h-5" /></button>
               </div>
-            )}
-
-            <div className="flex items-center gap-1 sm:gap-2">
-              <button onClick={() => router.push("/plans")} className="text-slate-400 hover:text-indigo-300 transition-colors p-1.5 sm:p-2 bg-slate-800/50 hover:bg-slate-800 rounded-lg" title="الباقات"><Crown className="w-4 h-4 sm:w-5 sm:h-5" /></button>
-              <button onClick={() => router.push("/history")} className="text-slate-400 hover:text-indigo-300 transition-colors p-1.5 sm:p-2 bg-slate-800/50 hover:bg-slate-800 rounded-lg" title="السجل"><History className="w-4 h-4 sm:w-5 sm:h-5" /></button>
-              <button onClick={() => router.push("/profile")} className="text-slate-400 hover:text-indigo-300 transition-colors p-1.5 sm:p-2 bg-slate-800/50 hover:bg-slate-800 rounded-lg" title="حسابي"><User className="w-4 h-4 sm:w-5 sm:h-5" /></button>
-              <button onClick={async () => { await signOut(); router.replace("/login"); }} className="text-slate-400 hover:text-red-300 transition-colors p-1.5 sm:p-2 bg-slate-800/50 hover:bg-slate-800 rounded-lg" title="خروج"><LogOut className="w-4 h-4 sm:w-5 sm:h-5" /></button>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      </div>
 
       <div className="flex-1 flex flex-col items-center p-8 overflow-x-hidden relative">
         {/* Parallel Loading Progress Indicator & Dhikr */}
@@ -541,87 +694,194 @@ function DashboardContent() {
           {(isStreaming || isProcessing) && !result?.annotations ? (
             <motion.div
               key="waiting"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.1 }}
-              className="flex-1 w-full max-w-4xl flex flex-col items-center justify-center py-12 px-6 text-center"
+              initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
+              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+              exit={{ opacity: 0, scale: 1.05, filter: "blur(10px)" }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="flex-1 w-full max-w-6xl flex flex-col lg:flex-row items-center justify-between gap-12 py-12 px-6 mx-auto"
             >
-              {/* Circular Progress / Glowing Orb */}
-              <div className="relative mb-12">
-                <div className="absolute inset-0 bg-indigo-500/20 blur-[100px] rounded-full animate-pulse"></div>
-                <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-full border-4 border-indigo-500/10 flex items-center justify-center p-8 glass shadow-[0_0_80px_rgba(99,102,241,0.2)]">
-                  <div className="absolute inset-2 rounded-full border-2 border-dashed border-indigo-500/20 animate-[spin_20s_linear_infinite]"></div>
-                  <div className="flex flex-col items-center">
-                    <Loader2 className="w-16 h-16 text-indigo-400 animate-spin mb-4" />
-                    <div className="bg-indigo-500/10 px-4 py-2 rounded-full border border-indigo-500/20">
-                      <span className="text-xl font-black text-indigo-300 tabular-nums">
-                        {timeLeft !== null ? `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}` : "--:--"}
-                      </span>
+              {/* Left Side: SaaS Stepper & Dynamic Pulse Scanner */}
+              <div className="flex-1 flex flex-col items-center lg:items-start text-right w-full relative z-10">
+                
+                {/* Glowing AI Radar */}
+                <div className="relative mb-10 flex justify-center w-full lg:justify-start">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-600/20 blur-[100px] rounded-full pointer-events-none"></div>
+                  <div className="relative w-48 h-48 rounded-[2.5rem] border border-indigo-500/20 bg-slate-950/40 backdrop-blur-3xl flex items-center justify-center p-6 shadow-[0_0_80px_rgba(99,102,241,0.2)]">
+                    <div className="absolute inset-2 rounded-[2rem] border border-dashed border-indigo-500/30 animate-[spin_40s_linear_infinite]"></div>
+                    <div className="absolute inset-4 rounded-[1.5rem] bg-gradient-to-tr from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 animate-pulse"></div>
+                    <div className="flex flex-col items-center justify-center z-10">
+                      <BrainCircuit className="w-14 h-14 text-indigo-400 animate-pulse mb-3 drop-shadow-[0_0_15px_rgba(129,140,248,0.5)]" />
+                      <div className="bg-slate-950/80 px-4 py-1.5 rounded-xl border border-indigo-500/30 shadow-inner">
+                        <span className="text-lg font-black text-indigo-300 tabular-nums tracking-[0.2em] drop-shadow-md">
+                          {timeLeft !== null ? `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}` : "جاري التجهيز"}
+                        </span>
+                      </div>
                     </div>
+                    {/* Glowing pulse rings */}
+                    <div className="absolute inset-0 rounded-[2.5rem] border border-indigo-500/30 animate-ping opacity-20" style={{ animationDuration: '3s' }}></div>
                   </div>
+
+                  {/* Queue Position Floating Badge */}
+                  {queuePosition > 0 && (
+                    <motion.div
+                      initial={{ scale: 0, rotate: -10 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", bounce: 0.6 }}
+                      className="absolute -top-4 -right-4 bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 text-slate-950 font-black px-5 py-3 rounded-2xl shadow-[0_15px_30px_rgba(245,158,11,0.4)] border border-amber-200 z-20 flex flex-col items-center"
+                    >
+                      <span className="text-[9px] uppercase tracking-[0.2em] font-black opacity-80 mb-0.5">ترتيب الانتظار</span>
+                      <span className="text-2xl leading-none drop-shadow-sm">#{queuePosition}</span>
+                    </motion.div>
+                  )}
                 </div>
 
-                {/* Queue Position Floating Badge */}
-                {queuePosition > 0 && (
-                  <motion.div
-                    initial={{ scale: 0 }} animate={{ scale: 1 }}
-                    className="absolute -top-4 -right-4 bg-gradient-to-br from-amber-400 to-orange-600 text-slate-900 font-black px-6 py-3 rounded-2xl shadow-xl border-4 border-slate-950 z-20"
-                  >
-                    <div className="text-[10px] uppercase opacity-70 mb-0.5">ترتيبك في القائمة</div>
-                    <div className="text-2xl tracking-tighter">#{queuePosition}</div>
-                  </motion.div>
-                )}
+                {/* Progress Messages */}
+                <div className="w-full text-center lg:text-right space-y-3 mb-10 relative z-10">
+                  <h2 className="text-3xl md:text-4xl font-black text-white leading-tight drop-shadow-md">
+                    {queuePosition > 0 ? "أنت في قائمة الانتظار الذهبية" : "لمّاح يعكف على محاضرتك الآن"}
+                  </h2>
+                  <p className="text-indigo-300/80 text-base font-semibold max-w-lg leading-relaxed">
+                    {queuePosition > 0
+                      ? "سيصلك الدور قريباً، شكراً لصبرك. نحن نعالج الطلبات حسب الأولوية لضمان أعلى جودة."
+                      : progressStep || "جاري استخراج الملاحظات والخرائط الذهنية وتنسيق الملزمة..."}
+                  </p>
+                </div>
+
+                {/* Stepper Component */}
+                <div className="w-full max-w-md bg-slate-950/40 backdrop-blur-3xl border border-indigo-500/15 rounded-[2.5rem] p-8 text-right space-y-6 shadow-[0_25px_60px_rgba(0,0,0,0.3)] relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[50px] rounded-full pointer-events-none -mr-10 -mt-10 transition-opacity opacity-50 group-hover:opacity-100"></div>
+                  <h4 className="text-xs font-black text-indigo-400/60 mb-4 tracking-[0.3em] uppercase flex items-center gap-2 justify-start border-b border-slate-800/60 pb-4">
+                    <Target className="w-4 h-4 text-indigo-500" />
+                    مراحل المعالجة الفورية
+                  </h4>
+                  <div className="space-y-5">
+                    {[
+                      { title: "استلام وتدقيق المادة", desc: "تحليل وتصحيح المادة الصوتية أو الروابط السحابية بذكاء" },
+                      { title: "التفريغ الذكي العالي الدقة", desc: "محرك فائق للتعرف على المصطلحات المعقدة بامتياز" },
+                      { title: "استخراج الخرائط والشروحات", desc: "توليد ملخصات تفاعلية وهياكل دراسية منظمة بدقة" },
+                      { title: "التنسيق والتدبيج النهائي", desc: "تطبيق الهوية البصرية المسطرة وأقلام التظليل الفاخرة" }
+                    ].map((step, stepIdx) => {
+                      let status: "waiting" | "active" | "completed" = "waiting";
+                      const currentStepMsg = (progressStep || "").toLowerCase();
+                      
+                      let activeIdx = 0;
+                      if (currentStepMsg.includes("أرشيف") || currentStepMsg.includes("استرجاع")) {
+                        activeIdx = 0;
+                      } else if (currentStepMsg.includes("طابور") || currentStepMsg.includes("انتظار") || currentStepMsg.includes("queue")) {
+                        activeIdx = 1;
+                      } else if (currentStepMsg.includes("تفريغ") || currentStepMsg.includes("تحويل") || currentStepMsg.includes("معالجة")) {
+                        activeIdx = 1;
+                      } else if (currentStepMsg.includes("ملخص") || currentStepMsg.includes("ملاحظات") || currentStepMsg.includes("تلخيص") || currentStepMsg.includes("ذهنية")) {
+                        activeIdx = 2;
+                      } else if (currentStepMsg.includes("تنسيق") || currentStepMsg.includes("حفظ") || currentStepMsg.includes("جاهز")) {
+                        activeIdx = 3;
+                      } else {
+                        if (isStreaming || isProcessing) activeIdx = 1;
+                      }
+
+                      if (stepIdx < activeIdx) status = "completed";
+                      else if (stepIdx === activeIdx) status = "active";
+
+                      return (
+                        <div key={stepIdx} className="flex gap-4 items-start relative z-10">
+                          <div className="flex flex-col items-center shrink-0 mt-1">
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 text-[10px] font-black transition-all duration-500 ${
+                              status === "completed" ? "bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)] scale-110" :
+                              status === "active" ? "bg-indigo-600/20 border-indigo-400 text-indigo-300 shadow-[0_0_20px_rgba(99,102,241,0.5)] animate-pulse scale-110" :
+                              "bg-slate-900 border-slate-700 text-slate-500 scale-100"
+                            }`}>
+                              {status === "completed" ? <Check className="w-3.5 h-3.5" /> : stepIdx + 1}
+                            </div>
+                            {stepIdx < 3 && (
+                              <div className={`w-0.5 h-8 mt-2 transition-all duration-500 rounded-full ${
+                                status === "completed" ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "bg-slate-800"
+                              }`} />
+                            )}
+                          </div>
+
+                          <div>
+                            <h5 className={`text-sm font-black transition-colors duration-300 ${
+                              status === "completed" ? "text-slate-300" :
+                              status === "active" ? "text-indigo-400 drop-shadow-[0_0_10px_rgba(99,102,241,0.3)]" :
+                              "text-slate-500"
+                            }`}>
+                              {step.title}
+                            </h5>
+                            <p className={`text-[11px] leading-relaxed mt-1 font-medium transition-colors duration-300 ${
+                              status === "active" ? "text-indigo-200/70" : "text-slate-500/70"
+                            }`}>
+                              {step.desc}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
-              <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
-                {queuePosition > 0 ? "أنت في قائمة الانتظار الذهبية" : "لمّاح يعكف على محاضرتك الآن"}
-              </h2>
-              <p className="text-slate-400 text-lg mb-12 max-w-lg mx-auto font-medium leading-relaxed">
-                {queuePosition > 0
-                  ? "سيصلك الدور قريباً، شكراً لصبرك. نحن نعالج الطلبات حسب الأولوية لضمان أعلى جودة."
-                  : progressStep || "جاري استخراج الملاحظات والخرائط الذهنية وتنسيق الملزمة..."}
-              </p>
-
-              {/* Enhanced Dhikr Counter */}
-              <motion.button
-                onClick={handleDhikrClick}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full max-w-md bg-emerald-950/30 backdrop-blur-xl border border-emerald-500/20 rounded-[2.5rem] p-10 shadow-2xl relative group overflow-hidden"
-              >
-                <div className="absolute top-0 left-0 w-full h-1.5 bg-emerald-900/50">
-                  <motion.div
-                    className="h-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(dhikrCurrentPhaseCount / 10) * 100}%` }}
-                  />
-                </div>
-
-                <div className="mb-6 flex items-center justify-center gap-3">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></div>
-                  <span className="text-xs font-black text-emerald-400/80 uppercase tracking-widest">رطّب لسانك بذكر الله</span>
-                </div>
-
-                <h3 className="text-3xl md:text-4xl font-black text-white mb-8 group-hover:text-emerald-300 transition-colors">
-                  {dhikrPhrases[currentDhikrIndex]}
-                </h3>
-
-                <div className="flex items-center justify-between gap-4 bg-emerald-900/40 p-4 rounded-2xl border border-emerald-500/10">
-                  <div className="flex flex-col items-start">
-                    <span className="text-[10px] text-emerald-500/70 font-bold uppercase">المجموعة الحالية</span>
-                    <span className="text-xl font-black text-emerald-400">{dhikrCurrentPhaseCount} / 10</span>
+              {/* Right Side: High-End Spiritual Istighfar / Tasbeeh counter Widget */}
+              <div className="flex-1 w-full flex flex-col items-center justify-center lg:items-end relative z-10">
+                <motion.button
+                  onClick={handleDhikrClick}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full max-w-md bg-slate-950/40 backdrop-blur-3xl border border-emerald-500/20 rounded-[3rem] p-10 shadow-[0_30px_60px_rgba(0,0,0,0.4)] relative group overflow-hidden flex flex-col items-center hover:border-emerald-400/50 transition-all duration-500"
+                >
+                  {/* Floating particles background */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-700"></div>
+                  
+                  {/* Liquid Phase progress bar */}
+                  <div className="absolute top-0 left-0 w-full h-2 bg-emerald-950/50">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 shadow-[0_0_20px_rgba(52,211,153,0.8)]"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(dhikrCurrentPhaseCount / 10) * 100}%` }}
+                      transition={{ type: "spring", stiffness: 60 }}
+                    />
                   </div>
-                  <div className="w-px h-10 bg-emerald-500/10"></div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] text-emerald-500/70 font-bold uppercase">إجمالي الذكر</span>
-                    <span className="text-xl font-black text-emerald-400">{dhikrTotal}</span>
-                  </div>
-                </div>
-              </motion.button>
 
-              <div className="mt-12 flex items-center gap-2 text-amber-400/60 text-xs font-bold bg-amber-400/5 px-4 py-2 rounded-full border border-amber-400/10">
-                <Clock className="w-3 h-3" />
-                الوقت المتوقع للاستخراج: 11 - 15 دقيقة
+                  {/* Pulsing indicator */}
+                  <div className="mb-8 flex items-center justify-center gap-3 relative z-10">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 duration-1000"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[11px] font-black text-emerald-400 tracking-[0.2em] uppercase drop-shadow-md">رطّب لسانك بذكر الله</span>
+                  </div>
+
+                  {/* Large Calligraphic Remembrance Text */}
+                  <h3 className="text-3xl md:text-4xl font-extrabold text-white mb-8 group-hover:text-emerald-300 text-center transition-colors min-h-[60px] leading-relaxed drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] relative z-10">
+                    {dhikrPhrases[currentDhikrIndex]}
+                  </h3>
+
+                  {/* Spiritual benefits note */}
+                  <div className="mb-8 text-center text-xs text-emerald-300/90 font-bold bg-slate-900/60 backdrop-blur-md border border-emerald-500/20 px-5 py-3 rounded-2xl w-full relative z-10 shadow-inner group-hover:bg-slate-900/80 transition-colors">
+                    {currentDhikrIndex === 0 ? "الاستغفار: يفتح الأقفال، يجلب الرزق، ويمحو الخطايا 🔑✨" :
+                     currentDhikrIndex === 1 ? "التوحيد: أعظم كلمة، تجدد الإيمان وتشرح الصدور 🕊️✨" :
+                     currentDhikrIndex === 2 ? "الحمد لله: تملأ الميزان بالخير والبركة وتزيد النعم 🌾✨" :
+                     currentDhikrIndex === 3 ? "التسبيح: خفيفتان على اللسان، ثقيلتان في الميزان ⚖️✨" :
+                     currentDhikrIndex === 4 ? "التكبير: تعلو بها فوق كل همّ وغمّ في الحياة ⛰️✨" :
+                     currentDhikrIndex === 5 ? "الصلاة على النبي: يُكفى بها همّك ويُغفر بها ذنبك 🌸✨" :
+                     "الحوقلة: كنز عظيم من تحت عرش الرحمن وقوة للمرء 💎✨"}
+                  </div>
+
+                  {/* Interactive Tasbeeh stats display */}
+                  <div className="w-full flex items-center justify-between gap-6 bg-slate-900/60 backdrop-blur-md p-5 rounded-[1.5rem] border border-emerald-500/20 shadow-inner relative z-10 group-hover:border-emerald-500/40 transition-colors">
+                    <div className="flex flex-col items-center flex-1">
+                      <span className="text-[10px] text-emerald-500/70 font-black uppercase tracking-widest mb-1">المجموعة الحالية</span>
+                      <span className="text-2xl font-black text-emerald-400 tabular-nums drop-shadow-md">{dhikrCurrentPhaseCount} / 10</span>
+                    </div>
+                    <div className="w-px h-10 bg-emerald-500/20"></div>
+                    <div className="flex flex-col items-center flex-1">
+                      <span className="text-[10px] text-emerald-500/70 font-black uppercase tracking-widest mb-1">إجمالي التسبيحات</span>
+                      <span className="text-2xl font-black text-emerald-400 tabular-nums drop-shadow-md">{dhikrTotal}</span>
+                    </div>
+                  </div>
+                </motion.button>
+
+                <div className="mt-10 flex items-center gap-3 text-amber-400/80 text-[11px] font-black bg-amber-500/10 backdrop-blur-sm px-5 py-3 rounded-full border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)] animate-pulse relative z-10">
+                  <Clock className="w-4 h-4 text-amber-500" />
+                  <span>الوقت المتوقع للاستخراج: 11 - 15 دقيقة</span>
+                </div>
               </div>
             </motion.div>
           ) : !showResults ? (
@@ -630,31 +890,19 @@ function DashboardContent() {
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
               className="w-full flex flex-col items-center"
             >
-              {/* Header */}
-              <div className="w-full max-w-4xl text-center mb-16">
-                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 px-4 py-2 rounded-full mb-6">
-                  <Sparkles className="w-4 h-4 text-indigo-400" />
-                  <span className="text-xs font-black text-indigo-300 uppercase tracking-widest">تكنولوجيا لمّاح الذكية</span>
-                </motion.div>
-                <h1 className="text-5xl md:text-6xl font-black mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-500 leading-tight">
-                  حوّل تعبك إلى تفوّق
-                </h1>
-                <p className="text-xl text-slate-400 max-w-2xl mx-auto font-medium">ارفع تسجيل المحاضرة وسنقوم نحن بالمهمة الصعبة. تلخيص، تفريغ، وخرائط ذهنية في مكان واحد.</p>
-              </div>
-
-              {/* Upload Card */}
-              <div className="w-full max-w-3xl bg-slate-800/40 border border-slate-700/50 rounded-3xl p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl">
-                <div className="mb-6">
-                  <div className="inline-flex bg-slate-900/70 border border-slate-700 rounded-2xl p-1 gap-1">
+              {/* Ultra-Premium Glassmorphic Upload Card */}
+              <div className="w-full max-w-3xl bg-slate-950/40 backdrop-blur-3xl border border-indigo-500/15 rounded-[3rem] p-8 md:p-10 shadow-[0_20px_50px_rgba(99,102,241,0.12)] relative overflow-hidden">
+                <div className="mb-8">
+                  <div className="inline-flex bg-slate-950/80 border border-slate-800 rounded-2xl p-1.5 gap-1.5 shadow-inner">
                     <button
                       type="button"
                       onClick={() => {
                         setUploadMode("file");
                         setLectureUrl("");
                       }}
-                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${uploadMode === "file" ? "bg-indigo-600 text-white" : "text-slate-300 hover:bg-slate-800"}`}
+                      className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wide transition-all duration-300 flex items-center gap-1.5 ${uploadMode === "file" ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-950/60" : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"}`}
                     >
-                      رفع ملف
+                      <FileAudio className="w-3.5 h-3.5" /> رفع ملف مسجل
                     </button>
                     <button
                       type="button"
@@ -664,62 +912,161 @@ function DashboardContent() {
                         setAudioTempId(null);
                         setAudioUploadProgress(0);
                       }}
-                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${uploadMode === "url" ? "bg-indigo-600 text-white" : "text-slate-300 hover:bg-slate-800"}`}
+                      className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wide transition-all duration-300 flex items-center gap-1.5 ${uploadMode === "url" ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-950/60" : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"}`}
                     >
-                      رابط محاضرة
+                      <Share2 className="w-3.5 h-3.5" /> رابط محاضرة
                     </button>
                   </div>
+                  
                   {uploadMode === "url" && (
-                    <div className="mt-4">
-                      <input
-                        type="url"
-                        value={lectureUrl}
-                        onChange={(e) => setLectureUrl(e.target.value)}
-                        placeholder="ألصق رابط Zoom أو YouTube أو Google Drive هنا"
-                        className="w-full bg-slate-900 border border-slate-700 text-slate-100 p-4 rounded-xl focus:outline-none focus:border-indigo-500"
-                        dir="ltr"
-                      />
-                      <p className="text-xs text-slate-400 mt-2">
-                        يجب أن يكون الرابط عامًا وقابلًا للوصول بدون تسجيل دخول.
+                    <div className="mt-6 space-y-4">
+                      {lectureUrls.map((url, idx) => (
+                        <div key={idx} className="flex gap-3 items-center">
+                          <input
+                            type="url"
+                            value={url}
+                            onChange={(e) => {
+                              const newUrls = [...lectureUrls];
+                              newUrls[idx] = e.target.value;
+                              setLectureUrls(newUrls);
+                              if (idx === 0) setLectureUrl(e.target.value);
+                            }}
+                            placeholder={idx === 0 ? "ألصق رابط YouTube أو Zoom أو Google Drive هنا" : `رابط محاضرة إضافي #${idx + 1}`}
+                            className="flex-1 bg-slate-950/80 border border-slate-800 text-slate-100 px-5 py-4 rounded-2xl focus:outline-none focus:border-indigo-500/70 focus:ring-1 focus:ring-indigo-500/40 transition-all duration-300 text-sm font-medium"
+                            dir="ltr"
+                          />
+                          {lectureUrls.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newUrls = lectureUrls.filter((_, i) => i !== idx);
+                                setLectureUrls(newUrls);
+                                if (idx === 0) setLectureUrl(newUrls[0] || "");
+                              }}
+                              className="text-slate-500 hover:text-rose-400 p-2 shrink-0 transition-colors bg-slate-950/40 rounded-xl border border-slate-800"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setLectureUrls(prev => [...prev, ""])}
+                        className="text-xs text-indigo-400 hover:text-indigo-300 font-extrabold flex items-center gap-1 mt-2 transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> إضافة رابط محاضرة آخر 🔗
+                      </button>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
+                        * يرجى التأكد من أن الرابط عام تماماً لضمان المعالجة بنجاح.
                       </p>
                     </div>
                   )}
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6 mb-8">
-                  <div className={`relative group border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center transition-all ${audioFile ? 'border-indigo-500 bg-indigo-500/10' : 'border-slate-600 hover:border-indigo-400 cursor-pointer'} ${uploadMode === "url" ? "opacity-50 pointer-events-none" : ""}`}>
-                    <input type="file" accept="audio/*" onChange={(e) => {
-                      const file = e.target.files?.[0] || null;
-                      setAudioFile(file);
-                      if (file) {
-                        setAudioUploadProgress(0);
-                        setAudioTempId(null);
-                        uploadToTemp(file, 'audio');
+                  {/* Audio File Dropzone */}
+                  <div className={`relative group border-2 border-dashed rounded-[2rem] p-10 flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-[1.01] ${audioFile || multiAudioFiles.length > 0 ? 'border-indigo-500 bg-indigo-500/5 shadow-[0_8px_32px_rgba(99,102,241,0.08)]' : 'border-slate-800 hover:border-indigo-500/40 hover:bg-slate-900/10 cursor-pointer'} ${uploadMode === "url" ? "opacity-30 pointer-events-none" : ""}`}>
+                    <input type="file" accept="audio/*" multiple onChange={(e) => {
+                      const files = e.target.files;
+                      if (files && files.length > 0) {
+                        if (files.length === 1 && multiAudioFiles.length === 0) {
+                          setAudioFile(files[0]);
+                          setAudioUploadProgress(0);
+                          setAudioTempId(null);
+                          uploadToTemp(files[0], 'audio');
+                        }
+                        
+                        const newFiles = Array.from(files).map(file => ({
+                          id: Math.random().toString(36).substring(7),
+                          file,
+                          progress: 0,
+                          isUploading: true
+                        }));
+                        setMultiAudioFiles(prev => [...prev, ...newFiles]);
+                        newFiles.forEach(item => {
+                          uploadSingleMultiAudio(item.id, item.file);
+                        });
                       }
                     }} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                    {audioFile ? (
-                      <div className="text-center w-full">
-                        {isAudioUploading ? (
-                          <div className="relative w-16 h-16 mx-auto mb-4">
-                            <div className="absolute inset-0 border-4 border-slate-700/50 rounded-full"></div>
-                            <svg className="absolute inset-0 w-full h-full -rotate-90">
-                              <circle cx="32" cy="32" r="28" fill="transparent" stroke="currentColor" strokeWidth="4"
-                                strokeDasharray={175.9} strokeDashoffset={175.9 - (175.9 * audioUploadProgress) / 100}
-                                className="text-indigo-500 transition-all duration-300" />
-                            </svg>
-                            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-indigo-300">{audioUploadProgress}%</span>
+                    
+                    {audioFile || multiAudioFiles.length > 0 ? (
+                      <div className="text-center w-full z-20 relative">
+                        {multiAudioFiles.length > 1 ? (
+                          <div className="flex flex-col gap-2.5 max-h-[180px] overflow-y-auto pr-1 select-text">
+                            <p className="text-xs font-black text-indigo-300 mb-1">الملفات الصوتية المحددة للدمج ({multiAudioFiles.length})</p>
+                            {multiAudioFiles.map((item) => (
+                              <div key={item.id} className="flex items-center justify-between bg-slate-950/80 border border-slate-800/80 p-3 rounded-2xl text-xs">
+                                <span className="font-semibold text-indigo-200 truncate max-w-[130px] text-right" dir="ltr">{item.file.name}</span>
+                                <div className="flex items-center gap-2">
+                                  {item.isUploading ? (
+                                    <span className="text-[10px] text-indigo-400 font-bold">{item.progress}%</span>
+                                  ) : (
+                                    <CheckCircle className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                      setMultiAudioFiles(prev => prev.filter(x => x.id !== item.id));
+                                    }}
+                                    className="text-slate-500 hover:text-rose-400 p-0.5"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         ) : (
-                          <CheckCircle className="w-14 h-14 text-indigo-400 mb-4 mx-auto" />
+                          <>
+                            {isAudioUploading || (multiAudioFiles[0] && multiAudioFiles[0].isUploading) ? (
+                              <div className="relative w-16 h-16 mx-auto mb-4">
+                                <div className="absolute inset-0 border-4 border-slate-800 rounded-full"></div>
+                                <svg className="absolute inset-0 w-full h-full -rotate-90">
+                                  <circle cx="32" cy="32" r="28" fill="transparent" stroke="currentColor" strokeWidth="4"
+                                    strokeDasharray={175.9} strokeDashoffset={175.9 - (175.9 * (audioUploadProgress || multiAudioFiles[0]?.progress || 0)) / 100}
+                                    className="text-indigo-500 transition-all duration-300" />
+                                </svg>
+                                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-indigo-300">{audioUploadProgress || multiAudioFiles[0]?.progress}%</span>
+                              </div>
+                            ) : (
+                              <CheckCircle className="w-14 h-14 text-indigo-400 mb-4 mx-auto animate-bounce" />
+                            )}
+                            <p className="font-extrabold text-indigo-200 text-xs truncate w-full" dir="ltr">{(audioFile || multiAudioFiles[0]?.file)?.name}</p>
+                            {(isAudioUploading || (multiAudioFiles[0] && multiAudioFiles[0].isUploading)) && <p className="text-[10px] text-indigo-450 mt-1 animate-pulse">جاري الرفع المسبق للـ Audio...</p>}
+                            {(audioFile || multiAudioFiles.length === 1) && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  setAudioFile(null);
+                                  setAudioTempId(null);
+                                  setMultiAudioFiles([]);
+                                }}
+                                className="text-[10px] text-rose-455 font-bold mt-3 hover:underline cursor-pointer bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20"
+                              >
+                                إزالة الملف 🗑️
+                              </button>
+                            )}
+                          </>
                         )}
-                        <p className="font-semibold text-indigo-200 truncate w-full">{audioFile.name}</p>
-                        {isAudioUploading && <p className="text-[10px] text-indigo-400 mt-1 animate-pulse">جاري الرفع المسبق...</p>}
                       </div>
                     ) : (
-                      <><FileAudio className="w-10 h-10 text-indigo-400 mb-3" /><p className="text-slate-300 font-medium">تسجيل المحاضرة</p><p className="text-xs text-slate-500">MP3, WAV, M4A</p></>
+                      <>
+                        <div className="p-4 bg-indigo-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-300 border border-indigo-500/20">
+                          <FileAudio className="w-8 h-8 text-indigo-400" />
+                        </div>
+                        <p className="text-slate-200 font-bold text-sm">تسجيل المحاضرة الصوتية</p>
+                        <p className="text-[10px] text-slate-500 mt-1 text-center leading-relaxed">اسحب الملف هنا أو انقر لاختياره<br />(MP3, WAV, M4A .. يمكنك دمج عدة ملفات)</p>
+                      </>
                     )}
                   </div>
-                  <div className={`relative group border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center transition-all ${pdfFile ? 'border-purple-500 bg-purple-500/10' : 'border-slate-600 hover:border-purple-400 cursor-pointer'}`}>
+
+                  {/* PDF Slide Dropzone */}
+                  <div className={`relative group border-2 border-dashed rounded-[2rem] p-10 flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-[1.01] ${pdfFile ? 'border-purple-500 bg-purple-500/5 shadow-[0_8px_32px_rgba(168,85,247,0.08)]' : 'border-slate-800 hover:border-purple-500/40 hover:bg-slate-900/10 cursor-pointer'}`}>
                     <input type="file" accept={isBasicPlan ? "application/pdf" : "application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,.pptx"} onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file && isBasicPlan && file.name.endsWith('.pptx')) {
@@ -733,31 +1080,57 @@ function DashboardContent() {
                         uploadToTemp(file, 'pdf');
                       }
                     }} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                    
                     {pdfFile ? (
-                      <div className="text-center w-full">
+                      <div className="text-center w-full z-20 relative">
                         {isPdfUploading ? (
                           <div className="relative w-16 h-16 mx-auto mb-4">
-                            <div className="absolute inset-0 border-4 border-slate-700/50 rounded-full"></div>
+                            <div className="absolute inset-0 border-4 border-slate-800 rounded-full"></div>
                             <svg className="absolute inset-0 w-full h-full -rotate-90">
                               <circle cx="32" cy="32" r="28" fill="transparent" stroke="currentColor" strokeWidth="4"
                                 strokeDasharray={175.9} strokeDashoffset={175.9 - (175.9 * pdfUploadProgress) / 100}
                                 className="text-purple-500 transition-all duration-300" />
                             </svg>
-                            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-purple-300">{pdfUploadProgress}%</span>
+                            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-purple-300">{pdfUploadProgress}%</span>
                           </div>
                         ) : (
-                          <CheckCircle className="w-14 h-14 text-purple-400 mb-4 mx-auto" />
+                          <CheckCircle className="w-14 h-14 text-purple-400 mb-4 mx-auto animate-bounce" />
                         )}
-                        <p className="font-semibold text-purple-200 truncate w-full" dir="ltr">{pdfFile.name}</p>
-                        {isPdfUploading && <p className="text-[10px] text-purple-400 mt-1 animate-pulse">جاري الرفع المسبق...</p>}
+                        <p className="font-extrabold text-purple-200 text-xs truncate w-full" dir="ltr">{pdfFile.name}</p>
+                        {isPdfUploading && <p className="text-[10px] text-purple-450 mt-1 animate-pulse">جاري الرفع المسبق للـ PDF...</p>}
+                        {!isPdfUploading && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              setPdfFile(null);
+                              setPdfTempId(null);
+                            }}
+                            className="text-[10px] text-rose-455 font-bold mt-3 hover:underline cursor-pointer bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20"
+                          >
+                            إزالة الملف 🗑️
+                          </button>
+                        )}
                       </div>
                     ) : (
-                      <><FileText className="w-10 h-10 text-purple-400 mb-3" /><p className="text-slate-300 font-medium">شرائح PDF {!isBasicPlan && <span>أو PPTX</span>} (اختياري)</p>
+                      <>
+                        <div className="p-4 bg-purple-500/10 rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-300 border border-purple-500/20">
+                          <FileText className="w-8 h-8 text-purple-400" />
+                        </div>
+                        <p className="text-slate-200 font-bold text-sm">شرائح العرض (PDF)</p>
+                        
                         {isBasicPlan ? (
-                          <div className="flex items-center text-[11px] font-bold text-amber-400 mt-3 bg-amber-400/10 px-3 py-1.5 rounded-full border border-amber-500/20"><Lock className="w-3 h-3 ml-1.5" /> الـ PPTX المباشر متاح بالمتقدم</div>
+                          <div className="flex flex-col items-center mt-2.5">
+                            <span className="text-[10px] text-slate-500">اسحب الـ PDF هنا لربط الشرح شفوياً</span>
+                            <div className="flex items-center text-[9px] font-black text-amber-400 mt-2 bg-amber-450/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+                              <Lock className="w-2.5 h-2.5 ml-1" /> رفع الـ PPTX المباشر متاح للباقة المتقدمة
+                            </div>
+                          </div>
                         ) : (
-                          <p className="text-xs text-slate-500">لإنشاء ملزمة ملونة تفاعلية</p>
-                        )}</>
+                          <p className="text-[10px] text-slate-500 mt-1 text-center leading-relaxed">اسحب ملف PDF أو PPTX هنا<br />(لإنشاء ملزمة تفاعلية ذكية ومظللة)</p>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -765,24 +1138,24 @@ function DashboardContent() {
                 <AnimatePresence>
                   {error && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6">
-                      <div className="bg-red-500/10 border border-red-500/50 text-red-200 px-6 py-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="bg-red-500/10 border border-red-500/30 text-red-200 px-6 py-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex-1">
-                          <p className="text-sm font-medium leading-relaxed">{error}</p>
+                          <p className="text-xs font-bold leading-relaxed">{error}</p>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-2 shrink-0">
                           {error.includes("اشتراك") || error.includes("حصت") ? (
-                            <button onClick={() => router.push("/plans")} className="text-sm bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-bold transition-colors min-w-[120px]">ترقية الباقة</button>
+                            <button onClick={() => router.push("/plans")} className="text-xs bg-indigo-650 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl font-black transition-all shadow-md">ترقية الباقة</button>
                           ) : null}
 
                           <button
                             onClick={() => {
                               const msg = `مرحباً بكِ مهندسة، أواجه مشكلة تقنية في المنصة.\nحسابي: ${user?.user_metadata?.full_name || user?.email || 'غير معروف'}\nالخطأ الذي ظهر لي:\n"${error}"\nأرجو المساعدة.`;
-                              window.open(`https://wa.me/970598298930?text=${encodeURIComponent(msg)}`, '_blank');
+                              window.open(`https://wa.me/972598298930?text=${encodeURIComponent(msg)}`, '_blank');
                             }}
-                            className="text-sm bg-slate-800 border border-slate-600 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors min-w-[140px]"
+                            className="text-xs bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-200 px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-colors font-bold"
                             title="إرسال سجل الخطأ للدعم الفني عبر واتساب"
                           >
-                            <MessageCircle className="w-4 h-4 text-green-400" />
+                            <MessageCircle className="w-4 h-4 text-green-455" />
                             إرسال الخطأ للإدارة
                           </button>
                         </div>
@@ -791,11 +1164,19 @@ function DashboardContent() {
                   )}
                 </AnimatePresence>
 
-                <button onClick={() => handleProcess()} disabled={isProcessing || (uploadMode === "file" ? !audioFile : !lectureUrl.trim()) || isAudioUploading || isPdfUploading}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black py-5 rounded-2xl shadow-xl hover:shadow-indigo-500/30 transition-all disabled:opacity-50">
-                  {isProcessing ? <span className="flex items-center justify-center"><Loader2 className="w-6 h-6 ml-3 animate-spin" />جاري المعالجة...</span> :
-                    (isAudioUploading || isPdfUploading) ? <span className="flex items-center justify-center"><Loader2 className="w-6 h-6 ml-3 animate-spin" />جاري رفع الملفات...</span> :
-                      <span className="flex items-center justify-center"><Upload className="w-6 h-6 ml-3" />ابدأ التلخيص الذكي</span>}
+                {/* Ultimate Futuristic Action Trigger Button */}
+                <button 
+                  onClick={() => handleProcess()} 
+                  disabled={isProcessing || (uploadMode === "file" ? (!audioFile && multiAudioFiles.length === 0) : (!lectureUrl.trim() && lectureUrls.filter(u => u.trim()).length === 0)) || isAudioUploading || (uploadMode === "file" && multiAudioFiles.some(item => item.isUploading)) || isPdfUploading}
+                  className="w-full bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 hover:from-indigo-400 hover:to-pink-400 text-white font-black py-5.5 rounded-2xl shadow-xl shadow-indigo-950/40 hover:shadow-indigo-500/25 transition-all duration-300 transform active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none"
+                >
+                  {isProcessing ? (
+                    <span className="flex items-center justify-center text-sm font-black"><Loader2 className="w-5 h-5 ml-2.5 animate-spin" />جاري التوليد والتلخيص...</span>
+                  ) : (isAudioUploading || isPdfUploading || (uploadMode === "file" && multiAudioFiles.some(item => item.isUploading))) ? (
+                    <span className="flex items-center justify-center text-sm font-black"><Loader2 className="w-5 h-5 ml-2.5 animate-spin" />جاري رفع المحاضرة والملفات بأمان...</span>
+                  ) : (
+                    <span className="flex items-center justify-center text-sm font-black"><Upload className="w-5 h-5 ml-2.5" />ابدأ التلخيص الذكي وتوليد الملزمة ✨</span>
+                  )}
                 </button>
               </div>
             </motion.div>
@@ -808,22 +1189,100 @@ function DashboardContent() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20">
 
 
-                {/* Back to Home / New Summary Button */}
-                <div className="lg:col-span-3 flex justify-start mb-2">
-                  <button
-                    onClick={() => {
-                      setResult(null);
-                      setAudioFile(null);
-                      setPdfFile(null);
-                      setError(null);
-                      setCurrentHistoryId(null);
-                      router.push("/dashboard");
-                    }}
-                    className="flex items-center gap-2 text-slate-400 hover:text-indigo-400 font-bold transition-all bg-slate-800/50 hover:bg-slate-800 px-5 py-2.5 rounded-2xl border border-slate-700 shadow-sm"
-                  >
-                    <ChevronLeft className="w-5 h-5 rotate-180" />
-                    العودة للرئيسية (رفع جديد)
-                  </button>
+                {/* Title Display & Edit / Back to Home Banner */}
+                <div className="lg:col-span-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-slate-950/40 backdrop-blur-3xl border border-indigo-500/15 p-6 rounded-[2.5rem] shadow-[0_20px_50px_rgba(99,102,241,0.08)] relative overflow-hidden mb-2 group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                  <div className="flex items-center gap-4 w-full md:w-auto relative z-10">
+                    <div className="w-12 h-12 bg-indigo-500/10 rounded-[1.25rem] flex items-center justify-center border border-indigo-500/20 shadow-inner group-hover:bg-indigo-500/20 transition-colors">
+                      <BookOpen className="w-6 h-6 text-indigo-400" />
+                    </div>
+                    {isEditingDashboardTitle ? (
+                      <div className="flex items-center gap-2 flex-1">
+                        <input
+                          type="text"
+                          value={dashboardTitleInput}
+                          onChange={e => setDashboardTitleInput(e.target.value)}
+                          onKeyDown={async e => {
+                            if (e.key === "Enter") {
+                              if (dashboardTitleInput.trim() && currentHistoryId && session) {
+                                setLectureTitle(dashboardTitleInput.trim());
+                                setIsEditingDashboardTitle(false);
+                                await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/history/${currentHistoryId}/title`, {
+                                  method: "PATCH",
+                                  headers: {
+                                    "Authorization": `Bearer ${session.access_token}`,
+                                    "Content-Type": "application/json"
+                                  },
+                                  body: JSON.stringify({ title: dashboardTitleInput.trim() })
+                                }).catch(() => {});
+                              }
+                            }
+                            if (e.key === "Escape") setIsEditingDashboardTitle(false);
+                          }}
+                          className="bg-slate-950/80 backdrop-blur-md border border-indigo-500/50 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-500/50 w-full max-w-md shadow-inner"
+                          placeholder="عنوان المحاضرة..."
+                          maxLength={120}
+                        />
+                        <button
+                          onClick={async () => {
+                            if (dashboardTitleInput.trim() && currentHistoryId && session) {
+                              setLectureTitle(dashboardTitleInput.trim());
+                              setIsEditingDashboardTitle(false);
+                              await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/history/${currentHistoryId}/title`, {
+                                method: "PATCH",
+                                headers: {
+                                  "Authorization": `Bearer ${session.access_token}`,
+                                  "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({ title: dashboardTitleInput.trim() })
+                              }).catch(() => {});
+                            }
+                          }}
+                          className="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 transition-all shadow-sm"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => setIsEditingDashboardTitle(false)} className="p-2.5 bg-slate-800/50 rounded-xl border border-slate-700 text-slate-400 hover:bg-slate-700 transition-all">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <h1 className="text-xl md:text-3xl font-black text-white leading-tight tracking-tight drop-shadow-sm">
+                          {lectureTitle || "محاضرة بدون عنوان"}
+                        </h1>
+                        {currentHistoryId && (
+                          <button
+                            onClick={() => {
+                              setIsEditingDashboardTitle(true);
+                              setDashboardTitleInput(lectureTitle || "");
+                            }}
+                            className="opacity-100 md:opacity-0 group-hover:opacity-100 transition-all p-2 rounded-xl text-slate-500 hover:text-indigo-300 hover:bg-indigo-500/10"
+                            title="تعديل العنوان"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 w-full md:w-auto justify-end">
+                    <button
+                      onClick={() => {
+                        setResult(null);
+                        setAudioFile(null);
+                        setPdfFile(null);
+                        setError(null);
+                        setCurrentHistoryId(null);
+                        setLectureTitle("");
+                        router.push("/dashboard");
+                      }}
+                      className="relative z-10 flex items-center gap-2 text-slate-300 hover:text-white font-black transition-all bg-slate-950/50 hover:bg-indigo-600/20 px-6 py-3 rounded-2xl border border-slate-800/80 hover:border-indigo-500/50 shadow-[0_0_20px_rgba(0,0,0,0.2)] hover:shadow-[0_0_20px_rgba(99,102,241,0.2)]"
+                    >
+                      <ChevronLeft className="w-5 h-5 rotate-180" />
+                      العودة للرئيسية (رفع جديد)
+                    </button>
+                  </div>
                 </div>
 
                 {/* WARNING BANNER FOR TRIMMED AUDIO */}
@@ -840,30 +1299,43 @@ function DashboardContent() {
                   </div>
                 )}
 
-                <div className="lg:col-span-2 space-y-8">
+                <div className="lg:col-span-2 space-y-8 relative">
+                  {/* Backdrop glowing sphere */}
+                  <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[30rem] h-[30rem] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+                  
                   {result?.downloadUrl && (
-                    <div className="bg-slate-800/60 border border-indigo-500/50 p-6 rounded-[2rem] shadow-2xl relative">
-                      <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold flex items-center text-indigo-300">
-                          <BookOpen className="w-7 h-7 ml-3 text-indigo-400" />الملزمة الذكية
-                        </h2>
+                    <div className="bg-slate-950/40 backdrop-blur-3xl border border-indigo-500/15 p-8 rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.4)] relative overflow-hidden group z-10">
+                      <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-l from-transparent via-indigo-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 relative z-10">
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 bg-indigo-500/10 rounded-[1.25rem] flex items-center justify-center border border-indigo-500/20 shadow-inner">
+                            <BookOpen className="w-7 h-7 text-indigo-400" />
+                          </div>
+                          <div>
+                            <h2 className="text-2xl font-black text-white leading-tight">الملزمة الذكية</h2>
+                            <p className="text-[10px] text-indigo-300/70 font-black tracking-[0.2em] mt-1 uppercase">Smart Annotated Notebook</p>
+                          </div>
+                        </div>
                         {isBasicPlan ? (
                           <button onClick={() => router.push("/plans")}
-                            className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-6 py-2.5 rounded-xl font-bold transition flex items-center shadow-lg border border-slate-600">
+                            className="bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 px-6 py-3 rounded-2xl font-black transition-all flex items-center shadow-lg hover:shadow-indigo-500/10">
                             <Lock className="w-4 h-4 ml-2 text-amber-400" /> تنزيل الملزمة (للمشتركين)
                           </button>
                         ) : (
-                          <a href={`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}${result.downloadUrl}`} download target="_blank"
-                            className="bg-gradient-to-l from-indigo-600 to-purple-600 hover:opacity-90 text-white px-6 py-2.5 rounded-xl font-bold transition flex items-center shadow-lg">
+                          <a href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}${result.downloadUrl}`} download target="_blank"
+                            className="bg-gradient-to-r from-indigo-500 via-purple-600 to-indigo-600 bg-[length:200%_auto] hover:bg-[position:right_center] text-white px-8 py-3.5 rounded-2xl font-black transition-all duration-500 flex items-center shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] transform hover:-translate-y-0.5 border border-white/10">
+                            <Download className="w-5 h-5 ml-2" />
                             تحميل الملف المخطط الذكي
                           </a>
                         )}
                       </div>
-                      <iframe
-                        key={pdfPage || 'default'}
-                        src={`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8500"}${result.downloadUrl}${pdfPage ? `#page=${pdfPage}` : ''}`}
-                        className="w-full h-[600px] rounded-2xl border border-slate-700 bg-white transition-all"
-                      />
+                      <div className="relative rounded-[1.5rem] p-1.5 bg-gradient-to-b from-slate-800/80 to-slate-950/80 border border-slate-800/60 shadow-inner">
+                        <iframe
+                          key={pdfPage || 'default'}
+                          src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}${result.downloadUrl}${pdfPage ? `#page=${pdfPage}` : ''}#toolbar=0`}
+                          className="w-full h-[650px] rounded-[1.25rem] bg-slate-900 transition-all border border-slate-950/50"
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -871,19 +1343,19 @@ function DashboardContent() {
                     <motion.div
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-slate-800/40 border border-slate-700/50 rounded-[2.5rem] shadow-2xl overflow-hidden relative group backdrop-blur-xl"
+                      className="bg-slate-950/20 backdrop-blur-3xl border border-indigo-500/10 rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.3)] overflow-hidden relative group"
                     >
                       {/* Header Section */}
-                      <div className="p-8 pb-4">
+                      <div className="p-8 pb-5">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                           <div className="flex items-center gap-5">
-                            <div className="w-14 h-14 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center border border-indigo-400/30 shadow-inner">
+                            <div className="w-14 h-14 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
                               <FileText className="w-7 h-7 text-indigo-400" />
                             </div>
                             <div>
-                              <h2 className="text-2xl font-black text-white mb-1">تفريغ لمّاح السريع</h2>
+                              <h2 className="text-2xl font-black text-white mb-1 drop-shadow-md">تفريغ لمّاح السريع</h2>
                               <p className="text-sm text-slate-400 flex items-center gap-2">
-                                <Sparkles className="w-3 h-3 text-indigo-400" />
+                                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
                                 نص المحاضرة مفرغ بدقة بواسطة الذكاء الاصطناعي
                               </p>
                             </div>
@@ -896,18 +1368,10 @@ function DashboardContent() {
                                 setIsCopied(true);
                                 setTimeout(() => setIsCopied(false), 2000);
                               }}
-                              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold transition-all border ${isCopied ? 'bg-green-500/20 border-green-500/50 text-green-400' : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:border-slate-600'}`}
+                              className={`flex items-center gap-2 px-6 py-3 rounded-[1.25rem] font-bold transition-all border ${isCopied ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]' : 'bg-slate-900/60 backdrop-blur-md border-slate-700/50 text-slate-300 hover:bg-slate-800 hover:border-indigo-500/50 hover:text-indigo-300 shadow-sm'}`}
                             >
                               {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                               {isCopied ? 'تم النسخ!' : 'نسخ النص'}
-                            </button>
-
-                            <button
-                              onClick={() => handleDownloadTranscriptPDF()}
-                              className="bg-gradient-to-l from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2 active:scale-95"
-                            >
-                              <Download className="w-5 h-5" />
-                              تصدير PDF
                             </button>
                           </div>
                         </div>
@@ -915,28 +1379,71 @@ function DashboardContent() {
 
                       {/* Content Section */}
                       <div className="px-8 pb-8">
-                        <div className="bg-slate-900/60 p-8 md:p-10 rounded-[2rem] border border-slate-700/50 shadow-inner relative overflow-hidden max-h-[700px] overflow-y-auto custom-scrollbar">
+                        <div className="bg-slate-950/50 backdrop-blur-md p-8 md:p-10 rounded-[2rem] border border-slate-800/80 shadow-inner relative overflow-hidden max-h-[700px] overflow-y-auto custom-scrollbar group-hover:border-indigo-500/20 transition-colors duration-500">
                           {/* Decorative elements */}
-                          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-[80px] rounded-full -mr-20 -mt-20"></div>
-                          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/5 blur-[80px] rounded-full -ml-20 -mb-20"></div>
+                          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none -mr-40 -mt-40"></div>
+                          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/5 blur-[120px] rounded-full pointer-events-none -ml-40 -mb-40"></div>
 
                           <div className="relative z-10">
-                            <div className="flex items-center gap-2 mb-6 text-slate-500 text-xs font-bold uppercase tracking-widest border-b border-slate-800 pb-4">
-                              <Clock className="w-3 h-3" />
+                            <div className="flex items-center gap-2 mb-6 text-indigo-400/60 text-xs font-black uppercase tracking-[0.3em] border-b border-slate-800/60 pb-4">
+                              <Clock className="w-3.5 h-3.5" />
                               بداية المحاضرة
                             </div>
 
+                            {/* Transcript Search */}
+                            <div className="relative mb-8">
+                              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                              <input
+                                type="text"
+                                value={transcriptSearchQuery}
+                                onChange={e => setTranscriptSearchQuery(e.target.value)}
+                                placeholder="ابحث في التفريغ عن معلومة محددة..."
+                                className="w-full bg-slate-900/80 backdrop-blur-sm border border-slate-700/80 rounded-2xl py-3.5 pr-12 pl-4 text-sm font-semibold text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all shadow-inner"
+                              />
+                              {transcriptSearchQuery && (
+                                <button onClick={() => setTranscriptSearchQuery("")} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-1 bg-slate-800 rounded-full transition-colors">
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                            {transcriptSearchQuery && (
+                              <div className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold px-4 py-2 rounded-xl mb-6 inline-block">
+                                {result.transcript.split('\n').filter((l: string) => l.toLowerCase().includes(transcriptSearchQuery.toLowerCase())).length} سطر يحتوي على "{transcriptSearchQuery}"
+                              </div>
+                            )}
+
                             <div
-                              className="text-slate-200 leading-[2.2] text-lg md:text-xl text-justify font-tajawal selection:bg-indigo-500/40 selection:text-white"
+                              className="text-slate-300 leading-[2.4] text-lg md:text-[1.35rem] text-justify font-tajawal selection:bg-indigo-500/40 selection:text-white"
                               style={{ fontVariantNumeric: 'tabular-nums' }}
                             >
-                              {result.transcript.split('\n').map((line: string, i: number) => (
-                                line.trim() && <p key={i} className="mb-6 last:mb-0">{line}</p>
-                              ))}
+                              {result.transcript.split('\n')
+                                .filter((line: string) => !transcriptSearchQuery || line.toLowerCase().includes(transcriptSearchQuery.toLowerCase()))
+                                .map((line: string, i: number) => {
+                                  if (!line.trim()) return null;
+                                  if (transcriptSearchQuery) {
+                                    const parts = line.split(new RegExp(`(${transcriptSearchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"));
+                                    return (
+                                      <p key={i} className="mb-6 last:mb-0">
+                                        {parts.map((part, j) =>
+                                          part.toLowerCase() === transcriptSearchQuery.toLowerCase()
+                                            ? <mark key={j} className="bg-amber-400/20 text-amber-300 border-b border-amber-500/50 rounded-sm px-1 font-bold not-italic shadow-[0_0_10px_rgba(245,158,11,0.2)]">{part}</mark>
+                                            : part
+                                        )}
+                                      </p>
+                                    );
+                                  }
+                                  return <p key={i} className="mb-6 last:mb-0">{line}</p>;
+                                })}
+                              {transcriptSearchQuery && result.transcript.split('\n').filter((l: string) => l.toLowerCase().includes(transcriptSearchQuery.toLowerCase())).length === 0 && (
+                                <div className="text-center py-12 text-slate-500 bg-slate-900/30 rounded-2xl border border-slate-800/50 border-dashed">
+                                  <Search className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                                  <p className="text-base font-semibold">لا توجد نتائج بحث لـ "{transcriptSearchQuery}"</p>
+                                </div>
+                              )}
                             </div>
 
-                            <div className="flex items-center gap-2 mt-8 text-slate-500 text-xs font-bold uppercase tracking-widest border-t border-slate-800 pt-4 justify-center">
-                              <CheckCircle className="w-3 h-3 text-green-500/50" />
+                            <div className="flex items-center gap-2 mt-12 text-indigo-400/40 text-xs font-black uppercase tracking-[0.3em] border-t border-slate-800/60 pt-6 justify-center">
+                              <CheckCircle className="w-3.5 h-3.5" />
                               نهاية التفريغ
                             </div>
                           </div>
@@ -949,22 +1456,22 @@ function DashboardContent() {
 
                   {/* TABS HEADERS */}
                   {(result?.annotations?.sticky_notes?.length > 0 || result?.annotations?.focus_points?.length > 0 || result?.annotations?.mcqs?.length > 0 || currentHistoryId) && (
-                    <div className="flex flex-wrap gap-2 space-x-reverse bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700 shadow-xl backdrop-blur-md">
-                      <button onClick={() => setActiveTab("notes")} className={`flex-1 min-w-[100px] flex items-center justify-center py-3 rounded-xl font-bold transition-all ${activeTab === "notes" ? "bg-indigo-600 shadow-md text-white scale-[0.98]" : "text-slate-400 hover:text-indigo-300 hover:bg-slate-700/50"}`}>
+                    <div className="flex flex-wrap gap-2 space-x-reverse bg-slate-950/60 p-2 rounded-2xl border border-slate-800/80 shadow-[0_15px_40px_rgba(0,0,0,0.4)] backdrop-blur-3xl relative z-20">
+                      <button onClick={() => setActiveTab("notes")} className={`flex-1 min-w-[100px] flex items-center justify-center py-3.5 rounded-[1.1rem] font-black transition-all duration-300 ${activeTab === "notes" ? "bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 shadow-[0_0_20px_rgba(99,102,241,0.2)] scale-[0.98]" : "text-slate-400 hover:text-indigo-300 hover:bg-slate-800/50 border border-transparent"}`}>
                         <BookOpen className="w-5 h-5 ml-2" />الشروحات
                       </button>
                       {(result?.annotations?.focus_points?.length > 0) && (
-                        <button onClick={() => setActiveTab("focus")} className={`flex-1 min-w-[100px] flex items-center justify-center py-3 rounded-xl font-bold transition-all ${activeTab === "focus" ? "bg-amber-600 shadow-md text-white scale-[0.98]" : "text-slate-400 hover:text-amber-300 hover:bg-slate-700/50"}`}>
+                        <button onClick={() => setActiveTab("focus")} className={`flex-1 min-w-[100px] flex items-center justify-center py-3.5 rounded-[1.1rem] font-black transition-all duration-300 ${activeTab === "focus" ? "bg-amber-500/15 border border-amber-500/30 text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.2)] scale-[0.98]" : "text-slate-400 hover:text-amber-300 hover:bg-slate-800/50 border border-transparent"}`}>
                           <Target className="w-5 h-5 ml-2" />التركيز
                         </button>
                       )}
                       {(result?.annotations?.mcqs?.length > 0 || result?.annotations?.flashcards?.length > 0) && (
-                        <button onClick={() => setActiveTab("quiz")} className={`flex-1 min-w-[100px] flex items-center justify-center py-3 rounded-xl font-bold transition-all ${activeTab === "quiz" ? "bg-emerald-600 shadow-md text-white scale-[0.98]" : "text-slate-400 hover:text-emerald-300 hover:bg-slate-700/50"}`}>
+                        <button onClick={() => setActiveTab("quiz")} className={`flex-1 min-w-[100px] flex items-center justify-center py-3.5 rounded-[1.1rem] font-black transition-all duration-300 ${activeTab === "quiz" ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.2)] scale-[0.98]" : "text-slate-400 hover:text-emerald-300 hover:bg-slate-800/50 border border-transparent"}`}>
                           <BrainCircuit className="w-5 h-5 ml-2" />الأسئلة
                         </button>
                       )}
                       {currentHistoryId && (
-                        <button onClick={() => setActiveTab("chat")} className={`flex-1 min-w-[100px] flex items-center justify-center py-3 rounded-xl font-bold transition-all ${activeTab === "chat" ? "bg-blue-600 shadow-md text-white scale-[0.98]" : "text-slate-400 hover:text-blue-300 hover:bg-slate-700/50"}`}>
+                        <button onClick={() => setActiveTab("chat")} className={`flex-1 min-w-[100px] flex items-center justify-center py-3.5 rounded-[1.1rem] font-black transition-all duration-300 ${activeTab === "chat" ? "bg-blue-500/15 border border-blue-500/30 text-blue-300 shadow-[0_0_20px_rgba(59,130,246,0.2)] scale-[0.98]" : "text-slate-400 hover:text-blue-300 hover:bg-slate-800/50 border border-transparent"}`}>
                           <MessageCircle className="w-5 h-5 ml-2" />تحدث
                         </button>
                       )}
@@ -974,33 +1481,18 @@ function DashboardContent() {
                   {/* TAB CONTENT: NOTES */}
                   <AnimatePresence mode="wait">
                     {activeTab === "notes" && (
-                      <motion.div key="notes" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-6">
+                      <motion.div key="notes" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-6 relative z-10">
                         {result?.annotations?.sticky_notes?.length > 0 && (
-                          <div className="bg-gradient-to-b from-indigo-900/30 to-slate-800/40 border border-indigo-500/20 p-6 rounded-[2rem] shadow-xl relative overflow-hidden">
-                            <h3 className="text-xl font-bold flex items-center mb-6 text-indigo-300">
+                          <div className="bg-slate-950/30 backdrop-blur-3xl border border-indigo-500/15 p-6 md:p-8 rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.3)] relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[50px] rounded-full pointer-events-none -mr-10 -mt-10"></div>
+                            <h3 className="text-xl font-black flex items-center mb-6 text-indigo-300 relative z-10 drop-shadow-md">
                               ملاحظات المحاضر السريعة
                             </h3>
-                            <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                            <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar relative z-10">
                               {result.annotations.sticky_notes.map((note: any, i: number) => (
-                                <div key={i} onClick={() => note.page_number && setPdfPage(note.page_number)} className="bg-slate-900/80 p-5 rounded-2xl border border-slate-700/50 cursor-pointer hover:bg-slate-800 transition-colors">
-                                  <span className="text-xs font-bold bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full mb-3 inline-block">شريحة {note.page_number}</span>
-                                  <p className="text-sm text-slate-300 leading-relaxed">{note.note_text}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {result?.annotations?.slide_explanations?.length > 0 && (
-                          <div className="bg-gradient-to-br from-indigo-900/30 to-purple-900/10 border border-purple-500/30 p-6 rounded-[2rem] shadow-xl relative overflow-hidden">
-                            <h3 className="text-xl font-bold flex items-center mb-6 text-purple-400">
-                              <Lightbulb className="w-6 h-6 ml-2 text-purple-500" />
-                              الشرح الكافي للشرائح
-                            </h3>
-                            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                              {result.annotations.slide_explanations.map((exp: any, i: number) => (
-                                <div key={i} onClick={() => exp.page_number && setPdfPage(exp.page_number)} className="bg-slate-900/60 p-5 rounded-2xl border border-purple-500/20 cursor-pointer hover:bg-slate-800 transition-colors">
-                                  <span className="text-xs font-bold bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full mb-3 inline-block">شريحة {exp.page_number}</span>
-                                  <p className="text-sm text-slate-300 leading-relaxed font-medium">{exp.explanation}</p>
+                                <div key={i} onClick={() => note.page_number && setPdfPage(note.page_number)} className="bg-slate-900/40 backdrop-blur-md p-5 rounded-2xl border border-slate-800/80 cursor-pointer hover:bg-slate-900/80 hover:border-indigo-500/40 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)] transition-all duration-300 transform hover:scale-[1.01]">
+                                  <span className="text-[10px] font-black bg-indigo-500/15 text-indigo-300 border border-indigo-500/20 px-3 py-1 rounded-full mb-3 inline-block tracking-wider">شريحة {note.page_number}</span>
+                                  <p className="text-sm text-slate-300 leading-relaxed font-medium">{note.note_text}</p>
                                 </div>
                               ))}
                             </div>
@@ -1011,21 +1503,22 @@ function DashboardContent() {
 
                     {/* TAB CONTENT: FOCUS */}
                     {activeTab === "focus" && (
-                      <motion.div key="focus" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-6">
+                      <motion.div key="focus" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-6 relative z-10">
                         {result?.annotations?.focus_points?.length > 0 && (
-                          <div className="bg-gradient-to-br from-amber-900/30 to-orange-900/10 border border-amber-500/30 p-6 rounded-[2rem] shadow-xl relative overflow-hidden">
-                            <h3 className="text-xl font-bold flex items-center mb-6 text-amber-400">
+                          <div className="bg-slate-950/30 backdrop-blur-3xl border border-amber-500/15 p-6 md:p-8 rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.3)] relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 blur-[50px] rounded-full pointer-events-none -mr-10 -mt-10"></div>
+                            <h3 className="text-xl font-black flex items-center mb-6 text-amber-400 relative z-10 drop-shadow-md">
                               <Target className="w-6 h-6 ml-2 text-amber-500" />
                               مواضع الأسئلة والتركيز
                             </h3>
-                            <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                            <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar relative z-10">
                               {result.annotations.focus_points.map((fp: any, i: number) => (
-                                <div key={i} onClick={() => fp.page_number && setPdfPage(fp.page_number)} className="bg-slate-900/60 p-5 rounded-2xl border border-amber-500/20 border-r-4 border-r-amber-500 cursor-pointer hover:bg-slate-800 transition-colors">
-                                  <div className="flex justify-between items-start mb-2">
-                                    <h4 className="text-base font-bold text-amber-300">{fp.point}</h4>
-                                    {fp.page_number && <span className="text-[10px] font-bold bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">شريحة {fp.page_number}</span>}
+                                <div key={i} onClick={() => fp.page_number && setPdfPage(fp.page_number)} className="bg-slate-900/40 backdrop-blur-md p-5 rounded-2xl border border-slate-800/80 border-r-4 border-r-amber-500 cursor-pointer hover:bg-slate-900/80 hover:border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.1)] transition-all duration-300 transform hover:scale-[1.01]">
+                                  <div className="flex justify-between items-start mb-3">
+                                    <h4 className="text-base font-black text-amber-300">{fp.point}</h4>
+                                    {fp.page_number && <span className="text-[10px] font-black bg-amber-500/15 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full tracking-wider shrink-0 mr-2">شريحة {fp.page_number}</span>}
                                   </div>
-                                  <p className="text-sm text-slate-300 leading-relaxed">{fp.explanation}</p>
+                                  <p className="text-sm text-slate-300 leading-relaxed font-medium">{fp.explanation}</p>
                                 </div>
                               ))}
                             </div>
@@ -1036,34 +1529,35 @@ function DashboardContent() {
 
                     {/* TAB CONTENT: QUIZ */}
                     {activeTab === "quiz" && (
-                      <motion.div key="quiz" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-6 relative">
+                      <motion.div key="quiz" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-6 relative z-10">
                         {isBasicPlan && (
-                          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-900/60 backdrop-blur-md rounded-3xl p-8 text-center border border-amber-500/30 shadow-2xl">
-                            <div className="w-20 h-20 bg-amber-500/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(245,158,11,0.4)] border border-amber-400/50">
-                              <Lock className="w-10 h-10 text-amber-400" />
+                          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-xl rounded-[2.5rem] p-8 text-center border border-emerald-500/20 shadow-[0_25px_60px_rgba(0,0,0,0.5)]">
+                            <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(16,185,129,0.2)] border border-emerald-500/30">
+                              <Lock className="w-10 h-10 text-emerald-400" />
                             </div>
-                            <h3 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-l from-amber-200 to-orange-400 mb-4">طوّر دراستك واختبر نفسك!</h3>
-                            <p className="text-lg text-slate-200 max-w-lg mb-8 leading-relaxed font-medium">
+                            <h3 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-l from-emerald-200 to-teal-400 mb-4 drop-shadow-lg">طوّر دراستك واختبر نفسك!</h3>
+                            <p className="text-lg text-slate-300 max-w-lg mb-8 leading-relaxed font-medium">
                               ميزة <strong>البطاقات التفاعلية (Flashcards)</strong> و <strong>الأسئلة المتوقعة (MCQs)</strong> حصرية لاشتراكات الباقات المتقدمة و الـ VIP. <br /><span className="text-slate-400 text-sm mt-2 block">رقي باقتك الآن لتفجير طاقتك الدراسية بأقوى أدوات الاسترجاع المتباعد!</span>
                             </p>
-                            <button onClick={() => router.push("/plans")} className="bg-gradient-to-l from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-900 font-extrabold px-10 py-4 rounded-xl shadow-xl transition-all flex items-center text-lg">
+                            <button onClick={() => router.push("/plans")} className="bg-gradient-to-l from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black px-10 py-4 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all flex items-center text-lg transform hover:-translate-y-1">
                               <Crown className="w-6 h-6 ml-2" /> ترقية الباقة الآن لفك القفل
                             </button>
                           </div>
                         )}
 
-                        <div className={isBasicPlan ? "opacity-20 pointer-events-none select-none blur-[6px] transition-all" : ""}>
+                        <div className={isBasicPlan ? "opacity-20 pointer-events-none select-none blur-[10px] transition-all" : ""}>
                           {/* FLASHCARDS */}
                           {result?.annotations?.flashcards?.length > 0 && (
-                            <div className="bg-gradient-to-br from-emerald-900/20 to-teal-900/10 border border-emerald-500/20 p-6 rounded-[2rem] shadow-xl relative">
-                              <h3 className="text-xl font-bold flex items-center mb-5 text-emerald-400">
+                            <div className="bg-slate-950/30 backdrop-blur-3xl border border-emerald-500/15 p-6 md:p-8 rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.3)] relative overflow-hidden group mb-6">
+                              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[50px] rounded-full pointer-events-none -mr-10 -mt-10"></div>
+                              <h3 className="text-xl font-black flex items-center mb-6 text-emerald-400 relative z-10 drop-shadow-md">
                                 <BookOpen className="w-6 h-6 ml-2 text-emerald-500" />بطاقات الحفظ (Flashcards)
                               </h3>
-                              <div className="grid grid-cols-1 gap-4">
+                              <div className="grid grid-cols-1 gap-4 max-h-[380px] overflow-y-auto pr-2 custom-scrollbar relative z-10">
                                 {result.annotations.flashcards.map((fc: any, i: number) => (
                                   <div key={i}
                                     onClick={() => setFlippedCards(prev => ({ ...prev, [i]: !prev[i] }))}
-                                    className="cursor-pointer min-h-[120px] relative group"
+                                    className="cursor-pointer min-h-[120px] relative group/card"
                                     style={{ perspective: "1000px" }}
                                   >
                                     <motion.div
@@ -1074,13 +1568,13 @@ function DashboardContent() {
                                       style={{ transformStyle: "preserve-3d" }}
                                     >
                                       {/* FRONT */}
-                                      <div className="absolute inset-0 w-full flex items-center justify-center p-6 bg-slate-800 border-2 border-emerald-500/30 rounded-2xl shadow-lg group-hover:border-emerald-400 transition-colors" style={{ backfaceVisibility: "hidden" }}>
-                                        <h4 className="text-lg font-bold text-emerald-300 text-center" dir="ltr">{fc.front}</h4>
-                                        <div className="absolute bottom-3 text-xs text-slate-500 flex items-center"><ChevronLeft className="w-3 h-3 ml-1" /> انقر للقلب</div>
+                                      <div className="absolute inset-0 w-full flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md border border-emerald-500/30 rounded-2xl shadow-lg group-hover/card:border-emerald-400 group-hover/card:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all" style={{ backfaceVisibility: "hidden" }}>
+                                        <h4 className="text-lg font-black text-emerald-300 text-center" dir="ltr">{fc.front}</h4>
+                                        <div className="absolute bottom-3 text-xs font-black text-emerald-500/50 flex items-center tracking-widest uppercase"><ChevronLeft className="w-3 h-3 ml-1" /> انقر للقلب</div>
                                       </div>
                                       {/* BACK */}
-                                      <div className="absolute inset-0 w-full flex items-center justify-center p-6 bg-emerald-900/80 border-2 border-emerald-400 rounded-2xl shadow-lg" style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}>
-                                        <p className="text-sm text-emerald-50 text-center leading-relaxed font-medium" dir="rtl">{fc.back}</p>
+                                      <div className="absolute inset-0 w-full flex items-center justify-center p-6 bg-emerald-950/90 backdrop-blur-md border border-emerald-400 rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.3)]" style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}>
+                                        <p className="text-sm text-emerald-50 text-center leading-relaxed font-bold" dir="rtl">{fc.back}</p>
                                       </div>
                                     </motion.div>
                                   </div>
@@ -1091,25 +1585,26 @@ function DashboardContent() {
 
                           {/* MCQs */}
                           {result?.annotations?.mcqs?.length > 0 && (
-                            <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/10 border border-blue-500/20 p-6 rounded-[2rem] shadow-xl relative">
-                              <h3 className="text-xl font-bold flex items-center mb-5 text-blue-400">
-                                <ListTodo className="w-6 h-6 ml-2 text-blue-500" />اختبر نفسك (MCQs)
+                            <div className="bg-slate-950/30 backdrop-blur-3xl border border-teal-500/15 p-6 md:p-8 rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.3)] relative overflow-hidden group">
+                              <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 blur-[50px] rounded-full pointer-events-none -mr-10 -mt-10"></div>
+                              <h3 className="text-xl font-black flex items-center mb-6 text-teal-400 relative z-10 drop-shadow-md">
+                                <ListTodo className="w-6 h-6 ml-2 text-teal-500" />اختبر نفسك (MCQs)
                               </h3>
-                              <div className="space-y-6">
+                              <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar relative z-10">
                                 {result.annotations.mcqs.map((q: any, i: number) => {
                                   const isAnswered = !!selectedAnswers[i];
                                   const isCorrect = selectedAnswers[i] === q.correct_answer;
 
                                   return (
-                                    <div key={i} className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700">
-                                      <h4 className="text-base font-bold text-slate-200 mb-4">{i + 1}. {q.question}</h4>
-                                      <div className="space-y-2">
+                                    <div key={i} className="bg-slate-900/40 backdrop-blur-md p-6 rounded-3xl border border-slate-800/80 shadow-inner">
+                                      <h4 className="text-base font-black text-slate-200 mb-5 leading-relaxed">{i + 1}. {q.question}</h4>
+                                      <div className="space-y-3">
                                         {q.options.map((opt: string, j: number) => {
-                                          let btnClass = "bg-slate-900/50 border-slate-600 hover:border-blue-400 text-slate-300";
+                                          let btnClass = "bg-slate-950/50 border border-slate-700/50 hover:border-teal-500/40 hover:bg-slate-900/80 text-slate-300 font-semibold shadow-sm hover:shadow-md";
                                           if (isAnswered) {
-                                            if (opt === q.correct_answer) btnClass = "bg-green-900/40 border-green-500 text-green-200";
-                                            else if (opt === selectedAnswers[i]) btnClass = "bg-red-900/40 border-red-500 text-red-200";
-                                            else btnClass = "bg-slate-900/20 border-slate-800 text-slate-600 opacity-50";
+                                            if (opt === q.correct_answer) btnClass = "bg-emerald-900/40 border-2 border-emerald-500 text-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.2)] font-black";
+                                            else if (opt === selectedAnswers[i]) btnClass = "bg-rose-900/40 border-2 border-rose-500 text-rose-200 font-bold opacity-80";
+                                            else btnClass = "bg-slate-950/30 border border-slate-800 text-slate-500 opacity-40";
                                           }
                                           return (
                                             <button
@@ -1119,21 +1614,21 @@ function DashboardContent() {
                                                 setSelectedAnswers(prev => ({ ...prev, [i]: opt }));
                                                 setShowExplanation(prev => ({ ...prev, [i]: true }));
                                               }}
-                                              className={`w-full text-right p-4 rounded-xl border-2 transition-all flex items-center justify-between ${btnClass}`}
+                                              className={`w-full text-right p-4 rounded-2xl transition-all duration-300 flex items-center justify-between ${btnClass}`}
                                             >
-                                              <span>{opt}</span>
-                                              {isAnswered && opt === q.correct_answer && <Check className="w-5 h-5 text-green-400" />}
-                                              {isAnswered && opt === selectedAnswers[i] && opt !== q.correct_answer && <X className="w-5 h-5 text-red-400" />}
+                                              <span className="leading-relaxed">{opt}</span>
+                                              {isAnswered && opt === q.correct_answer && <Check className="w-5 h-5 text-emerald-400 shrink-0" />}
+                                              {isAnswered && opt === selectedAnswers[i] && opt !== q.correct_answer && <X className="w-5 h-5 text-rose-400 shrink-0" />}
                                             </button>
                                           );
                                         })}
                                       </div>
                                       <AnimatePresence>
                                         {showExplanation[i] && (
-                                          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-4 overflow-hidden">
-                                            <div className={`p-4 rounded-xl border ${isCorrect ? 'bg-green-900/20 border-green-500/30' : 'bg-amber-900/20 border-amber-500/30'}`}>
-                                              <p className="text-sm font-medium text-slate-300">
-                                                <span className={`font-bold ml-2 ${isCorrect ? 'text-green-400' : 'text-amber-400'}`}>السبب:</span>
+                                          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-5 overflow-hidden">
+                                            <div className={`p-5 rounded-2xl border ${isCorrect ? 'bg-emerald-900/10 border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.05)]' : 'bg-amber-900/10 border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.05)]'}`}>
+                                              <p className="text-sm font-medium text-slate-300 leading-relaxed">
+                                                <span className={`font-black ml-2 px-2 py-1 rounded-md text-[10px] uppercase tracking-wider ${isCorrect ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>السبب</span>
                                                 {q.explanation}
                                               </p>
                                             </div>
@@ -1152,77 +1647,78 @@ function DashboardContent() {
 
                     {/* TAB CONTENT: CHAT */}
                     {activeTab === "chat" && (
-                      <motion.div key="chat" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="flex flex-col h-[700px] bg-slate-800/80 border border-slate-700 rounded-[2rem] shadow-xl overflow-hidden relative">
+                      <motion.div key="chat" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="flex flex-col h-[700px] bg-slate-950/40 backdrop-blur-3xl border border-blue-500/15 rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.3)] overflow-hidden relative z-10 group">
 
                         {isBasicPlan && (
-                          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-900/60 backdrop-blur-md rounded-[2rem] p-8 text-center border border-blue-500/30 shadow-2xl">
-                            <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(59,130,246,0.4)] border border-blue-400/50">
+                          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-xl p-8 text-center border border-blue-500/20">
+                            <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(59,130,246,0.3)] border border-blue-500/30">
                               <Lock className="w-10 h-10 text-blue-400" />
                             </div>
-                            <h3 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-l from-blue-200 to-cyan-400 mb-4">تحدث مع المحاضرة بذكاء!</h3>
-                            <p className="text-lg text-slate-200 max-w-lg mb-8 leading-relaxed font-medium">
+                            <h3 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-l from-blue-200 to-cyan-400 mb-4 drop-shadow-md">تحدث مع المحاضرة بذكاء!</h3>
+                            <p className="text-lg text-slate-300 max-w-lg mb-8 leading-relaxed font-medium">
                               ميزة <strong>المحادثة الذكية (Chat)</strong> حصرية لاشتراكات الباقات المتقدمة والـ VIP. <br /><span className="text-slate-400 text-sm mt-2 block">رقي باقتك الآن لتتمكن من طرح أي سؤال على المحاضرة وسيجيبك النظام بدقة!</span>
                             </p>
-                            <button onClick={() => router.push("/plans")} className="bg-gradient-to-l from-blue-500 to-cyan-600 hover:from-blue-400 hover:to-cyan-500 text-slate-900 font-extrabold px-10 py-4 rounded-xl shadow-xl transition-all flex items-center text-lg">
+                            <button onClick={() => router.push("/plans")} className="bg-gradient-to-l from-blue-500 to-cyan-600 hover:from-blue-400 hover:to-cyan-500 text-slate-950 font-black px-10 py-4 rounded-2xl shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] transition-all flex items-center text-lg transform hover:-translate-y-1">
                               <Crown className="w-6 h-6 ml-2" /> ترقية الباقة الآن لفك القفل
                             </button>
                           </div>
                         )}
 
-                        <div className={`flex flex-col h-full ${isBasicPlan ? "opacity-20 pointer-events-none select-none blur-[6px] transition-all" : ""}`}>
-                          <div className="bg-gradient-to-r from-blue-900/40 to-indigo-900/40 p-5 px-6 border-b border-slate-700/50 flex flex-col">
-                            <h3 className="text-xl font-bold flex items-center text-blue-300">
-                              <MessageCircle className="w-6 h-6 ml-2 text-blue-400" /> تحدث مع المحاضرة
+                        <div className={`flex flex-col h-full relative z-10 ${isBasicPlan ? "opacity-20 pointer-events-none select-none blur-[10px] transition-all" : ""}`}>
+                          <div className="bg-slate-900/60 backdrop-blur-md p-6 border-b border-slate-800/80 flex flex-col relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[50px] rounded-full pointer-events-none -mr-10 -mt-10"></div>
+                            <h3 className="text-xl font-black flex items-center text-blue-400 relative z-10 drop-shadow-md">
+                              <MessageCircle className="w-6 h-6 ml-2 text-blue-500" /> تحدث مع المحاضرة
                             </h3>
-                            <p className="text-sm text-slate-400 pr-8 mt-1">يستند الرد لمعالجة سؤالك باحترافية، مع توضيح ما ذكره الدكتور في المحاضرة.</p>
+                            <p className="text-sm text-slate-400 pr-8 mt-1 font-medium relative z-10">يستند الرد لمعالجة سؤالك باحترافية، مع توضيح ما ذكره الدكتور في المحاضرة.</p>
                           </div>
 
-                          <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-slate-900/50">
+                          <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-transparent">
                             {chatMessages.length === 0 && (
                               <div className="h-full flex flex-col items-center justify-center text-slate-500 space-y-4 opacity-60">
                                 <BrainCircuit className="w-16 h-16 text-slate-600" />
-                                <p className="text-lg text-center">اطرح سؤالاً يخص جزئية معينة من المحاضرة وسيجيبك النظام فوراً!</p>
+                                <p className="text-lg text-center font-bold">اطرح سؤالاً يخص جزئية معينة من المحاضرة وسيجيبك النظام فوراً!</p>
                               </div>
                             )}
                             {chatMessages.map((msg, idx) => (
                               <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} w-full`}>
-                                <div className={`max-w-[85%] p-4 rounded-2xl ${msg.role === "user" ? "bg-blue-600/90 text-white rounded-tl-sm shadow-md" : "bg-slate-800 border border-slate-700 text-slate-200 rounded-tr-sm shadow-sm"}`}>
-                                  <p className="leading-relaxed whitespace-pre-wrap text-sm md:text-base">{msg.content}</p>
+                                <div className={`max-w-[85%] p-5 rounded-[1.5rem] ${msg.role === "user" ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-tl-sm shadow-[0_10px_20px_rgba(59,130,246,0.2)]" : "bg-slate-800/80 backdrop-blur-md border border-slate-700/50 text-slate-200 rounded-tr-sm shadow-inner"}`}>
+                                  <p className="leading-relaxed whitespace-pre-wrap text-sm md:text-base font-medium">{msg.content}</p>
                                 </div>
                               </div>
                             ))}
                             {isChatLoading && (
                               <div className="flex justify-start w-full">
-                                <div className="max-w-[75%] p-4 rounded-2xl bg-slate-800 border border-slate-700 text-slate-400 rounded-tr-sm flex items-center space-x-2 space-x-reverse">
-                                  <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
-                                  <span className="text-sm">يقرأ الشرائح والصوت...</span>
+                                <div className="max-w-[75%] p-5 rounded-[1.5rem] bg-slate-800/80 backdrop-blur-md border border-slate-700/50 text-slate-400 rounded-tr-sm flex items-center space-x-2 space-x-reverse shadow-inner">
+                                  <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
+                                  <span className="text-sm font-bold">يقرأ الشرائح والصوت...</span>
                                 </div>
                               </div>
                             )}
                             <div ref={chatEndRef} />
                           </div>
 
-                          <div className="p-4 bg-slate-800 border-t border-slate-700">
+                          <div className="p-6 bg-slate-900/60 backdrop-blur-md border-t border-slate-800/80">
                             {/* Chat Usage Indicator */}
                             {subscriptionLimit > 0 && (
-                              <div className="flex justify-between items-center mb-2 px-1">
-                                <span className="text-[10px] md:text-xs font-bold text-slate-500">
+                              <div className="flex justify-between items-center mb-3 px-2">
+                                <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-500">
                                   {chatCount >= subscriptionLimit ? "⚠️ انتهى رصيد المحادثة لهذه المحاضرة" : `متبقي ${subscriptionLimit - chatCount} من ${subscriptionLimit} سؤالاً`}
                                 </span>
-                                <div className="flex-1 mx-3 h-1 bg-slate-700 rounded-full overflow-hidden">
+                                <div className="flex-1 mx-4 h-1.5 bg-slate-800 rounded-full overflow-hidden shadow-inner">
                                   <div
-                                    className={`h-full transition-all ${chatCount >= subscriptionLimit ? "bg-red-500" : "bg-blue-500"}`}
+                                    className={`h-full transition-all duration-500 ease-out ${chatCount >= subscriptionLimit ? "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]" : "bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"}`}
                                     style={{ width: `${Math.min(100, (chatCount / subscriptionLimit) * 100)}%` }}
                                   />
                                 </div>
                               </div>
                             )}
 
-                            <form onSubmit={handleChatSubmit} className="flex space-x-2 space-x-reverse">
+                            <form onSubmit={handleChatSubmit} className="flex space-x-3 space-x-reverse relative">
                               <input
                                 type="text"
                                 maxLength={500}
-                                className="flex-1 bg-slate-900 border border-slate-700 text-slate-200 p-4 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-slate-500 shadow-inner"
+                                className="flex-1 bg-slate-950/50 backdrop-blur-sm border border-slate-700/80 text-slate-200 p-4 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder-slate-500 shadow-inner font-semibold"
                                 placeholder="مثال: كيف شرح الدكتور الفرق بين DOS و DDOS؟"
                                 value={chatInput}
                                 onChange={(e) => setChatInput(e.target.value)}
@@ -1231,7 +1727,7 @@ function DashboardContent() {
                               <button
                                 type="submit"
                                 disabled={isChatLoading || !chatInput.trim() || (subscriptionLimit > 0 && chatCount >= subscriptionLimit)}
-                                className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 text-white p-4 rounded-xl font-bold flex items-center justify-center transition-all shadow-md active:scale-95"
+                                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:hover:from-blue-600 disabled:hover:to-indigo-600 text-white w-14 h-14 rounded-2xl font-black flex items-center justify-center transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] active:scale-95"
                               >
                                 <Send className="w-5 h-5 rtl:-scale-x-100" />
                               </button>
@@ -1282,6 +1778,49 @@ function DashboardContent() {
                   سأكتفي بالملخص حالياً
                 </button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Onboarding Name Modal */}
+      <AnimatePresence>
+        {showNameOnboarding && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-slate-900 border border-indigo-500/30 rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-3xl rounded-full pointer-events-none" />
+              <div className="w-16 h-16 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-indigo-500/30">
+                <Sparkles className="w-8 h-8 text-indigo-400 fill-indigo-400" />
+              </div>
+              <h3 className="text-2xl font-black text-white mb-2">أهلاً بك في عائلة لمّاح! 🌟</h3>
+              <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+                يسعدنا انضمامك إلينا! يرجى تحديد اسمك المعتمد الذي ترغب في أن يطبع على دفاتر ملازمك في المتجر ويظهر لزملائك الطلاب.
+              </p>
+              
+              <form onSubmit={handleSaveOnboardName} className="space-y-4">
+                <div className="space-y-2">
+                  <input
+                    required
+                    type="text"
+                    placeholder="اكتب اسمك الكامل (مثال: يوسف أحمد)..."
+                    value={onboardNameInput}
+                    onChange={(e) => setOnboardNameInput(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none transition text-center font-bold"
+                  />
+                </div>
+
+                {onboardError && (
+                  <p className="text-rose-400 text-xs font-semibold">{onboardError}</p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isOnboardUpdating || !onboardNameInput.trim()}
+                  className="w-full py-4 bg-gradient-to-l from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black rounded-xl shadow-lg transition-all transform active:scale-[0.98] flex justify-center items-center gap-2"
+                >
+                  {isOnboardUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : "حفظ الاسم وتأكيد الحساب 🚀"}
+                </button>
+              </form>
             </motion.div>
           </motion.div>
         )}
