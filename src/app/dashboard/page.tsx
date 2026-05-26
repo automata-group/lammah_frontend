@@ -906,15 +906,11 @@ function DashboardContent() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        setUploadMode("url");
-                        setAudioFile(null);
-                        setAudioTempId(null);
-                        setAudioUploadProgress(0);
-                      }}
-                      className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wide transition-all duration-300 flex items-center gap-1.5 ${uploadMode === "url" ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-950/60" : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"}`}
+                      disabled
+                      className="px-5 py-2.5 rounded-xl text-xs font-black tracking-wide text-slate-500 cursor-not-allowed bg-slate-950/20 opacity-50 flex items-center gap-1.5"
+                      title="ميزة روابط المحاضرات غير متاحة حالياً - ستتوفر قريباً"
                     >
-                      <Share2 className="w-3.5 h-3.5" /> رابط محاضرة
+                      <Share2 className="w-3.5 h-3.5" /> رابط محاضرة (قريباً)
                     </button>
                   </div>
                   
