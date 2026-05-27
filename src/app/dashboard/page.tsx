@@ -514,7 +514,14 @@ function DashboardContent() {
                   break;
                 case "done":
                   setChatCount(0);
-                  setResult({ transcript: metadata?.transcript || "", downloadUrl: p.download_url, annotations: metadata?.annotations });
+                  // Use annotations from 'done' event (backend includes them as backup)
+                  // Fallback to metadata?.annotations if available
+                  // Transcript is already in result state from the earlier 'transcript' event
+                  setResult((prev: any) => ({
+                    ...prev,
+                    downloadUrl: p.download_url,
+                    annotations: p.annotations || metadata?.annotations || prev?.annotations
+                  }));
                   if (p.title && !lectureTitle.trim()) {
                     setLectureTitle(p.title);
                   }
