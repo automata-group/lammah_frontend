@@ -58,7 +58,7 @@ function DashboardContent() {
   const isBasicPlan = planName.includes("طالب") || planName.includes("أساسي") || planName === "مجاني";
 
   const subscriptionLimit = planName.includes("متقدم") ? 40 :
-    (planName.includes("برو") || planName.includes("VIP")) ? 100 :
+    (planName.includes("برو") || planName.includes("VIP") || planName.includes("الذهبية") || planName.includes("النخبة") || planName.includes("Elite")) ? 100 :
       15; // Default for Basic/Student
 
   // UI States for Expansion
