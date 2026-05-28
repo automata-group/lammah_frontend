@@ -161,7 +161,7 @@ export default function Home() {
             className="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-xs font-black text-white rounded-full group bg-gradient-to-br from-purple-600 to-blue-500 group-hover:from-purple-600 group-hover:to-blue-500 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-blue-800"
           >
             <span className="relative px-6 py-2.5 transition-all ease-in duration-75 bg-[#020617] rounded-full group-hover:bg-opacity-0">
-              ابدأ الدراسة مجاناً
+              ابدأ الآن
             </span>
           </a>
         </div>
@@ -193,7 +193,7 @@ export default function Home() {
 
           {/* Elegant Subtitle */}
           <p className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed font-medium">
-            لمّاح هي المنصة العربية الأولى التي تعتمد على الذكاء الاصطناعي لتفريغ محاضراتك، تلخيصها، توليد أسئلة متوقعة للامتحان، وخرائط ذهنية تفاعلية. سجل الآن وانضم لأكثر من 10,000 طالب وطالبة.
+            لمّاح هي منصة مبتكرة تعتمد على الذكاء الاصطناعي لتفريغ محاضراتك وتلخيصها بدقة، مع توليد أسئلة متوقعة للاختبارات وخرائط ذهنية تفاعلية تسهّل عليك المذاكرة. انضم لزملائك وابدأ الدراسة بذكاء وكفاءة.
           </p>
 
           {/* CTA Buttons */}
@@ -202,7 +202,7 @@ export default function Home() {
               href="#get-started"
               className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-sm px-8 py-4.5 rounded-2xl shadow-xl shadow-indigo-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
             >
-              جرب المنصة مجاناً 🚀
+              ابدأ دراستك الآن 🚀
             </a>
             <a
               href="#demo-section"
@@ -349,7 +349,7 @@ export default function Home() {
             <Cpu className="w-12 h-12 text-indigo-400 mx-auto animate-spin" style={{ animationDuration: '8s' }} />
             <h2 className="text-3xl sm:text-4xl font-black text-white">انضم لعالم المذاكرة الذكية اليوم</h2>
             <p className="text-slate-400 text-sm leading-relaxed">
-              سجل حسابك مجاناً فوراً وابدأ بتجربة تفريغ أولى محاضراتك مجاناً. لا يتطلب أي بطاقة ائتمانية.
+              سجل حسابك الآن وابدأ بتحويل محاضراتك الجامعية إلى ملخصات ذكية في ثوانٍ معدودة.
             </p>
 
             <AnimatePresence mode="wait">

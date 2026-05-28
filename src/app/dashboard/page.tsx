@@ -810,7 +810,7 @@ function DashboardContent() {
                 {/* Progress Messages */}
                 <div className="w-full text-center lg:text-right space-y-3 mb-10 relative z-10">
                   <h2 className="text-3xl md:text-4xl font-black text-white leading-tight drop-shadow-md">
-                    {queuePosition > 0 ? "أنت في قائمة الانتظار الذهبية" : "لمّاح يعكف على محاضرتك الآن"}
+                    {queuePosition > 0 ? "أنت في قائمة الانتظار الذهبية" : "لمّاح يقوم بإعداد محاضرتك الآن"}
                   </h2>
                   <p className="text-indigo-300/80 text-base font-semibold max-w-lg leading-relaxed">
                     {queuePosition > 0
