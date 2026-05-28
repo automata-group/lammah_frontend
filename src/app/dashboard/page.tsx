@@ -1,4 +1,5 @@
 "use client";
+// v2.1.0 — SSE done-event annotations fix
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useAuth } from "@/context/AuthContext";
