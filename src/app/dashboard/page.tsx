@@ -532,6 +532,7 @@ function DashboardContent() {
                     // annotations are saved to DB BEFORE the done event is sent.
                     // This avoids relying on large SSE JSON parsing which fails silently.
                     const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+                    console.log(`🌐 [LAMMAH] Fetching annotations from: ${apiBase}/api/v1/subscription/history/${p.history_id}`);
                     fetch(`${apiBase}/api/v1/subscription/history/${p.history_id}`, {
                       headers: {
                         "Authorization": `Bearer ${session.access_token}`,
@@ -541,37 +542,73 @@ function DashboardContent() {
                     }).then(async r => {
                       const fallbackAnnotations = p.annotations || metadata?.annotations;
                       if (!r.ok) {
+                        console.warn("⚠️ [LAMMAH] Supabase fetch returned non-ok status. Using fallback annotations.");
+                        const finalAnnos = fallbackAnnotations;
+                        if (finalAnnos) {
+                          if (finalAnnos.sticky_notes?.length > 0) setActiveTab("notes");
+                          else if (finalAnnos.focus_points?.length > 0) setActiveTab("focus");
+                          else if (finalAnnos.mcqs?.length > 0 || finalAnnos.flashcards?.length > 0) setActiveTab("quiz");
+                        }
                         setResult((prev: any) => ({ ...prev, downloadUrl: p.download_url, annotations: fallbackAnnotations }));
                         return;
                       }
                       const data = await r.json();
                       const fetchedAnnotations = data?.metadata?.annotations;
+                      const finalAnnos = fetchedAnnotations || fallbackAnnotations;
+                      console.log("🎉 [LAMMAH] Deployed frontend fetch successful. Annotations loaded:", finalAnnos);
+                      if (finalAnnos) {
+                        if (finalAnnos.sticky_notes?.length > 0) setActiveTab("notes");
+                        else if (finalAnnos.focus_points?.length > 0) setActiveTab("focus");
+                        else if (finalAnnos.mcqs?.length > 0 || finalAnnos.flashcards?.length > 0) setActiveTab("quiz");
+                        else setActiveTab("chat");
+                      }
                       setResult((prev: any) => ({
                         ...prev,
                         downloadUrl: p.download_url,
-                        annotations: fetchedAnnotations || fallbackAnnotations || prev?.annotations
+                        annotations: finalAnnos || prev?.annotations
                       }));
-                    }).catch(() => {
+                    }).catch((err) => {
+                      console.error("❌ [LAMMAH] Fetch from Supabase history failed:", err);
+                      const finalAnnos = p.annotations || metadata?.annotations;
+                      if (finalAnnos) {
+                        if (finalAnnos.sticky_notes?.length > 0) setActiveTab("notes");
+                        else if (finalAnnos.focus_points?.length > 0) setActiveTab("focus");
+                        else if (finalAnnos.mcqs?.length > 0 || finalAnnos.flashcards?.length > 0) setActiveTab("quiz");
+                      }
                       setResult((prev: any) => ({
                         ...prev,
                         downloadUrl: p.download_url,
-                        annotations: p.annotations || metadata?.annotations || prev?.annotations
+                        annotations: finalAnnos || prev?.annotations
                       }));
                     });
                   } else {
+                    console.log("ℹ️ [LAMMAH] Done event parsed without history_id. Using fallback annotations.");
+                    const finalAnnos = p.annotations || metadata?.annotations;
+                    if (finalAnnos) {
+                      if (finalAnnos.sticky_notes?.length > 0) setActiveTab("notes");
+                      else if (finalAnnos.focus_points?.length > 0) setActiveTab("focus");
+                      else if (finalAnnos.mcqs?.length > 0 || finalAnnos.flashcards?.length > 0) setActiveTab("quiz");
+                    }
                     setResult((prev: any) => ({
                       ...prev,
                       downloadUrl: p.download_url,
-                      annotations: p.annotations || metadata?.annotations || prev?.annotations
+                      annotations: finalAnnos || prev?.annotations
                     }));
                   }
                   setIsStreaming(false); setProgressStep(""); break;
 
                 case "complete":
                   setChatCount(0);
+                  console.log("🎉 [LAMMAH] Complete event received. Annotations:", p.data.annotations);
+                  if (p.data.annotations) {
+                    const finalAnnos = p.data.annotations;
+                    if (finalAnnos.sticky_notes?.length > 0) setActiveTab("notes");
+                    else if (finalAnnos.focus_points?.length > 0) setActiveTab("focus");
+                    else if (finalAnnos.mcqs?.length > 0 || finalAnnos.flashcards?.length > 0) setActiveTab("quiz");
+                  }
                   setResult({ transcript: p.data.transcript || "", downloadUrl: p.data.downloadUrl, annotations: p.data.annotations });
                   setIsStreaming(false); setProgressStep(""); break;
-                case "error": setError(p.message); setIsStreaming(false); break;
+                case "error": console.error("❌ [LAMMAH] Stream error received:", p.message); setError(p.message); setIsStreaming(false); break;
               }
             } catch { }
           }
