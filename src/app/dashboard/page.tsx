@@ -515,14 +515,6 @@ function DashboardContent() {
                   break;
                 case "done":
                   setChatCount(0);
-                  // Use annotations from 'done' event (backend includes them as backup)
-                  // Fallback to metadata?.annotations if available
-                  // Transcript is already in result state from the earlier 'transcript' event
-                  setResult((prev: any) => ({
-                    ...prev,
-                    downloadUrl: p.download_url,
-                    annotations: p.annotations || metadata?.annotations || prev?.annotations
-                  }));
                   if (p.title && !lectureTitle.trim()) {
                     setLectureTitle(p.title);
                   }
@@ -536,8 +528,45 @@ function DashboardContent() {
                         body: JSON.stringify({ title: lectureTitle.trim() })
                       }).catch(() => {});
                     }
+                    // Fetch full annotations from Supabase — guaranteed to work because
+                    // annotations are saved to DB BEFORE the done event is sent.
+                    // This avoids relying on large SSE JSON parsing which fails silently.
+                    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+                    fetch(`${apiBase}/api/v1/subscription/history/${p.history_id}`, {
+                      headers: {
+                        "Authorization": `Bearer ${session.access_token}`,
+                        "X-Fingerprint": fp,
+                        "X-Device-Metadata": meta
+                      }
+                    }).then(async r => {
+                      const fallbackAnnotations = p.annotations || metadata?.annotations;
+                      if (!r.ok) {
+                        setResult((prev: any) => ({ ...prev, downloadUrl: p.download_url, annotations: fallbackAnnotations }));
+                        return;
+                      }
+                      const data = await r.json();
+                      const fetchedAnnotations = data?.metadata?.annotations;
+                      setResult((prev: any) => ({
+                        ...prev,
+                        downloadUrl: p.download_url,
+                        annotations: fetchedAnnotations || fallbackAnnotations || prev?.annotations
+                      }));
+                    }).catch(() => {
+                      setResult((prev: any) => ({
+                        ...prev,
+                        downloadUrl: p.download_url,
+                        annotations: p.annotations || metadata?.annotations || prev?.annotations
+                      }));
+                    });
+                  } else {
+                    setResult((prev: any) => ({
+                      ...prev,
+                      downloadUrl: p.download_url,
+                      annotations: p.annotations || metadata?.annotations || prev?.annotations
+                    }));
                   }
                   setIsStreaming(false); setProgressStep(""); break;
+
                 case "complete":
                   setChatCount(0);
                   setResult({ transcript: p.data.transcript || "", downloadUrl: p.data.downloadUrl, annotations: p.data.annotations });
