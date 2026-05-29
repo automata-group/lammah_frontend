@@ -448,6 +448,13 @@ export default function MarketplacePage() {
                       {actualTitle}
                     </h3>
 
+                    {/* Description */}
+                    {nb.description && (
+                      <p className="text-xs text-slate-400 line-clamp-3 mb-4 leading-relaxed bg-slate-950/40 p-3 rounded-xl border border-slate-800/60">
+                        {nb.description}
+                      </p>
+                    )}
+
                     {/* Metadata Row */}
                     <div className="flex flex-wrap gap-x-2 gap-y-1.5 text-xs text-slate-400 mb-6 font-medium">
                       <span>📄 {nb.page_count} صفحات</span>
