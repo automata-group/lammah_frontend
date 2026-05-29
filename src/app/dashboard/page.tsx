@@ -47,6 +47,21 @@ function DashboardContent() {
   const [chatCount, setChatCount] = useState<number>(0);
   const [showLimitModal, setShowLimitModal] = useState(false);
 
+  const fetchChatUsage = async () => {
+    if (!session) return;
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/chat-usage`, {
+        headers: { "Authorization": `Bearer ${session.access_token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setChatCount(data.total_chat_count || 0);
+      }
+    } catch (e) {
+      console.warn("Failed to fetch chat usage:", e);
+    }
+  };
+
   // Pre-upload States
   const [audioUploadProgress, setAudioUploadProgress] = useState(0);
   const [pdfUploadProgress, setPdfUploadProgress] = useState(0);
@@ -57,9 +72,9 @@ function DashboardContent() {
 
   const isBasicPlan = planName.includes("طالب") || planName.includes("أساسي") || planName === "مجاني";
 
-  const subscriptionLimit = planName.includes("متقدم") ? 40 :
-    (planName.includes("برو") || planName.includes("VIP") || planName.includes("الذهبية") || planName.includes("النخبة") || planName.includes("Elite")) ? 100 :
-      15; // Default for Basic/Student
+  const subscriptionLimit = (planName.includes("الذهبية") || planName.includes("النخبة") || planName.includes("Elite") || planName.includes("برو") || planName.includes("VIP")) ? 100 :
+    (planName.includes("الميدتيرم") || planName.includes("التفوق") || planName.includes("متقدم") || planName.includes("Premium")) ? 25 :
+      5; // Default for Basic/Rescue/Student (الإنقاذ/الأساسية)
 
   // UI States for Expansion
   const [activeTab, setActiveTab] = useState("notes");
@@ -271,7 +286,7 @@ function DashboardContent() {
               if (!r.ok) throw new Error("التلخيص غير موجود أو محذوف");
               const data = await r.json();
               if (data?.metadata?.job_id) {
-                setChatCount(data.chat_count || 0);
+                setChatCount(data.total_chat_count !== undefined ? data.total_chat_count : (data.chat_count || 0));
                 setLectureTitle(data.metadata.title || "محاضرة بدون عنوان");
                 const hasPdf = data.metadata.has_pdf !== undefined
                   ? data.metadata.has_pdf
@@ -368,6 +383,7 @@ function DashboardContent() {
       }
     };
     fetchQuota();
+    fetchChatUsage();
   }, [session]);
 
   const handleProcess = async (forceRawFiles: boolean = false) => {
@@ -514,7 +530,7 @@ function DashboardContent() {
                   setShowExplanation({});
                   break;
                 case "done":
-                  setChatCount(0);
+                  fetchChatUsage();
                   if (p.title && !lectureTitle.trim()) {
                     setLectureTitle(p.title);
                   }
@@ -598,7 +614,7 @@ function DashboardContent() {
                   setIsStreaming(false); setProgressStep(""); break;
 
                 case "complete":
-                  setChatCount(0);
+                  fetchChatUsage();
                   console.log("🎉 [LAMMAH] Complete event received. Annotations:", p.data.annotations);
                   if (p.data.annotations) {
                     const finalAnnos = p.data.annotations;
