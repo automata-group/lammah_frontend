@@ -455,6 +455,15 @@ export default function MarketplacePage() {
                       </p>
                     )}
 
+                    {/* Covered Topics */}
+                    {nb.covered_topics && (
+                      <div className="mb-4 bg-indigo-950/20 border border-indigo-500/20 rounded-xl p-3">
+                        <p className="text-[10px] font-black text-indigo-400 mb-1 tracking-wide uppercase">📖 المادة المشروحة</p>
+                        <p className="text-xs text-indigo-200/80 leading-relaxed line-clamp-3">{nb.covered_topics}</p>
+                      </div>
+                    )}
+
+
                     {/* Metadata Row */}
                     <div className="flex flex-wrap gap-x-2 gap-y-1.5 text-xs text-slate-400 mb-6 font-medium">
                       <span>📄 {nb.page_count} صفحات</span>

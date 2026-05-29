@@ -25,6 +25,7 @@ function PublishToMarketplaceContent() {
   const [reflectPhoneNumber, setReflectPhoneNumber] = useState("");
   const [reflectAccountName, setReflectAccountName] = useState("");
   const [description, setDescription] = useState("");
+  const [coveredTopics, setCoveredTopics] = useState("");
   const [university, setUniversity] = useState("");
   const [showCustomUni, setShowCustomUni] = useState(false);
   const [courseName, setCourseName] = useState("");
@@ -67,7 +68,8 @@ function PublishToMarketplaceContent() {
           pdf_url: pdfUrl,
           preview_pdf_url: previewUrl,
           description: formattedDescription,
-          student_name: formattedStudentName
+          student_name: formattedStudentName,
+          covered_topics: coveredTopics.trim()
         })
       });
 
@@ -206,6 +208,26 @@ function PublishToMarketplaceContent() {
                 <textarea required value={description} onChange={e => setDescription(e.target.value)} rows={3}
                   placeholder="تحتوي هذه الملزمة على شرح كامل لجميع الفصول وجداول مقارنة ومصطلحات هامة مع التركيز على كلام الدكتور الشفوي..."
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:border-indigo-500 transition outline-none resize-none" />
+              </div>
+
+              {/* Covered Topics Field */}
+              <div className="space-y-2 bg-indigo-950/20 border border-indigo-500/20 rounded-2xl p-4">
+                <label className="text-sm font-bold text-indigo-300 flex items-center gap-2">
+                  <span className="text-lg">📖</span>
+                  المادة المشروحة — أي شابترات ومواضيع غطّاها الدكتور؟
+                  <span className="text-rose-500 font-black">*</span>
+                </label>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  اكتب هنا بدقة ماذا شرح الدكتور في هذه المحاضرة حتى يعرف الطلاب ماذا سيحصلون قبل الشراء.
+                </p>
+                <textarea
+                  required
+                  value={coveredTopics}
+                  onChange={e => setCoveredTopics(e.target.value)}
+                  rows={3}
+                  placeholder="مثال: Chapter 3 - Memory Management, Chapter 4 - Process Scheduling (كل ما يتعلق بالـ CPU Scheduling والـ Deadlocks)"
+                  className="w-full bg-slate-950 border border-indigo-500/30 rounded-xl px-4 py-3 text-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition outline-none resize-none"
+                />
               </div>
 
               {/* PAYMENT DETAILS: Strictly Reflect ONLY & requires prefix selector */}
