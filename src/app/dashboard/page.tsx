@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getFingerprint as getThumbmark } from '@thumbmarkjs/thumbmarkjs';
 import { Loader2, Upload, FileAudio, FileText, CheckCircle, AlertCircle, Sparkles, ChevronLeft, History, User, Package, Crown, Lock, ChevronRight, Menu, X, Info, Download, Share2, Printer, Copy, Check, MessageCircle, Home, LogOut, Clock, Target, BrainCircuit, BookOpen, Lightbulb, ListTodo, Quote, Eye, Send, Plus, Search, Pencil, Store } from "lucide-react";
 import ResultSkeleton from "@/components/ResultSkeleton";
+import ReactMarkdown from 'react-markdown';
 
 function DashboardContent() {
   const { user, session, loading, signOut } = useAuth();
@@ -1769,7 +1770,39 @@ function DashboardContent() {
                             {chatMessages.map((msg, idx) => (
                               <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} w-full`}>
                                 <div className={`max-w-[85%] p-5 rounded-[1.5rem] ${msg.role === "user" ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-tl-sm shadow-[0_10px_20px_rgba(59,130,246,0.2)]" : "bg-slate-800/80 backdrop-blur-md border border-slate-700/50 text-slate-200 rounded-tr-sm shadow-inner"}`}>
-                                  <p className="leading-relaxed whitespace-pre-wrap text-sm md:text-base font-medium">{msg.content}</p>
+                                  {msg.role === "user" ? (
+                                    <p className="leading-relaxed whitespace-pre-wrap text-sm md:text-base font-medium">{msg.content}</p>
+                                  ) : (
+                                    <div className="max-w-none text-sm md:text-base font-medium leading-relaxed text-right">
+                                      <ReactMarkdown
+                                        components={{
+                                          p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed">{children}</p>,
+                                          ul: ({ children }) => <ul className="list-disc pr-6 mb-4 space-y-2">{children}</ul>,
+                                          ol: ({ children }) => <ol className="list-decimal pr-6 mb-4 space-y-2">{children}</ol>,
+                                          li: ({ children }) => <li className="list-item mr-1">{children}</li>,
+                                          h1: ({ children }) => <h1 className="text-lg font-black text-blue-400 mt-5 mb-3">{children}</h1>,
+                                          h2: ({ children }) => <h2 className="text-base font-black text-blue-400 mt-4 mb-2">{children}</h2>,
+                                          h3: ({ children }) => <h3 className="text-sm font-black text-blue-400 mt-3 mb-2">{children}</h3>,
+                                          strong: ({ children }) => <strong className="font-bold text-white bg-white/5 px-1.5 py-0.5 rounded border border-white/10">{children}</strong>,
+                                          em: ({ children }) => <em className="italic text-slate-300">{children}</em>,
+                                          table: ({ children }) => (
+                                            <div className="overflow-x-auto my-4 rounded-xl border border-slate-700/50 bg-slate-900/50">
+                                              <table className="min-w-full divide-y divide-slate-800 text-right">{children}</table>
+                                            </div>
+                                          ),
+                                          thead: ({ children }) => <thead className="bg-slate-900/80 text-xs font-bold text-slate-300 border-b border-slate-800">{children}</thead>,
+                                          tbody: ({ children }) => <tbody className="divide-y divide-slate-800/50 text-sm">{children}</tbody>,
+                                          tr: ({ children }) => <tr className="hover:bg-white/[0.02] transition-colors">{children}</tr>,
+                                          th: ({ children }) => <th className="px-4 py-3 text-right font-black text-slate-200">{children}</th>,
+                                          td: ({ children }) => <td className="px-4 py-3 text-slate-300 font-medium">{children}</td>,
+                                          code: ({ children }) => <code className="bg-slate-950/60 px-1.5 py-0.5 rounded font-mono text-xs text-indigo-300 border border-slate-800/80">{children}</code>,
+                                          pre: ({ children }) => <pre className="bg-slate-950/60 p-4 rounded-xl font-mono text-xs text-indigo-300 border border-slate-800/80 my-4 overflow-x-auto whitespace-pre">{children}</pre>,
+                                        }}
+                                      >
+                                        {msg.content}
+                                      </ReactMarkdown>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             ))}
