@@ -736,49 +736,49 @@ function DashboardContent() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-100 flex flex-col" dir="rtl">
       {/* Top Floating Luxurious Nav */}
-      <div className="sticky top-0 z-50 w-full px-4 pt-4 pb-2">
-        <nav className="bg-slate-950/60 backdrop-blur-xl border border-indigo-500/15 rounded-[2rem] px-4 sm:px-6 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.4)] max-w-6xl mx-auto transition-all duration-300">
-          <div className="flex items-center justify-between gap-2">
+      <div className="sticky top-0 z-50 w-full px-1.5 sm:px-4 pt-2.5 sm:pt-4 pb-2">
+        <nav className="bg-slate-950/60 backdrop-blur-xl border border-indigo-500/15 rounded-xl sm:rounded-[2rem] px-2 sm:px-6 py-2 sm:py-3 shadow-[0_8px_32px_rgba(0,0,0,0.4)] max-w-6xl mx-auto transition-all duration-300">
+          <div className="flex items-center justify-between gap-1 sm:gap-2">
             {/* Logo & Home */}
-            <div className="flex items-center cursor-pointer group" onClick={() => router.push("/")} title="العودة للصفحة الرئيسية">
-              <img src="/lammah-logo.png" alt="Lammah" className="w-8 h-8 ml-2 object-contain drop-shadow-[0_0_8px_rgba(99,102,241,0.6)] group-hover:scale-110 transition-transform duration-300" />
-              <span className="font-black text-lg bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 hidden md:inline-block tracking-tight">لمّاح</span>
+            <div className="flex items-center cursor-pointer group shrink-0" onClick={() => router.push("/")} title="العودة للصفحة الرئيسية">
+              <img src="/lammah-logo.png" alt="Lammah" className="w-6 h-6 sm:w-8 sm:h-8 ml-1 sm:ml-2 object-contain drop-shadow-[0_0_8px_rgba(99,102,241,0.6)] group-hover:scale-110 transition-transform duration-300" />
+              <span className="font-black text-sm sm:text-lg bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 hidden md:inline-block tracking-tight">لمّاح</span>
             </div>
 
             {/* Quota & Actions */}
             <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
               {quota !== null && (
-                <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-2xl px-3 sm:px-4 py-1.5 text-[10px] sm:text-xs flex items-center gap-1.5 shadow-inner">
-                  <Package className="w-3.5 h-3.5 text-indigo-400" />
+                <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-full px-1.5 sm:px-4 py-1 text-[8px] sm:text-xs flex items-center gap-0.5 sm:gap-1.5 shadow-inner">
+                  <Package className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-indigo-400" />
                   <span className="text-slate-400 hidden lg:inline">رصيدك: </span>
                   <span className={`font-black ${quota > 0 ? "text-emerald-450" : "text-rose-500"}`}>{quota}</span>
                   <span className="text-slate-500 hidden sm:inline">دقيقة</span>
                 </div>
               )}
 
-              <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-900/40 p-1 rounded-[1.2rem] border border-slate-800/80">
-                <button onClick={() => router.push("/marketplace")} className="text-indigo-300 hover:text-white transition-all duration-300 px-3 py-2 bg-indigo-500/10 hover:bg-indigo-500/25 rounded-xl flex items-center gap-1.5 font-black text-xs border border-indigo-500/20" title="متجر الملازم">
-                  <Store className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>المتجر</span>
+              <div className="flex items-center gap-0 sm:gap-1.5 bg-slate-900/40 p-0.5 sm:p-1 rounded-lg sm:rounded-[1.2rem] border border-slate-800/80">
+                <button onClick={() => router.push("/marketplace")} className="text-indigo-300 hover:text-white transition-all duration-300 p-1 sm:px-3 sm:py-2 bg-indigo-500/10 hover:bg-indigo-500/25 rounded-md sm:rounded-xl flex items-center gap-1 font-black text-[9px] sm:text-xs border border-indigo-500/20" title="متجر الملازم">
+                  <Store className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-400" />
+                  <span className="hidden sm:inline">المتجر</span>
                 </button>
-                <button onClick={() => router.push("/notebook")} className="text-purple-350 hover:text-white transition-all duration-300 px-3 py-2 bg-purple-500/10 hover:bg-purple-500/25 rounded-xl flex items-center gap-1.5 font-black text-xs border border-purple-500/20" title="صانع الدفاتر الذكية">
-                  <BookOpen className="w-3.5 h-3.5 text-purple-400" />
-                  <span>الدفتر</span>
+                <button onClick={() => router.push("/notebook")} className="text-purple-350 hover:text-white transition-all duration-300 p-1 sm:px-3 sm:py-2 bg-purple-500/10 hover:bg-purple-500/25 rounded-md sm:rounded-xl flex items-center gap-1 font-black text-[9px] sm:text-xs border border-purple-500/20" title="صانع الدفاتر الذكية">
+                  <BookOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-purple-400" />
+                  <span className="hidden sm:inline">الدفتر</span>
                 </button>
                 
-                <div className="w-px h-5 bg-slate-800 mx-1 hidden sm:block"></div>
+                <div className="w-px h-3.5 sm:h-5 bg-slate-800 mx-0.5 sm:mx-1"></div>
                 
-                <button onClick={() => router.push("/plans")} className="text-slate-450 hover:text-indigo-400 hover:bg-slate-900/60 transition-all p-2 rounded-xl" title="الباقات"><Crown className="w-4 h-4 sm:w-5 sm:h-5" /></button>
-                <button onClick={() => router.push("/history")} className="text-slate-450 hover:text-indigo-400 hover:bg-slate-900/60 transition-all p-2 rounded-xl" title="السجل"><History className="w-4 h-4 sm:w-5 sm:h-5" /></button>
-                <button onClick={() => router.push("/profile")} className="text-slate-450 hover:text-indigo-400 hover:bg-slate-900/60 transition-all p-2 rounded-xl" title="حسابي"><User className="w-4 h-4 sm:w-5 sm:h-5" /></button>
-                <button onClick={async () => { await signOut(); router.replace("/login"); }} className="text-slate-500 hover:text-rose-450 hover:bg-rose-500/5 transition-all p-2 rounded-xl" title="تسجيل خروج"><LogOut className="w-4 h-4 sm:w-5 sm:h-5" /></button>
+                <button onClick={() => router.push("/plans")} className="text-slate-450 hover:text-indigo-400 hover:bg-slate-900/60 transition-all p-1 rounded-md sm:rounded-xl" title="الباقات"><Crown className="w-3.5 h-3.5 sm:w-5 sm:h-5" /></button>
+                <button onClick={() => router.push("/history")} className="text-slate-450 hover:text-indigo-400 hover:bg-slate-900/60 transition-all p-1 rounded-md sm:rounded-xl" title="السجل"><History className="w-3.5 h-3.5 sm:w-5 sm:h-5" /></button>
+                <button onClick={() => router.push("/profile")} className="text-slate-450 hover:text-indigo-400 hover:bg-slate-900/60 transition-all p-1 rounded-md sm:rounded-xl" title="حسابي"><User className="w-3.5 h-3.5 sm:w-5 sm:h-5" /></button>
+                <button onClick={async () => { await signOut(); router.replace("/login"); }} className="text-slate-500 hover:text-rose-455 hover:bg-rose-500/5 transition-all p-1 rounded-md sm:rounded-xl" title="تسجيل خروج"><LogOut className="w-3.5 h-3.5 sm:w-5 sm:h-5" /></button>
               </div>
             </div>
           </div>
         </nav>
       </div>
 
-      <div className="flex-1 flex flex-col items-center p-8 overflow-x-hidden relative">
+      <div className="flex-1 flex flex-col items-center px-3 py-4 sm:p-8 overflow-x-hidden relative w-full">
         {/* Parallel Loading Progress Indicator & Dhikr */}
         {/* Main Content Area */}
         <AnimatePresence mode="wait">
@@ -837,7 +837,7 @@ function DashboardContent() {
                 </div>
 
                 {/* Stepper Component */}
-                <div className="w-full max-w-md bg-slate-950/40 backdrop-blur-3xl border border-indigo-500/15 rounded-[2.5rem] p-8 text-right space-y-6 shadow-[0_25px_60px_rgba(0,0,0,0.3)] relative overflow-hidden group">
+                <div className="w-full max-w-md bg-slate-950/40 backdrop-blur-3xl border border-indigo-500/15 rounded-2xl sm:rounded-[2.5rem] p-5 sm:p-8 text-right space-y-6 shadow-[0_25px_60px_rgba(0,0,0,0.3)] relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[50px] rounded-full pointer-events-none -mr-10 -mt-10 transition-opacity opacity-50 group-hover:opacity-100"></div>
                   <h4 className="text-xs font-black text-indigo-400/60 mb-4 tracking-[0.3em] uppercase flex items-center gap-2 justify-start border-b border-slate-800/60 pb-4">
                     <Target className="w-4 h-4 text-indigo-500" />
@@ -915,7 +915,7 @@ function DashboardContent() {
                   onClick={handleDhikrClick}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full max-w-md bg-slate-950/40 backdrop-blur-3xl border border-emerald-500/20 rounded-[3rem] p-10 shadow-[0_30px_60px_rgba(0,0,0,0.4)] relative group overflow-hidden flex flex-col items-center hover:border-emerald-400/50 transition-all duration-500"
+                  className="w-full max-w-md bg-slate-950/40 backdrop-blur-3xl border border-emerald-500/20 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 shadow-[0_30px_60px_rgba(0,0,0,0.4)] relative group overflow-hidden flex flex-col items-center hover:border-emerald-400/50 transition-all duration-500"
                 >
                   {/* Floating particles background */}
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-700"></div>
@@ -956,7 +956,7 @@ function DashboardContent() {
                   </div>
 
                   {/* Interactive Tasbeeh stats display */}
-                  <div className="w-full flex items-center justify-between gap-6 bg-slate-900/60 backdrop-blur-md p-5 rounded-[1.5rem] border border-emerald-500/20 shadow-inner relative z-10 group-hover:border-emerald-500/40 transition-colors">
+                  <div className="w-full flex items-center justify-between gap-2 sm:gap-6 bg-slate-900/60 backdrop-blur-md p-3.5 sm:p-5 rounded-2xl sm:rounded-[1.5rem] border border-emerald-500/20 shadow-inner relative z-10 group-hover:border-emerald-500/40 transition-colors">
                     <div className="flex flex-col items-center flex-1">
                       <span className="text-[10px] text-emerald-500/70 font-black uppercase tracking-widest mb-1">المجموعة الحالية</span>
                       <span className="text-2xl font-black text-emerald-400 tabular-nums drop-shadow-md">{dhikrCurrentPhaseCount} / 10</span>
@@ -982,7 +982,7 @@ function DashboardContent() {
               className="w-full flex flex-col items-center"
             >
               {/* Ultra-Premium Glassmorphic Upload Card */}
-              <div className="w-full max-w-3xl bg-slate-950/40 backdrop-blur-3xl border border-indigo-500/15 rounded-[3rem] p-8 md:p-10 shadow-[0_20px_50px_rgba(99,102,241,0.12)] relative overflow-hidden">
+              <div className="w-full max-w-3xl bg-slate-950/40 backdrop-blur-3xl border border-indigo-500/15 rounded-2xl sm:rounded-[3rem] p-4 sm:p-8 md:p-10 shadow-[0_20px_50px_rgba(99,102,241,0.12)] relative overflow-hidden">
                 <div className="mb-8">
                   <div className="inline-flex bg-slate-950/80 border border-slate-800 rounded-2xl p-1.5 gap-1.5 shadow-inner">
                     <button
@@ -1053,7 +1053,7 @@ function DashboardContent() {
 
                 <div className="grid md:grid-cols-2 gap-6 mb-8">
                   {/* Audio File Dropzone */}
-                  <div className={`relative group border-2 border-dashed rounded-[2rem] p-10 flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-[1.01] ${audioFile || multiAudioFiles.length > 0 ? 'border-indigo-500 bg-indigo-500/5 shadow-[0_8px_32px_rgba(99,102,241,0.08)]' : 'border-slate-800 hover:border-indigo-500/40 hover:bg-slate-900/10 cursor-pointer'} ${uploadMode === "url" ? "opacity-30 pointer-events-none" : ""}`}>
+                  <div className={`relative group border-2 border-dashed rounded-2xl sm:rounded-[2rem] p-4 sm:p-10 flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-[1.01] ${audioFile || multiAudioFiles.length > 0 ? 'border-indigo-500 bg-indigo-500/5 shadow-[0_8px_32px_rgba(99,102,241,0.08)]' : 'border-slate-800 hover:border-indigo-500/40 hover:bg-slate-900/10 cursor-pointer'} ${uploadMode === "url" ? "opacity-30 pointer-events-none" : ""}`}>
                     <input type="file" accept="audio/*" multiple onChange={(e) => {
                       const files = e.target.files;
                       if (files && files.length > 0) {
@@ -1153,7 +1153,7 @@ function DashboardContent() {
                   </div>
 
                   {/* PDF Slide Dropzone */}
-                  <div className={`relative group border-2 border-dashed rounded-[2rem] p-10 flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-[1.01] ${pdfFile ? 'border-purple-500 bg-purple-500/5 shadow-[0_8px_32px_rgba(168,85,247,0.08)]' : 'border-slate-800 hover:border-purple-500/40 hover:bg-slate-900/10 cursor-pointer'}`}>
+                  <div className={`relative group border-2 border-dashed rounded-2xl sm:rounded-[2rem] p-4 sm:p-10 flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-[1.01] ${pdfFile ? 'border-purple-500 bg-purple-500/5 shadow-[0_8px_32px_rgba(168,85,247,0.08)]' : 'border-slate-800 hover:border-purple-500/40 hover:bg-slate-900/10 cursor-pointer'}`}>
                     <input type="file" accept={isBasicPlan ? "application/pdf" : "application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,.pptx"} onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file && isBasicPlan && file.name.endsWith('.pptx')) {
@@ -1277,11 +1277,11 @@ function DashboardContent() {
 
 
                 {/* Title Display & Edit / Back to Home Banner */}
-                <div className="lg:col-span-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-slate-950/40 backdrop-blur-3xl border border-indigo-500/15 p-6 rounded-[2.5rem] shadow-[0_20px_50px_rgba(99,102,241,0.08)] relative overflow-hidden mb-2 group">
+                <div className="lg:col-span-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-slate-950/40 backdrop-blur-3xl border border-indigo-500/15 p-4 sm:p-6 rounded-2xl sm:rounded-[2.5rem] shadow-[0_20px_50px_rgba(99,102,241,0.08)] relative overflow-hidden mb-2 group">
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                  <div className="flex items-center gap-4 w-full md:w-auto relative z-10">
-                    <div className="w-12 h-12 bg-indigo-500/10 rounded-[1.25rem] flex items-center justify-center border border-indigo-500/20 shadow-inner group-hover:bg-indigo-500/20 transition-colors">
-                      <BookOpen className="w-6 h-6 text-indigo-400" />
+                  <div className="flex items-center gap-3 sm:gap-4 w-full md:w-auto relative z-10">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-500/10 rounded-xl sm:rounded-[1.25rem] flex items-center justify-center border border-indigo-500/20 shadow-inner group-hover:bg-indigo-500/20 transition-colors shrink-0">
+                      <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-400" />
                     </div>
                     {isEditingDashboardTitle ? (
                       <div className="flex items-center gap-2 flex-1">
@@ -1329,13 +1329,13 @@ function DashboardContent() {
                         >
                           <Check className="w-4 h-4" />
                         </button>
-                        <button onClick={() => setIsEditingDashboardTitle(false)} className="p-2.5 bg-slate-800/50 rounded-xl border border-slate-700 text-slate-400 hover:bg-slate-700 transition-all">
+                        <button onClick={() => setIsEditingDashboardTitle(false)} className="p-2.5 bg-slate-800/50 rounded-xl border border-slate-700 text-slate-450 hover:bg-slate-700 transition-all">
                           <X className="w-4 h-4" />
                         </button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-3">
-                        <h1 className="text-xl md:text-3xl font-black text-white leading-tight tracking-tight drop-shadow-sm">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <h1 className="text-base sm:text-lg md:text-3xl font-black text-white leading-tight tracking-tight drop-shadow-sm line-clamp-2 md:line-clamp-none">
                           {lectureTitle || "محاضرة بدون عنوان"}
                         </h1>
                         {currentHistoryId && (
@@ -1344,10 +1344,10 @@ function DashboardContent() {
                               setIsEditingDashboardTitle(true);
                               setDashboardTitleInput(lectureTitle || "");
                             }}
-                            className="opacity-100 md:opacity-0 group-hover:opacity-100 transition-all p-2 rounded-xl text-slate-500 hover:text-indigo-300 hover:bg-indigo-500/10"
+                            className="opacity-100 md:opacity-0 group-hover:opacity-100 transition-all p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-indigo-300 hover:bg-indigo-500/10 shrink-0"
                             title="تعديل العنوان"
                           >
-                            <Pencil className="w-4 h-4" />
+                            <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>
                         )}
                       </div>
@@ -1364,9 +1364,9 @@ function DashboardContent() {
                         setLectureTitle("");
                         router.push("/dashboard");
                       }}
-                      className="relative z-10 flex items-center gap-2 text-slate-300 hover:text-white font-black transition-all bg-slate-950/50 hover:bg-indigo-600/20 px-6 py-3 rounded-2xl border border-slate-800/80 hover:border-indigo-500/50 shadow-[0_0_20px_rgba(0,0,0,0.2)] hover:shadow-[0_0_20px_rgba(99,102,241,0.2)]"
+                      className="relative z-10 flex items-center gap-2 text-slate-300 hover:text-white font-black transition-all bg-slate-950/50 hover:bg-indigo-600/20 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border border-slate-800/80 hover:border-indigo-500/50 shadow-[0_0_20px_rgba(0,0,0,0.2)] hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] w-full md:w-auto text-center justify-center text-xs sm:text-sm"
                     >
-                      <ChevronLeft className="w-5 h-5 rotate-180" />
+                      <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 rotate-180" />
                       العودة للرئيسية (رفع جديد)
                     </button>
                   </div>
@@ -1374,13 +1374,13 @@ function DashboardContent() {
 
                 {/* WARNING BANNER FOR TRIMMED AUDIO */}
                 {result?.annotations?.is_audio_trimmed && planName === "مجاني" && (
-                  <div className="lg:col-span-3 bg-amber-500/10 border border-amber-500/50 p-5 rounded-2xl flex items-center gap-4 shadow-lg">
+                  <div className="lg:col-span-3 bg-amber-500/10 border border-amber-500/50 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row items-center sm:items-start gap-4 shadow-lg text-center sm:text-right">
                     <AlertCircle className="w-8 h-8 text-amber-500 shrink-0" />
-                    <div>
-                      <h4 className="text-amber-400 font-bold text-lg mb-1">تنبيه: تم تحليل جزء من المحاضرة فقط</h4>
-                      <p className="text-amber-200/90 text-sm">أنت تستخدم التجربة المجانية، لذلك تم استخراج وتحليل أول 15 دقيقة فقط من المحاضرة بدلاً من كامل المحتوى. للوصول إلى تفريغ وتلخيص كامل لأي محاضرة مهما كان طولها، اشترك الآن.</p>
+                    <div className="flex-1">
+                      <h4 className="text-amber-400 font-bold text-base sm:text-lg mb-1">تنبيه: تم تحليل جزء من المحاضرة فقط</h4>
+                      <p className="text-amber-200/90 text-xs sm:text-sm leading-relaxed">أنت تستخدم التجربة المجانية، لذلك تم استخراج وتحليل أول 15 دقيقة فقط من المحاضرة بدلاً من كامل المحتوى. للوصول إلى تفريغ وتلخيص كامل لأي محاضرة مهما كان طولها، اشترك الآن.</p>
                     </div>
-                    <button onClick={() => router.push("/plans")} className="mr-auto bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2 rounded-xl font-bold text-sm shrink-0 transition-colors">
+                    <button onClick={() => router.push("/plans")} className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2.5 rounded-xl font-black text-xs sm:text-sm shrink-0 transition-colors">
                       الترقية الآن
                     </button>
                   </div>
@@ -1391,36 +1391,36 @@ function DashboardContent() {
                   <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[30rem] h-[30rem] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
                   
                   {result?.downloadUrl && (
-                    <div className="bg-slate-950/40 backdrop-blur-3xl border border-indigo-500/15 p-8 rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.4)] relative overflow-hidden group z-10">
+                    <div className="bg-slate-950/40 backdrop-blur-3xl border border-indigo-500/15 p-4 sm:p-8 rounded-2xl sm:rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.4)] relative overflow-hidden group z-10">
                       <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-l from-transparent via-indigo-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 relative z-10">
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 bg-indigo-500/10 rounded-[1.25rem] flex items-center justify-center border border-indigo-500/20 shadow-inner">
-                            <BookOpen className="w-7 h-7 text-indigo-400" />
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div className="w-10 h-10 sm:w-14 sm:h-14 bg-indigo-500/10 rounded-xl sm:rounded-[1.25rem] flex items-center justify-center border border-indigo-500/20 shadow-inner shrink-0">
+                            <BookOpen className="w-5 h-5 sm:w-7 sm:h-7 text-indigo-400" />
                           </div>
                           <div>
-                            <h2 className="text-2xl font-black text-white leading-tight">الملزمة الذكية</h2>
-                            <p className="text-[10px] text-indigo-300/70 font-black tracking-[0.2em] mt-1 uppercase">Smart Annotated Notebook</p>
+                            <h2 className="text-lg sm:text-2xl font-black text-white leading-tight">الملزمة الذكية</h2>
+                            <p className="text-[9px] sm:text-[10px] text-indigo-300/70 font-black tracking-[0.2em] mt-1 uppercase">Smart Annotated Notebook</p>
                           </div>
                         </div>
                         {isBasicPlan ? (
                           <button onClick={() => router.push("/plans")}
-                            className="bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 px-6 py-3 rounded-2xl font-black transition-all flex items-center shadow-lg hover:shadow-indigo-500/10">
+                            className="bg-slate-950/80 hover:bg-slate-900 border border-slate-800 text-slate-300 px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl font-black transition-all flex items-center shadow-lg hover:shadow-indigo-500/10 w-full sm:w-auto text-center justify-center whitespace-normal text-xs sm:text-sm">
                             <Lock className="w-4 h-4 ml-2 text-amber-400" /> تنزيل الملزمة (للمشتركين)
                           </button>
                         ) : (
                           <a href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}${result.downloadUrl}`} download target="_blank"
-                            className="bg-gradient-to-r from-indigo-500 via-purple-600 to-indigo-600 bg-[length:200%_auto] hover:bg-[position:right_center] text-white px-8 py-3.5 rounded-2xl font-black transition-all duration-500 flex items-center shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] transform hover:-translate-y-0.5 border border-white/10">
-                            <Download className="w-5 h-5 ml-2" />
+                            className="bg-gradient-to-r from-indigo-500 via-purple-600 to-indigo-600 bg-[length:200%_auto] hover:bg-[position:right_center] text-white px-5 py-2.5 sm:px-8 sm:py-3.5 rounded-xl sm:rounded-2xl font-black transition-all duration-500 flex items-center shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_30px_rgba(99,102,241,0.5)] transform hover:-translate-y-0.5 border border-white/10 w-full sm:w-auto text-center justify-center whitespace-normal text-xs sm:text-sm">
+                            <Download className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                             تحميل الملف المخطط الذكي
                           </a>
                         )}
                       </div>
-                      <div className="relative rounded-[1.5rem] p-1.5 bg-gradient-to-b from-slate-800/80 to-slate-950/80 border border-slate-800/60 shadow-inner">
+                      <div className="relative rounded-xl sm:rounded-[1.5rem] p-1 bg-gradient-to-b from-slate-800/80 to-slate-950/80 border border-slate-800/60 shadow-inner">
                         <iframe
                           key={pdfPage || 'default'}
                           src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}${result.downloadUrl}${pdfPage ? `#page=${pdfPage}` : ''}#toolbar=0`}
-                          className="w-full h-[650px] rounded-[1.25rem] bg-slate-900 transition-all border border-slate-950/50"
+                          className="w-full h-[350px] sm:h-[500px] lg:h-[650px] rounded-lg sm:rounded-[1.25rem] bg-slate-900 transition-all border border-slate-950/50"
                         />
                       </div>
                     </div>
@@ -1430,32 +1430,32 @@ function DashboardContent() {
                     <motion.div
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-slate-950/20 backdrop-blur-3xl border border-indigo-500/10 rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.3)] overflow-hidden relative group"
+                      className="bg-slate-950/20 backdrop-blur-3xl border border-indigo-500/10 rounded-2xl sm:rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.3)] overflow-hidden relative group"
                     >
                       {/* Header Section */}
-                      <div className="p-8 pb-5">
+                      <div className="p-4 sm:p-8 pb-4 sm:pb-5">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                          <div className="flex items-center gap-5">
-                            <div className="w-14 h-14 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
-                              <FileText className="w-7 h-7 text-indigo-400" />
+                          <div className="flex items-center gap-3 sm:gap-5">
+                            <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-xl sm:rounded-2xl flex items-center justify-center border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.2)] shrink-0">
+                              <FileText className="w-5 h-5 sm:w-7 sm:h-7 text-indigo-400" />
                             </div>
                             <div>
-                              <h2 className="text-2xl font-black text-white mb-1 drop-shadow-md">تفريغ لمّاح السريع</h2>
-                              <p className="text-sm text-slate-400 flex items-center gap-2">
+                              <h2 className="text-lg sm:text-2xl font-black text-white mb-1 drop-shadow-md">تفريغ لمّاح السريع</h2>
+                              <p className="text-xs sm:text-sm text-slate-400 flex items-center gap-2">
                                 <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
                                 نص المحاضرة مفرغ بدقة بواسطة الذكاء الاصطناعي
                               </p>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 w-full md:w-auto">
                             <button
                               onClick={() => {
                                 navigator.clipboard.writeText(result.transcript);
                                 setIsCopied(true);
                                 setTimeout(() => setIsCopied(false), 2000);
                               }}
-                              className={`flex items-center gap-2 px-6 py-3 rounded-[1.25rem] font-bold transition-all border ${isCopied ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]' : 'bg-slate-900/60 backdrop-blur-md border-slate-700/50 text-slate-300 hover:bg-slate-800 hover:border-indigo-500/50 hover:text-indigo-300 shadow-sm'}`}
+                              className={`flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl sm:rounded-[1.25rem] font-bold transition-all border text-xs sm:text-sm w-full md:w-auto justify-center ${isCopied ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.2)]' : 'bg-slate-900/60 backdrop-blur-md border-slate-700/50 text-slate-300 hover:bg-slate-800 hover:border-indigo-500/50 hover:text-indigo-300 shadow-sm'}`}
                             >
                               {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                               {isCopied ? 'تم النسخ!' : 'نسخ النص'}
@@ -1465,8 +1465,8 @@ function DashboardContent() {
                       </div>
 
                       {/* Content Section */}
-                      <div className="px-8 pb-8">
-                        <div className="bg-slate-950/50 backdrop-blur-md p-8 md:p-10 rounded-[2rem] border border-slate-800/80 shadow-inner relative overflow-hidden max-h-[700px] overflow-y-auto custom-scrollbar group-hover:border-indigo-500/20 transition-colors duration-500">
+                      <div className="px-3 sm:px-8 pb-4 sm:pb-8">
+                        <div className="bg-slate-950/50 backdrop-blur-md p-4 sm:p-8 md:p-10 rounded-2xl sm:rounded-[2rem] border border-slate-800/80 shadow-inner relative overflow-hidden max-h-[700px] overflow-y-auto custom-scrollbar group-hover:border-indigo-500/20 transition-colors duration-500">
                           {/* Decorative elements */}
                           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none -mr-40 -mt-40"></div>
                           <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/5 blur-[120px] rounded-full pointer-events-none -ml-40 -mb-40"></div>
@@ -1500,7 +1500,7 @@ function DashboardContent() {
                             )}
 
                             <div
-                              className="text-slate-300 leading-[2.4] text-lg md:text-[1.35rem] text-justify font-tajawal selection:bg-indigo-500/40 selection:text-white"
+                              className="text-slate-300 leading-[2.4] text-sm sm:text-lg md:text-[1.35rem] text-justify font-tajawal selection:bg-indigo-500/40 selection:text-white"
                               style={{ fontVariantNumeric: 'tabular-nums' }}
                             >
                               {result.transcript.split('\n')
@@ -1543,23 +1543,27 @@ function DashboardContent() {
 
                   {/* TABS HEADERS */}
                   {(result?.annotations?.sticky_notes?.length > 0 || result?.annotations?.focus_points?.length > 0 || result?.annotations?.mcqs?.length > 0 || currentHistoryId) && (
-                    <div className="flex flex-wrap gap-2 space-x-reverse bg-slate-950/60 p-2 rounded-2xl border border-slate-800/80 shadow-[0_15px_40px_rgba(0,0,0,0.4)] backdrop-blur-3xl relative z-20">
-                      <button onClick={() => setActiveTab("notes")} className={`flex-1 min-w-[100px] flex items-center justify-center py-3.5 rounded-[1.1rem] font-black transition-all duration-300 ${activeTab === "notes" ? "bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 shadow-[0_0_20px_rgba(99,102,241,0.2)] scale-[0.98]" : "text-slate-400 hover:text-indigo-300 hover:bg-slate-800/50 border border-transparent"}`}>
-                        <BookOpen className="w-5 h-5 ml-2" />الشروحات
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2 bg-slate-950/60 p-1.5 sm:p-2 rounded-2xl border border-slate-800/80 shadow-[0_15px_40px_rgba(0,0,0,0.4)] backdrop-blur-3xl relative z-20">
+                      <button onClick={() => setActiveTab("notes")} className={`flex-1 min-w-[65px] sm:min-w-[100px] flex flex-col sm:flex-row items-center justify-center py-2.5 sm:py-3.5 rounded-xl sm:rounded-[1.1rem] text-[10px] sm:text-xs md:text-sm font-black transition-all duration-300 gap-1 ${activeTab === "notes" ? "bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 shadow-[0_0_20px_rgba(99,102,241,0.2)] scale-[0.98]" : "text-slate-400 hover:text-indigo-300 hover:bg-slate-800/50 border border-transparent"}`}>
+                        <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span>الشروحات</span>
                       </button>
                       {(result?.annotations?.focus_points?.length > 0) && (
-                        <button onClick={() => setActiveTab("focus")} className={`flex-1 min-w-[100px] flex items-center justify-center py-3.5 rounded-[1.1rem] font-black transition-all duration-300 ${activeTab === "focus" ? "bg-amber-500/15 border border-amber-500/30 text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.2)] scale-[0.98]" : "text-slate-400 hover:text-amber-300 hover:bg-slate-800/50 border border-transparent"}`}>
-                          <Target className="w-5 h-5 ml-2" />التركيز
+                        <button onClick={() => setActiveTab("focus")} className={`flex-1 min-w-[65px] sm:min-w-[100px] flex flex-col sm:flex-row items-center justify-center py-2.5 sm:py-3.5 rounded-xl sm:rounded-[1.1rem] text-[10px] sm:text-xs md:text-sm font-black transition-all duration-300 gap-1 ${activeTab === "focus" ? "bg-amber-500/15 border border-amber-500/30 text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.2)] scale-[0.98]" : "text-slate-400 hover:text-amber-300 hover:bg-slate-800/50 border border-transparent"}`}>
+                          <Target className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <span>التركيز</span>
                         </button>
                       )}
                       {(result?.annotations?.mcqs?.length > 0 || result?.annotations?.flashcards?.length > 0) && (
-                        <button onClick={() => setActiveTab("quiz")} className={`flex-1 min-w-[100px] flex items-center justify-center py-3.5 rounded-[1.1rem] font-black transition-all duration-300 ${activeTab === "quiz" ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.2)] scale-[0.98]" : "text-slate-400 hover:text-emerald-300 hover:bg-slate-800/50 border border-transparent"}`}>
-                          <BrainCircuit className="w-5 h-5 ml-2" />الأسئلة
+                        <button onClick={() => setActiveTab("quiz")} className={`flex-1 min-w-[65px] sm:min-w-[100px] flex flex-col sm:flex-row items-center justify-center py-2.5 sm:py-3.5 rounded-xl sm:rounded-[1.1rem] text-[10px] sm:text-xs md:text-sm font-black transition-all duration-300 gap-1 ${activeTab === "quiz" ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.2)] scale-[0.98]" : "text-slate-400 hover:text-emerald-300 hover:bg-slate-800/50 border border-transparent"}`}>
+                          <BrainCircuit className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <span>الأسئلة</span>
                         </button>
                       )}
                       {currentHistoryId && (
-                        <button onClick={() => setActiveTab("chat")} className={`flex-1 min-w-[100px] flex items-center justify-center py-3.5 rounded-[1.1rem] font-black transition-all duration-300 ${activeTab === "chat" ? "bg-blue-500/15 border border-blue-500/30 text-blue-300 shadow-[0_0_20px_rgba(59,130,246,0.2)] scale-[0.98]" : "text-slate-400 hover:text-blue-300 hover:bg-slate-800/50 border border-transparent"}`}>
-                          <MessageCircle className="w-5 h-5 ml-2" />تحدث
+                        <button onClick={() => setActiveTab("chat")} className={`flex-1 min-w-[65px] sm:min-w-[100px] flex flex-col sm:flex-row items-center justify-center py-2.5 sm:py-3.5 rounded-xl sm:rounded-[1.1rem] text-[10px] sm:text-xs md:text-sm font-black transition-all duration-300 gap-1 ${activeTab === "chat" ? "bg-blue-500/15 border border-blue-500/30 text-blue-300 shadow-[0_0_20px_rgba(59,130,246,0.2)] scale-[0.98]" : "text-slate-400 hover:text-blue-300 hover:bg-slate-800/50 border border-transparent"}`}>
+                          <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <span>تحدث</span>
                         </button>
                       )}
                     </div>
@@ -1618,16 +1622,16 @@ function DashboardContent() {
                     {activeTab === "quiz" && (
                       <motion.div key="quiz" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-6 relative z-10">
                         {isBasicPlan && (
-                          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-xl rounded-[2.5rem] p-8 text-center border border-emerald-500/20 shadow-[0_25px_60px_rgba(0,0,0,0.5)]">
-                            <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(16,185,129,0.2)] border border-emerald-500/30">
-                              <Lock className="w-10 h-10 text-emerald-400" />
+                          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-xl rounded-[2.5rem] p-4 sm:p-8 text-center border border-emerald-500/20 shadow-[0_25px_60px_rgba(0,0,0,0.5)]">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(16,185,129,0.2)] border border-emerald-500/30">
+                              <Lock className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-400" />
                             </div>
-                            <h3 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-l from-emerald-200 to-teal-400 mb-4 drop-shadow-lg">طوّر دراستك واختبر نفسك!</h3>
-                            <p className="text-lg text-slate-300 max-w-lg mb-8 leading-relaxed font-medium">
+                            <h3 className="text-xl sm:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-l from-emerald-200 to-teal-400 mb-4 drop-shadow-lg">طوّر دراستك واختبر نفسك!</h3>
+                            <p className="text-sm sm:text-lg text-slate-300 max-w-lg mb-6 sm:mb-8 leading-relaxed font-medium">
                               ميزة <strong>البطاقات التفاعلية (Flashcards)</strong> و <strong>الأسئلة المتوقعة (MCQs)</strong> حصرية لاشتراكات الباقات المتقدمة و الـ VIP. <br /><span className="text-slate-400 text-sm mt-2 block">رقي باقتك الآن لتفجير طاقتك الدراسية بأقوى أدوات الاسترجاع المتباعد!</span>
                             </p>
-                            <button onClick={() => router.push("/plans")} className="bg-gradient-to-l from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black px-10 py-4 rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all flex items-center text-lg transform hover:-translate-y-1">
-                              <Crown className="w-6 h-6 ml-2" /> ترقية الباقة الآن لفك القفل
+                            <button onClick={() => router.push("/plans")} className="bg-gradient-to-l from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black px-6 py-3 sm:px-10 sm:py-4 rounded-xl sm:rounded-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all flex items-center text-base sm:text-lg transform hover:-translate-y-1">
+                              <Crown className="w-5 h-5 sm:w-6 sm:h-6 ml-2" /> ترقية الباقة الآن لفك القفل
                             </button>
                           </div>
                         )}
@@ -1635,16 +1639,16 @@ function DashboardContent() {
                         <div className={isBasicPlan ? "opacity-20 pointer-events-none select-none blur-[10px] transition-all" : ""}>
                           {/* FLASHCARDS */}
                           {result?.annotations?.flashcards?.length > 0 && (
-                            <div className="bg-slate-950/30 backdrop-blur-3xl border border-emerald-500/15 p-6 md:p-8 rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.3)] relative overflow-hidden group mb-6">
+                            <div className="bg-slate-950/30 backdrop-blur-3xl border border-emerald-500/15 p-4 sm:p-6 md:p-8 rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.3)] relative overflow-hidden group mb-6">
                               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[50px] rounded-full pointer-events-none -mr-10 -mt-10"></div>
-                              <h3 className="text-xl font-black flex items-center mb-6 text-emerald-400 relative z-10 drop-shadow-md">
-                                <BookOpen className="w-6 h-6 ml-2 text-emerald-500" />بطاقات الحفظ (Flashcards)
+                              <h3 className="text-lg sm:text-xl font-black flex items-center mb-6 text-emerald-400 relative z-10 drop-shadow-md">
+                                <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 ml-2 text-emerald-500" />بطاقات الحفظ (Flashcards)
                               </h3>
                               <div className="grid grid-cols-1 gap-4 max-h-[380px] overflow-y-auto pr-2 custom-scrollbar relative z-10">
                                 {result.annotations.flashcards.map((fc: any, i: number) => (
                                   <div key={i}
                                     onClick={() => setFlippedCards(prev => ({ ...prev, [i]: !prev[i] }))}
-                                    className="cursor-pointer min-h-[120px] relative group/card"
+                                    className="cursor-pointer min-h-[150px] sm:min-h-[170px] relative group/card"
                                     style={{ perspective: "1000px" }}
                                   >
                                     <motion.div
@@ -1655,13 +1659,13 @@ function DashboardContent() {
                                       style={{ transformStyle: "preserve-3d" }}
                                     >
                                       {/* FRONT */}
-                                      <div className="absolute inset-0 w-full flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md border border-emerald-500/30 rounded-2xl shadow-lg group-hover/card:border-emerald-400 group-hover/card:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all" style={{ backfaceVisibility: "hidden" }}>
-                                        <h4 className="text-lg font-black text-emerald-300 text-center" dir="ltr">{fc.front}</h4>
-                                        <div className="absolute bottom-3 text-xs font-black text-emerald-500/50 flex items-center tracking-widest uppercase"><ChevronLeft className="w-3 h-3 ml-1" /> انقر للقلب</div>
+                                      <div className="absolute inset-0 w-full flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md border border-emerald-500/30 rounded-2xl shadow-lg group-hover/card:border-emerald-400 group-hover/card:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all" style={{ backfaceVisibility: "hidden" }}>
+                                        <h4 className="text-xs sm:text-base md:text-lg font-black text-emerald-300 text-center px-2" dir="ltr">{fc.front}</h4>
+                                        <div className="absolute bottom-3 text-[10px] font-black text-emerald-500/50 flex items-center tracking-widest uppercase"><ChevronLeft className="w-2.5 h-2.5 ml-1" /> انقر للقلب</div>
                                       </div>
                                       {/* BACK */}
-                                      <div className="absolute inset-0 w-full flex items-center justify-center p-6 bg-emerald-950/90 backdrop-blur-md border border-emerald-400 rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.3)]" style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}>
-                                        <p className="text-sm text-emerald-50 text-center leading-relaxed font-bold" dir="rtl">{fc.back}</p>
+                                      <div className="absolute inset-0 w-full flex items-center justify-center p-4 bg-emerald-950/90 backdrop-blur-md border border-emerald-400 rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.3)]" style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}>
+                                        <p className="text-xs sm:text-sm text-emerald-50 text-center leading-relaxed font-bold px-2" dir="rtl">{fc.back}</p>
                                       </div>
                                     </motion.div>
                                   </div>
@@ -1672,10 +1676,10 @@ function DashboardContent() {
 
                           {/* MCQs */}
                           {result?.annotations?.mcqs?.length > 0 && (
-                            <div className="bg-slate-950/30 backdrop-blur-3xl border border-teal-500/15 p-6 md:p-8 rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.3)] relative overflow-hidden group">
+                            <div className="bg-slate-950/30 backdrop-blur-3xl border border-teal-500/15 p-4 sm:p-6 md:p-8 rounded-3xl sm:rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.3)] relative overflow-hidden group">
                               <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 blur-[50px] rounded-full pointer-events-none -mr-10 -mt-10"></div>
-                              <h3 className="text-xl font-black flex items-center mb-6 text-teal-400 relative z-10 drop-shadow-md">
-                                <ListTodo className="w-6 h-6 ml-2 text-teal-500" />اختبر نفسك (MCQs)
+                              <h3 className="text-lg sm:text-xl font-black flex items-center mb-6 text-teal-400 relative z-10 drop-shadow-md">
+                                <ListTodo className="w-5 h-5 sm:w-6 sm:h-6 ml-2 text-teal-500" />اختبر نفسك (MCQs)
                               </h3>
                               <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar relative z-10">
                                 {result.annotations.mcqs.map((q: any, i: number) => {
@@ -1683,8 +1687,8 @@ function DashboardContent() {
                                   const isCorrect = selectedAnswers[i] === q.correct_answer;
 
                                   return (
-                                    <div key={i} className="bg-slate-900/40 backdrop-blur-md p-6 rounded-3xl border border-slate-800/80 shadow-inner">
-                                      <h4 className="text-base font-black text-slate-200 mb-5 leading-relaxed">{i + 1}. {q.question}</h4>
+                                    <div key={i} className="bg-slate-900/40 backdrop-blur-md p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-800/80 shadow-inner">
+                                      <h4 className="text-sm sm:text-base font-black text-slate-200 mb-5 leading-relaxed">{i + 1}. {q.question}</h4>
                                       <div className="space-y-3">
                                         {q.options.map((opt: string, j: number) => {
                                           let btnClass = "bg-slate-950/50 border border-slate-700/50 hover:border-teal-500/40 hover:bg-slate-900/80 text-slate-300 font-semibold shadow-sm hover:shadow-md";
@@ -1701,7 +1705,7 @@ function DashboardContent() {
                                                 setSelectedAnswers(prev => ({ ...prev, [i]: opt }));
                                                 setShowExplanation(prev => ({ ...prev, [i]: true }));
                                               }}
-                                              className={`w-full text-right p-4 rounded-2xl transition-all duration-300 flex items-center justify-between ${btnClass}`}
+                                              className={`w-full text-right p-3 sm:p-4 rounded-xl sm:rounded-2xl text-xs sm:text-sm transition-all duration-300 flex items-center justify-between ${btnClass}`}
                                             >
                                               <span className="leading-relaxed">{opt}</span>
                                               {isAnswered && opt === q.correct_answer && <Check className="w-5 h-5 text-emerald-400 shrink-0" />}
@@ -1734,46 +1738,46 @@ function DashboardContent() {
 
                     {/* TAB CONTENT: CHAT */}
                     {activeTab === "chat" && (
-                      <motion.div key="chat" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="flex flex-col h-[700px] bg-slate-950/40 backdrop-blur-3xl border border-blue-500/15 rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.3)] overflow-hidden relative z-10 group">
+                      <motion.div key="chat" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="flex flex-col h-[500px] sm:h-[650px] lg:h-[700px] bg-slate-950/40 backdrop-blur-3xl border border-blue-500/15 rounded-2xl sm:rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.3)] overflow-hidden relative z-10 group">
 
                         {isBasicPlan && (
-                          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-xl p-8 text-center border border-blue-500/20">
-                            <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(59,130,246,0.3)] border border-blue-500/30">
-                              <Lock className="w-10 h-10 text-blue-400" />
+                          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-xl p-4 sm:p-8 text-center border border-blue-500/20">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(59,130,246,0.3)] border border-blue-500/30">
+                              <Lock className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400" />
                             </div>
-                            <h3 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-l from-blue-200 to-cyan-400 mb-4 drop-shadow-md">تحدث مع المحاضرة بذكاء!</h3>
-                            <p className="text-lg text-slate-300 max-w-lg mb-8 leading-relaxed font-medium">
+                            <h3 className="text-xl sm:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-l from-blue-200 to-cyan-400 mb-4 drop-shadow-md">تحدث مع المحاضرة بذكاء!</h3>
+                            <p className="text-sm sm:text-lg text-slate-300 max-w-lg mb-6 sm:mb-8 leading-relaxed font-medium">
                               ميزة <strong>المحادثة الذكية (Chat)</strong> حصرية لاشتراكات الباقات المتقدمة والـ VIP. <br /><span className="text-slate-400 text-sm mt-2 block">رقي باقتك الآن لتتمكن من طرح أي سؤال على المحاضرة وسيجيبك النظام بدقة!</span>
                             </p>
-                            <button onClick={() => router.push("/plans")} className="bg-gradient-to-l from-blue-500 to-cyan-600 hover:from-blue-400 hover:to-cyan-500 text-slate-950 font-black px-10 py-4 rounded-2xl shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] transition-all flex items-center text-lg transform hover:-translate-y-1">
-                              <Crown className="w-6 h-6 ml-2" /> ترقية الباقة الآن لفك القفل
+                            <button onClick={() => router.push("/plans")} className="bg-gradient-to-l from-blue-500 to-cyan-600 hover:from-blue-400 hover:to-cyan-500 text-slate-950 font-black px-6 py-3 sm:px-10 sm:py-4 rounded-xl sm:rounded-2xl shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] transition-all flex items-center text-base sm:text-lg transform hover:-translate-y-1">
+                              <Crown className="w-5 h-5 sm:w-6 sm:h-6 ml-2" /> ترقية الباقة الآن لفك القفل
                             </button>
                           </div>
                         )}
 
                         <div className={`flex flex-col h-full relative z-10 ${isBasicPlan ? "opacity-20 pointer-events-none select-none blur-[10px] transition-all" : ""}`}>
-                          <div className="bg-slate-900/60 backdrop-blur-md p-6 border-b border-slate-800/80 flex flex-col relative overflow-hidden">
+                          <div className="bg-slate-900/60 backdrop-blur-md p-4 sm:p-6 border-b border-slate-800/80 flex flex-col relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[50px] rounded-full pointer-events-none -mr-10 -mt-10"></div>
-                            <h3 className="text-xl font-black flex items-center text-blue-400 relative z-10 drop-shadow-md">
-                              <MessageCircle className="w-6 h-6 ml-2 text-blue-500" /> تحدث مع المحاضرة
+                            <h3 className="text-lg sm:text-xl font-black flex items-center text-blue-400 relative z-10 drop-shadow-md">
+                              <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 ml-2 text-blue-500" /> تحدث مع المحاضرة
                             </h3>
-                            <p className="text-sm text-slate-400 pr-8 mt-1 font-medium relative z-10">يستند الرد لمعالجة سؤالك باحترافية، مع توضيح ما ذكره الدكتور في المحاضرة.</p>
+                            <p className="text-xs sm:text-sm text-slate-400 pr-0 sm:pr-8 mt-1 font-medium relative z-10">يستند الرد لمعالجة سؤالك باحترافية، مع توضيح ما ذكره الدكتور في المحاضرة.</p>
                           </div>
 
-                          <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-transparent">
+                          <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 custom-scrollbar bg-transparent">
                             {chatMessages.length === 0 && (
                               <div className="h-full flex flex-col items-center justify-center text-slate-500 space-y-4 opacity-60">
-                                <BrainCircuit className="w-16 h-16 text-slate-600" />
-                                <p className="text-lg text-center font-bold">اطرح سؤالاً يخص جزئية معينة من المحاضرة وسيجيبك النظام فوراً!</p>
+                                <BrainCircuit className="w-12 h-12 sm:w-16 sm:h-16 text-slate-600" />
+                                <p className="text-base sm:text-lg text-center font-bold">اطرح سؤالاً يخص جزئية معينة من المحاضرة وسيجيبك النظام فوراً!</p>
                               </div>
                             )}
                             {chatMessages.map((msg, idx) => (
                               <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} w-full`}>
-                                <div className={`max-w-[85%] p-5 rounded-[1.5rem] ${msg.role === "user" ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-tl-sm shadow-[0_10px_20px_rgba(59,130,246,0.2)]" : "bg-slate-800/80 backdrop-blur-md border border-slate-700/50 text-slate-200 rounded-tr-sm shadow-inner"}`}>
+                                <div className={`max-w-[85%] p-3.5 sm:p-5 rounded-2xl sm:rounded-[1.5rem] ${msg.role === "user" ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-tl-sm shadow-[0_10px_20px_rgba(59,130,246,0.2)]" : "bg-slate-800/80 backdrop-blur-md border border-slate-700/50 text-slate-200 rounded-tr-sm shadow-inner"}`}>
                                   {msg.role === "user" ? (
-                                    <p className="leading-relaxed whitespace-pre-wrap text-sm md:text-base font-medium">{msg.content}</p>
+                                    <p className="leading-relaxed whitespace-pre-wrap text-xs sm:text-sm md:text-base font-medium">{msg.content}</p>
                                   ) : (
-                                    <div className="max-w-none text-sm md:text-base font-medium leading-relaxed text-right">
+                                    <div className="max-w-none text-xs sm:text-sm md:text-base font-medium leading-relaxed text-right">
                                       <ReactMarkdown
                                         components={{
                                           p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed">{children}</p>,
@@ -1808,23 +1812,23 @@ function DashboardContent() {
                             ))}
                             {isChatLoading && (
                               <div className="flex justify-start w-full">
-                                <div className="max-w-[75%] p-5 rounded-[1.5rem] bg-slate-800/80 backdrop-blur-md border border-slate-700/50 text-slate-400 rounded-tr-sm flex items-center space-x-2 space-x-reverse shadow-inner">
-                                  <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
-                                  <span className="text-sm font-bold">يقرأ الشرائح والصوت...</span>
+                                <div className="max-w-[75%] p-3.5 sm:p-5 rounded-2xl sm:rounded-[1.5rem] bg-slate-800/80 backdrop-blur-md border border-slate-700/50 text-slate-450 rounded-tr-sm flex items-center gap-2 shadow-inner">
+                                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-blue-400" />
+                                  <span className="text-xs sm:text-sm font-bold">يقرأ الشرائح والصوت...</span>
                                 </div>
                               </div>
                             )}
                             <div ref={chatEndRef} />
                           </div>
 
-                          <div className="p-6 bg-slate-900/60 backdrop-blur-md border-t border-slate-800/80">
+                          <div className="p-3.5 sm:p-6 bg-slate-900/60 backdrop-blur-md border-t border-slate-800/80">
                             {/* Chat Usage Indicator */}
                             {subscriptionLimit > 0 && (
                               <div className="flex justify-between items-center mb-3 px-2">
                                 <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-500">
-                                  {chatCount >= subscriptionLimit ? "⚠️ انتهى رصيد المحادثة لهذه المحاضرة" : `متبقي ${subscriptionLimit - chatCount} من ${subscriptionLimit} سؤالاً`}
+                                  {chatCount >= subscriptionLimit ? "⚠️ انتهى رصيد" : `متبقي ${subscriptionLimit - chatCount} من ${subscriptionLimit}`}
                                 </span>
-                                <div className="flex-1 mx-4 h-1.5 bg-slate-800 rounded-full overflow-hidden shadow-inner">
+                                <div className="flex-1 mx-2 sm:mx-4 h-1.5 bg-slate-800 rounded-full overflow-hidden shadow-inner">
                                   <div
                                     className={`h-full transition-all duration-500 ease-out ${chatCount >= subscriptionLimit ? "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]" : "bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"}`}
                                     style={{ width: `${Math.min(100, (chatCount / subscriptionLimit) * 100)}%` }}
@@ -1833,11 +1837,11 @@ function DashboardContent() {
                               </div>
                             )}
 
-                            <form onSubmit={handleChatSubmit} className="flex space-x-3 space-x-reverse relative">
+                            <form onSubmit={handleChatSubmit} className="flex gap-2 sm:gap-3 relative">
                               <input
                                 type="text"
                                 maxLength={500}
-                                className="flex-1 bg-slate-950/50 backdrop-blur-sm border border-slate-700/80 text-slate-200 p-4 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder-slate-500 shadow-inner font-semibold"
+                                className="flex-1 bg-slate-950/50 backdrop-blur-sm border border-slate-700/80 text-slate-200 p-3 sm:p-4 rounded-xl sm:rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder-slate-500 shadow-inner font-semibold text-xs sm:text-sm md:text-base"
                                 placeholder="مثال: كيف شرح الدكتور الفرق بين DOS و DDOS؟"
                                 value={chatInput}
                                 onChange={(e) => setChatInput(e.target.value)}
@@ -1846,9 +1850,9 @@ function DashboardContent() {
                               <button
                                 type="submit"
                                 disabled={isChatLoading || !chatInput.trim() || (subscriptionLimit > 0 && chatCount >= subscriptionLimit)}
-                                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:hover:from-blue-600 disabled:hover:to-indigo-600 text-white w-14 h-14 rounded-2xl font-black flex items-center justify-center transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] active:scale-95"
+                                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:hover:from-blue-600 disabled:hover:to-indigo-600 text-white w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl font-black flex items-center justify-center transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] active:scale-95 flex-shrink-0"
                               >
-                                <Send className="w-5 h-5 rtl:-scale-x-100" />
+                                <Send className="w-4 h-4 sm:w-5 sm:h-5 rtl:-scale-x-100" />
                               </button>
                             </form>
                           </div>
