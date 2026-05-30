@@ -390,8 +390,9 @@ function DashboardContent() {
   const handleProcess = async (forceRawFiles: boolean = false) => {
     const hasAudioFile = !!audioFile || multiAudioFiles.length > 0;
     const hasLectureUrl = (uploadMode === "url" && lectureUrl.trim().length > 0) || (uploadMode === "url" && lectureUrls.filter(u => u.trim()).length > 0);
-    if (!hasAudioFile && !hasLectureUrl) {
-      setError(uploadMode === "url" ? "يرجى إدخال رابط المحاضرة أولاً." : "يرجى إرفاق الملف الصوتي أولاً.");
+    const hasPdfOnly = !hasAudioFile && !hasLectureUrl && (!!pdfFile || !!pdfTempId);
+    if (!hasAudioFile && !hasLectureUrl && !hasPdfOnly) {
+      setError(uploadMode === "url" ? "يرجى إدخال رابط المحاضرة أولاً." : "يرجى إرفاق ملف صوتي أو ملف PDF/PPTX للمعالجة.");
       return;
     }
     if (!session) { router.replace("/login"); return; }
@@ -1220,6 +1221,21 @@ function DashboardContent() {
                       </>
                     )}
                   </div>
+
+                {/* PDF-Only Info Banner — shown when only PDF is uploaded without audio */}
+                {pdfFile && !audioFile && multiAudioFiles.length === 0 && uploadMode === "file" && (
+                  <div className="mb-4 flex items-start gap-3 bg-blue-500/10 border border-blue-500/25 px-4 py-3.5 rounded-2xl text-right">
+                    <div className="p-1.5 bg-blue-500/15 rounded-lg shrink-0 mt-0.5">
+                      <FileText className="w-4 h-4 text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-black text-blue-300 mb-0.5">وضع الملف فقط (بدون صوت)</p>
+                      <p className="text-[10px] text-blue-200/70 leading-relaxed">
+                        سيتم تحليل ملفك مباشرة وتوليد: ملخص ذكي + نقاط التركيز + أسئلة MCQ + فلاش كاردز. لن يتم تفريغ صوتي لأنه لا يوجد ملف صوتي مرفق.
+                      </p>
+                    </div>
+                  </div>
+                )}
                 </div>
 
                 <AnimatePresence>
@@ -1254,7 +1270,7 @@ function DashboardContent() {
                 {/* Ultimate Futuristic Action Trigger Button */}
                 <button 
                   onClick={() => handleProcess()} 
-                  disabled={isProcessing || (uploadMode === "file" ? (!audioFile && multiAudioFiles.length === 0) : (!lectureUrl.trim() && lectureUrls.filter(u => u.trim()).length === 0)) || isAudioUploading || (uploadMode === "file" && multiAudioFiles.some(item => item.isUploading)) || isPdfUploading}
+                  disabled={isProcessing || (uploadMode === "file" ? (!audioFile && multiAudioFiles.length === 0 && !pdfFile && !pdfTempId) : (!lectureUrl.trim() && lectureUrls.filter(u => u.trim()).length === 0)) || isAudioUploading || (uploadMode === "file" && multiAudioFiles.some(item => item.isUploading)) || isPdfUploading}
                   className="w-full bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 hover:from-indigo-400 hover:to-pink-400 text-white font-black py-5.5 rounded-2xl shadow-xl shadow-indigo-950/40 hover:shadow-indigo-500/25 transition-all duration-300 transform active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none"
                 >
                   {isProcessing ? (
