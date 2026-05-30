@@ -216,29 +216,19 @@ export default function Home() {
       </section>
 
       {/* High-Fidelity Interactive Preview Section */}
-      <section id="demo-section" className="relative z-10 px-6 max-w-6xl mx-auto mb-32">
+      <section id="demo-section" className="relative z-10 px-6 max-w-xl mx-auto mb-32">
         
         <motion.div
           layout
-          className="relative w-full rounded-[2rem] overflow-hidden bg-[#0A0D14] border border-white/[0.08] shadow-[0_20px_80px_rgba(0,0,0,0.6)] ring-1 ring-white/5"
+          className="relative max-w-[340px] mx-auto rounded-[3rem] overflow-hidden bg-[#0A0D14] border-[10px] border-slate-900 shadow-[0_25px_100px_rgba(0,0,0,0.8)] ring-1 ring-white/10"
         >
-          {/* macOS Fake Window Header */}
-          <div className="bg-[#121620] border-b border-white/[0.05] h-12 flex items-center px-4 gap-2 z-30 relative">
-            <div className="flex gap-2 w-full max-w-[60px]">
-              <div className="w-3 h-3 rounded-full bg-rose-500/80"></div>
-              <div className="w-3 h-3 rounded-full bg-amber-500/80"></div>
-              <div className="w-3 h-3 rounded-full bg-emerald-500/80"></div>
-            </div>
-            <div className="flex-1 flex justify-center">
-              <div className="flex items-center gap-2 bg-white/[0.03] border border-white/[0.05] rounded-lg px-4 py-1.5">
-                <Lock className="w-3 h-3 text-slate-500" />
-                <span className="text-[11px] text-slate-400 font-mono tracking-widest">lammah.site/workspace</span>
-              </div>
-            </div>
-            <div className="w-full max-w-[60px]"></div>
+          {/* Smartphone Camera Notch / Dynamic Island */}
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-6 bg-slate-900 rounded-full z-30 flex items-center justify-center border border-white/5">
+            <div className="w-3 h-3 rounded-full bg-[#121620] mr-2"></div>
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-900/40"></div>
           </div>
 
-          <div className="relative aspect-video w-full">
+          <div className="relative aspect-[9/16] w-full">
             <video
               ref={videoRef}
               className="w-full h-full object-cover"
@@ -247,18 +237,18 @@ export default function Home() {
               onPlay={() => setIsPlaying(true)}
               preload="metadata"
             >
-              <source src="/demo/DemoLammah.mp4" type="video/mp4" />
+              <source src="/demo/0530.mp4" type="video/mp4" />
             </video>
             {!isPlaying && (
               <div
                 onClick={handlePlayDemo}
-                className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 z-20 bg-[#0A0D14]/55 backdrop-blur-xs cursor-pointer"
+                className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 z-20 bg-[#0A0D14]/75 backdrop-blur-sm cursor-pointer"
               >
-                <div className="w-20 h-20 bg-indigo-600 hover:bg-indigo-500 backdrop-blur-xl rounded-full flex items-center justify-center mb-6 border border-white/10 shadow-lg shadow-indigo-600/30 transition-transform hover:scale-105">
-                  <Play className="w-8 h-8 text-white translate-x-0.5" fill="currentColor" />
+                <div className="w-16 h-16 bg-indigo-600 hover:bg-indigo-500 backdrop-blur-xl rounded-full flex items-center justify-center mb-6 border border-white/10 shadow-lg shadow-indigo-600/30 transition-transform hover:scale-105">
+                  <Play className="w-6 h-6 text-white translate-x-0.5" fill="currentColor" />
                 </div>
-                <h3 className="text-2xl font-black text-white mb-2">شاهد طريقة التوليد المذهلة ⏱️</h3>
-                <p className="text-slate-300 text-sm max-w-md">فيديو توضيحي مدته دقيقة واحدة يكشف سر تميز ملازم لمّاح.</p>
+                <h3 className="text-xl font-black text-white mb-2 text-center">شاهد طريقة التوليد المذهلة ⏱️</h3>
+                <p className="text-slate-400 text-xs max-w-[240px] text-center leading-relaxed">فيديو توضيحي يكشف سر تميز ملازم لمّاح.</p>
               </div>
             )}
           </div>
