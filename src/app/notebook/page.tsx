@@ -227,8 +227,10 @@ function NotebookCreatorContent() {
     
     const hasAudioFile = !!audioFile || multiAudioFiles.length > 0;
     const hasLectureUrl = (uploadMode === "url" && lectureUrl.trim().length > 0) || (uploadMode === "url" && lectureUrls.filter(u => u.trim()).length > 0);
-    if (!hasAudioFile && !hasLectureUrl) {
-      setError(uploadMode === "url" ? "يرجى إدخال رابط المحاضرة أولاً." : "يرجى إرفاق الملف الصوتي أولاً.");
+    const hasPdfFile = !!pdfFile || !!pdfTempId;
+
+    if (!hasAudioFile && !hasLectureUrl && !hasPdfFile) {
+      setError(uploadMode === "url" ? "يرجى إدخال رابط المحاضرة أولاً." : "يرجى إرفاق ملف صوتي، أو رابط محاضرة، أو ملف عرض (PDF/PPTX) أولاً.");
       return;
     }
 
