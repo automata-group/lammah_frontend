@@ -998,11 +998,14 @@ function DashboardContent() {
                     </button>
                     <button
                       type="button"
-                      disabled
-                      className="px-5 py-2.5 rounded-xl text-xs font-black tracking-wide text-slate-500 cursor-not-allowed bg-slate-950/20 opacity-50 flex items-center gap-1.5"
-                      title="ميزة روابط المحاضرات غير متاحة حالياً - ستتوفر قريباً"
+                      onClick={() => {
+                        setUploadMode("url");
+                        setLectureUrl("");
+                        setLectureUrls([""]);
+                      }}
+                      className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wide transition-all duration-300 flex items-center gap-1.5 ${uploadMode === "url" ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-950/60" : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"}`}
                     >
-                      <Share2 className="w-3.5 h-3.5" /> رابط محاضرة (قريباً)
+                      <Share2 className="w-3.5 h-3.5" /> رابط يوتيوب
                     </button>
                   </div>
                   
@@ -1019,7 +1022,7 @@ function DashboardContent() {
                               setLectureUrls(newUrls);
                               if (idx === 0) setLectureUrl(e.target.value);
                             }}
-                            placeholder={idx === 0 ? "ألصق رابط YouTube أو Zoom أو Google Drive هنا" : `رابط محاضرة إضافي #${idx + 1}`}
+                            placeholder={idx === 0 ? "ألصق رابط يوتيوب (YouTube) هنا" : `رابط محاضرة إضافي #${idx + 1}`}
                             className="flex-1 bg-slate-950/80 border border-slate-800 text-slate-100 px-5 py-4 rounded-2xl focus:outline-none focus:border-indigo-500/70 focus:ring-1 focus:ring-indigo-500/40 transition-all duration-300 text-sm font-medium"
                             dir="ltr"
                           />

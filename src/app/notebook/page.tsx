@@ -571,11 +571,13 @@ function NotebookCreatorContent() {
                 </button>
                 <button
                   type="button"
-                  disabled
-                  className="flex-1 py-2.5 rounded-xl text-xs font-bold text-slate-500 cursor-not-allowed bg-slate-900/40 opacity-50"
-                  title="ميزة روابط اليوتيوب غير متاحة حالياً - ستتوفر قريباً"
+                  onClick={() => {
+                    setUploadMode("url");
+                    setLectureUrls([""]);
+                  }}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${uploadMode === "url" ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/10" : "text-slate-400 hover:text-slate-200"}`}
                 >
-                  🔗 روابط يوتيوب (قريباً)
+                  🔗 روابط يوتيوب
                 </button>
               </div>
 
