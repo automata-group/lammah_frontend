@@ -622,6 +622,18 @@ function NotebookCreatorContent() {
                   >
                     <Plus className="w-3.5 h-3.5" /> إضافة رابط محاضرة آخر 🔗
                   </button>
+                  <div className="flex justify-between items-center mt-3 border-t border-slate-850 pt-3">
+                    <span className="text-[10px] text-slate-500">
+                      * تواجه مشكلة في التنزيل من يوتيوب؟
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => router.push("/ytdl")}
+                      className="text-[10px] text-emerald-450 hover:text-emerald-350 font-extrabold flex items-center gap-1 transition-colors hover:underline"
+                    >
+                      💡 جرب أداة تحميل MP3 المستقلة
+                    </button>
+                  </div>
                 </div>
               )}
 
