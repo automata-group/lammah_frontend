@@ -28,6 +28,7 @@ function NotebookCreatorContent() {
   
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [notebookType, setNotebookType] = useState<"university" | "course_podcast">("university");
   
   interface UploadedAudio {
     id: string;
@@ -274,6 +275,7 @@ function NotebookCreatorContent() {
 
     if (lectureTitle) formData.append("lecture_title", lectureTitle);
     formData.append("student_name", customStudentName || fullName);
+    formData.append("notebook_type", notebookType);
 
     try {
       const response = await fetch(`${apiUrl}/api/v1/notebook/process-notebook`, {
@@ -538,6 +540,37 @@ function NotebookCreatorContent() {
             <h2 className="text-lg font-black text-slate-200 border-b border-slate-800/80 pb-3 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-indigo-400" /> إنشاء الملزمة ✍️
             </h2>
+
+            {/* Notebook Type Selection — FIRST thing the user sees */}
+            <div className="space-y-2.5">
+              <label className="text-xs font-bold text-slate-300 block">نوع الملزمة والمحتوى:</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setNotebookType("university")}
+                  className={`p-4 rounded-2xl border text-right transition-all flex flex-col justify-between h-24 ${
+                    notebookType === "university"
+                      ? "border-indigo-500 bg-indigo-500/10 text-white shadow-lg shadow-indigo-500/10"
+                      : "border-slate-800 bg-slate-950/40 text-slate-400 hover:border-slate-700"
+                  }`}
+                >
+                  <span className="text-xs font-black block">🎓 دفتر جامعي</span>
+                  <span className="text-[9.5px] text-slate-450 leading-snug mt-1.5 block">مخصص للمحاضرات الجامعية، أسئلة MCQs، وفخاخ الامتحان</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNotebookType("course_podcast")}
+                  className={`p-4 rounded-2xl border text-right transition-all flex flex-col justify-between h-24 ${
+                    notebookType === "course_podcast"
+                      ? "border-indigo-500 bg-indigo-500/10 text-white shadow-lg shadow-indigo-500/10"
+                      : "border-slate-800 bg-slate-950/40 text-slate-400 hover:border-slate-700"
+                  }`}
+                >
+                  <span className="text-xs font-black block">🎙️ دفتر الدورات والبودكاست</span>
+                  <span className="text-[9.5px] text-slate-450 leading-snug mt-1.5 block">خلاصة جوهرية، خطة عمل عملية، عقبات وحلول، وWorkbook</span>
+                </button>
+              </div>
+            </div>
 
             {/* Student Name Watermark Input */}
             <div className="space-y-2">
@@ -817,6 +850,8 @@ function NotebookCreatorContent() {
                 <p className="text-xs font-bold text-rose-200 leading-relaxed text-right">{error}</p>
               </div>
             )}
+
+
 
             {/* Submit Action Button */}
             {!isProcessing ? (
