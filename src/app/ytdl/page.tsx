@@ -207,11 +207,23 @@ export default function YouTubeToMP3Page() {
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-red-500/10 border border-red-500/30 text-red-200 px-5 py-4 rounded-2xl text-xs flex flex-col gap-3"
+                    className="bg-red-500/10 border border-red-500/30 text-red-200 px-5 py-4 rounded-2xl text-xs flex flex-col gap-4"
                   >
                     <div className="flex items-start gap-2">
                       <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                       <p className="font-bold leading-relaxed">{error}</p>
+                    </div>
+
+                    {/* Fallback recommendation banner */}
+                    <div className="bg-slate-950/80 border border-emerald-500/20 p-4 rounded-xl space-y-2 text-right">
+                      <p className="font-black text-emerald-400 flex items-center gap-1">
+                        💡 حل بديل وسريع لتجاوز حظر يوتيوب:
+                      </p>
+                      <p className="text-slate-300 text-[11px] leading-relaxed">
+                        نظراً لأن يوتيوب يفرض قيوداً أمنية مشددة أحياناً على السيرفرات، يمكنك نسخ رابط الفيديو وتنزيله كملف MP3 مباشرة عبر الموقع الخارجي المجاني والخالي من الإعلانات 
+                        <a href="https://cobalt.tools" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline font-black mx-1 hover:text-emerald-350">cobalt.tools</a> 
+                        ثم رفعه كملف مسجل في لوحة التحكم بلمّاح.
+                      </p>
                     </div>
                     
                     <button
