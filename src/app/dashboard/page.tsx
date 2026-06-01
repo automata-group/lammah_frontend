@@ -72,6 +72,7 @@ function DashboardContent() {
   const [isPdfUploading, setIsPdfUploading] = useState(false);
 
   const isBasicPlan = planName.includes("طالب") || planName.includes("أساسي") || planName === "مجاني";
+  const isFreeTrial = !planName || planName === "free" || planName === "مجاني" || planName.includes("مجاني") || planName.toLowerCase().includes("free");
 
   const subscriptionLimit = (planName.includes("الذهبية") || planName.includes("النخبة") || planName.includes("Elite") || planName.includes("برو") || planName.includes("VIP")) ? 100 :
     (planName.includes("الميدتيرم") || planName.includes("التفوق") || planName.includes("متقدم") || planName.includes("Premium")) ? 25 :
@@ -1285,6 +1286,19 @@ function DashboardContent() {
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* Free Trial Banner */}
+                {isFreeTrial && (
+                  <div className="mb-6 flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 px-5 py-4 rounded-2xl text-right text-amber-200">
+                    <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-xs font-black">وضع التجربة المجانية نشط 🎁</p>
+                      <p className="text-[11px] text-amber-100/75 leading-relaxed mt-1">
+                        سيتم معالجة أول 5 دقائق فقط من التسجيل الصوتي وأول 6 صفحات فقط من مستند العرض المرفق. للاستمتاع بمعالجة غير محدودة، يرجى ترقية باقتك.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Ultimate Futuristic Action Trigger Button */}
                 <button 

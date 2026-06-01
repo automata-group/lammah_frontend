@@ -354,10 +354,11 @@ function NotebookCreatorContent() {
     );
   }
 
-  const isPremiumUser = session && planName && planName !== "free";
+  const isFreeTrial = !planName || planName === "free" || planName === "مجاني";
+  const isGoldPlan = planName.toLowerCase().includes("الذهبية") || planName.toLowerCase().includes("ذهبية") || planName.toLowerCase().includes("elite");
 
-  // PREMIUM PAYWALL
-  if (!session || !isPremiumUser) {
+  // PREMIUM PAYWALL (FOR NOT LOGGED IN)
+  if (!session) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
         {/* Decorative ambient lights */}
@@ -422,7 +423,8 @@ function NotebookCreatorContent() {
     );
   }
 
-  if (!checkingAuth && !planName.toLowerCase().includes("الذهبية") && !planName.toLowerCase().includes("ذهبية")) {
+  // Lock only for basic paid users (not Gold and not Free Trial)
+  if (!checkingAuth && !isGoldPlan && !isFreeTrial) {
     return (
       <div className="min-h-screen bg-[#070b13] text-white p-6 relative overflow-hidden flex flex-col justify-center items-center font-sans" dir="rtl">
         {/* Background Gradients */}
@@ -431,7 +433,7 @@ function NotebookCreatorContent() {
 
         <div className="max-w-2xl text-center space-y-8 bg-slate-900/60 backdrop-blur-2xl border border-amber-500/30 p-12 rounded-[2.5rem] shadow-[0_0_50px_rgba(245,158,11,0.15)] relative">
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-amber-500/30 border border-amber-300/40">
-            <Lock className="w-12 h-12 text-slate-950" />
+            <Lock className="w-12 h-12 text-slate-955" />
           </div>
 
           <div className="pt-6 space-y-4">
@@ -521,6 +523,17 @@ function NotebookCreatorContent() {
       <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-8 relative z-10">
         {/* Left Form Settings Panel: 5 columns */}
         <div className="lg:col-span-5 space-y-6">
+          {isFreeTrial && (
+            <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl flex items-start gap-3 text-amber-200">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div className="text-right">
+                <p className="text-xs font-black">وضع التجربة المجانية نشط 🎁</p>
+                <p className="text-[10px] text-amber-100/75 leading-relaxed mt-1">
+                  كعضو في الفترة التجريبية، يمكنك توليد دفاتر البائعين لكن بحد أقصى 5 دقائق صوتية و6 صفحات عرض للمستند المرفق.
+                </p>
+              </div>
+            </div>
+          )}
           <div className="bg-slate-900/60 border border-slate-800/80 p-6 rounded-[2rem] space-y-6 shadow-xl backdrop-blur-xl">
             <h2 className="text-lg font-black text-slate-200 border-b border-slate-800/80 pb-3 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-indigo-400" /> إنشاء الملزمة ✍️
@@ -809,7 +822,7 @@ function NotebookCreatorContent() {
             {!isProcessing ? (
               <button 
                 onClick={startNotebookProcessing}
-                disabled={isAudioUploading || isPdfUploading}
+                disabled={isAudioUploading || isPdfUploading || (uploadMode === "file" ? (!audioFile && multiAudioFiles.length === 0 && !pdfFile && !pdfTempId) : (!lectureUrl.trim() && lectureUrls.filter(u => u.trim()).length === 0))}
                 className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 text-white font-black text-sm py-4 rounded-2xl transition shadow-[0_0_20px_rgba(99,102,241,0.15)] flex items-center justify-center gap-2"
               >
                 ✨ ابدأ صياغة ملزمتك الذكية ✨
