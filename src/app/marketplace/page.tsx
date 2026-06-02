@@ -408,7 +408,7 @@ export default function MarketplacePage() {
               return (
                 <div 
                   key={nb.id} 
-                  className="bg-slate-900/30 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-6 hover:border-indigo-500/40 transition-all duration-300 group flex flex-col justify-between h-full relative"
+                  className="bg-slate-900/85 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 hover:border-indigo-500/60 hover:shadow-2xl hover:shadow-indigo-955/40 transition-all duration-300 group flex flex-col justify-between h-full relative shadow-lg shadow-slate-950/45"
                 >
                   <div>
                     {/* Top Row: Badges & Price */}
