@@ -66,6 +66,24 @@ jobs:
                   - "3001:3000"
             EOF
             
+            # Prefer IPv4 over IPv6 to resolve docker pull connection reset issues on GHCR
+            if [ -f /etc/gai.conf ]; then
+              sudo sed -i 's/#\s*precedence ::ffff:0:0\/96  100/precedence ::ffff:0:0\/96  100/g' /etc/gai.conf || true
+            fi
+
             echo ${{ secrets.GHCR_PAT }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-            docker compose pull
+            
+            echo "Pulling latest image with retries..."
+            MAX_PULL_RETRIES=5
+            PULL_COUNT=0
+            until docker compose pull; do
+              PULL_COUNT=$((PULL_COUNT+1))
+              if [ $PULL_COUNT -eq $MAX_PULL_RETRIES ]; then
+                echo "Failed to pull images after $MAX_PULL_RETRIES attempts. Exiting."
+                exit 1
+              fi
+              echo "Pull failed, retrying in 15 seconds ($PULL_COUNT/$MAX_PULL_RETRIES)..."
+              sleep 15
+            done
+
             docker compose up -d
