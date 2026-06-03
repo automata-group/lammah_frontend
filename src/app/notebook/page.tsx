@@ -3,10 +3,11 @@
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { getFingerprint as getThumbmark } from '@thumbmarkjs/thumbmarkjs';
 import { 
   BookOpen, Sparkles, Lock, ArrowLeft, Upload, FileText, 
   User, CheckCircle, Download, AlertTriangle, PlayCircle, Loader2,
-  Plus, X
+  Plus, X, Crown
 } from "lucide-react";
 
 function NotebookCreatorContent() {
@@ -18,6 +19,48 @@ function NotebookCreatorContent() {
   const [quota, setQuota] = useState<number>(0);
   const [fullName, setFullName] = useState<string>("طالب متميز");
   const [checkingAuth, setCheckingAuth] = useState<boolean>(true);
+  const [deviceAbuse, setDeviceAbuse] = useState<boolean>(false);
+  const [deviceAbuseMessage, setDeviceAbuseMessage] = useState<string | null>(null);
+
+  // -- FINGERPRINTING LOGIC --
+  const getFingerprint = async () => {
+    if (typeof window === "undefined") return "";
+    let fp = localStorage.getItem("device_id_v3");
+    if (!fp) {
+      try {
+        fp = await getThumbmark();
+        localStorage.setItem("device_id_v3", fp);
+      } catch (e) {
+        console.error("Device ID generation failed:", e);
+        fp = `fallback_${Math.random().toString(36).substring(7)}`;
+      }
+    }
+    return fp;
+  };
+
+  const getDeviceMetadata = async () => {
+    if (typeof window === "undefined") return "";
+    const fp = await getFingerprint();
+    const metadata = {
+      fingerprint: fp,
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      platform: navigator.platform,
+      screen: `${window.screen.width}x${window.screen.height}`,
+      battery: null as any
+    };
+
+    if ('getBattery' in navigator) {
+      try {
+        const battery = await (navigator as any).getBattery();
+        metadata.battery = {
+          level: Math.round(battery.level * 100),
+          charging: battery.charging
+        };
+      } catch (e) { }
+    }
+    return JSON.stringify(metadata);
+  };
 
   // Form states
   const [lectureTitle, setLectureTitle] = useState<string>("");
@@ -59,23 +102,32 @@ function NotebookCreatorContent() {
     if (authLoading) return;
     
     if (session) {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
-      fetch(`${apiUrl}/api/v1/subscription/quota`, {
-        headers: {
-          "Authorization": `Bearer ${session.access_token}`
-        }
-      })
-      .then(async r => {
-        const data = await r.json();
-        if (r.ok) {
-          setPlanName(data.plan_name || "free");
-          setQuota(data.quota_remaining || 0);
-          setFullName(data.full_name || "طالب متميز");
-          setCustomStudentName(data.full_name || "طالب متميز");
-        }
-      })
-      .catch(e => console.error("Failed to load quota info:", e))
-      .finally(() => setCheckingAuth(false));
+      const fetchQuota = async () => {
+        const fp = await getFingerprint();
+        const meta = await getDeviceMetadata();
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+        fetch(`${apiUrl}/api/v1/subscription/quota`, {
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`,
+            "X-Fingerprint": fp,
+            "X-Device-Metadata": meta
+          }
+        })
+        .then(async r => {
+          const data = await r.json();
+          if (r.ok) {
+            setPlanName(data.plan_name || "free");
+            setQuota(data.quota_remaining || 0);
+            setFullName(data.full_name || "طالب متميز");
+            setCustomStudentName(data.full_name || "طالب متميز");
+            setDeviceAbuse(!!data.device_abuse);
+            setDeviceAbuseMessage(data.device_abuse_message || null);
+          }
+        })
+        .catch(e => console.error("Failed to load quota info:", e))
+        .finally(() => setCheckingAuth(false));
+      };
+      fetchQuota();
     } else {
       setCheckingAuth(false);
     }
@@ -629,7 +681,7 @@ function NotebookCreatorContent() {
 
               {/* Lecture URL Inputs */}
               {uploadMode === "url" && (
-                <div className={`space-y-3 bg-slate-950/40 p-4 rounded-2xl border border-slate-850 ${quota <= 0 ? "opacity-30 pointer-events-none" : ""}`}>
+                <div className={`space-y-3 bg-slate-950/40 p-4 rounded-2xl border border-slate-850 ${quota <= 0 || deviceAbuse ? "opacity-30 pointer-events-none" : ""}`}>
                   <label className="text-xs font-bold text-slate-300 block">روابط المحاضرات المراد دمجها بالملزمة:</label>
                   {lectureUrls.map((url, idx) => (
                     <div key={idx} className="flex gap-2 items-center">
@@ -687,7 +739,7 @@ function NotebookCreatorContent() {
               {uploadMode === "file" && (
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-300 block">صوت أو تسجيل المحاضرة (يمكن اختيار عدة ملفات للدمج):</label>
-                  <div className={`border-2 border-dashed rounded-2xl p-6 text-center hover:border-indigo-500/50 transition cursor-pointer relative bg-slate-950/40 ${audioFile || multiAudioFiles.length > 0 ? "border-indigo-500 bg-indigo-500/5" : "border-slate-850"} ${quota <= 0 ? "opacity-30 pointer-events-none" : ""}`}>
+                  <div className={`border-2 border-dashed rounded-2xl p-6 text-center hover:border-indigo-500/50 transition cursor-pointer relative bg-slate-950/40 ${audioFile || multiAudioFiles.length > 0 ? "border-indigo-500 bg-indigo-500/5" : "border-slate-850"} ${quota <= 0 || deviceAbuse ? "opacity-30 pointer-events-none" : ""}`}>
                     <input 
                       type="file" 
                       accept="audio/*" 
@@ -791,7 +843,7 @@ function NotebookCreatorContent() {
               {/* PDF/PPT Slide Upload */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-300 block">ملف السلايدات PowerPoint أو PDF (اختياري):</label>
-                <div className={`border-2 border-dashed border-slate-850 rounded-2xl p-4 text-center hover:border-indigo-500/50 transition cursor-pointer relative bg-slate-950/40 ${quota <= 0 ? "opacity-30 pointer-events-none" : ""}`}>
+                <div className={`border-2 border-dashed border-slate-850 rounded-2xl p-4 text-center hover:border-indigo-500/50 transition cursor-pointer relative bg-slate-950/40 ${quota <= 0 || deviceAbuse ? "opacity-30 pointer-events-none" : ""}`}>
                   <input 
                     type="file" 
                     accept=".pdf,.pptx,.ppt,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation" 
@@ -875,14 +927,40 @@ function NotebookCreatorContent() {
               </div>
             )}
 
+            {/* Device Abuse Lock Banner — Notebook */}
+            {deviceAbuse && (
+              <div className="relative overflow-hidden rounded-2xl border border-rose-500/30 bg-gradient-to-br from-rose-950/60 via-slate-950/80 to-rose-950/40 backdrop-blur-xl p-5 text-right shadow-[0_0_30px_rgba(239,68,68,0.08)]">
+                <div className="absolute inset-0 rounded-2xl bg-rose-500/5 animate-pulse pointer-events-none" />
+                <div className="relative z-10 flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center shrink-0 shadow-inner">
+                    <Lock className="w-5 h-5 text-rose-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-black text-rose-200 mb-1">🚫 تم استخدام التجربة المجانية على هذا الجهاز</p>
+                    <p className="text-[11px] text-rose-300/70 leading-relaxed">
+                      {deviceAbuseMessage || "عذراً! تم استخدام التجربة المجانية بالفعل على هذا الجهاز بحساب آخر. يرجى الاشتراك للاستمرار. 🚀"}
+                    </p>
+                    <button
+                      onClick={() => router.push("/plans")}
+                      className="mt-3 inline-flex items-center gap-1.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400 text-white font-black text-xs px-4 py-2 rounded-xl transition-all shadow-lg shadow-rose-500/20 hover:scale-[1.03]"
+                    >
+                      <Crown className="w-3.5 h-3.5" /> شحن الرصيد والاشتراك الآن
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Submit Action Button */}
             {!isProcessing ? (
               <button 
                 onClick={startNotebookProcessing}
-                disabled={isAudioUploading || isPdfUploading || quota <= 0 || (uploadMode === "file" ? (!audioFile && multiAudioFiles.length === 0 && !pdfFile && !pdfTempId) : (!lectureUrl.trim() && lectureUrls.filter(u => u.trim()).length === 0))}
+                disabled={isAudioUploading || isPdfUploading || quota <= 0 || deviceAbuse || (uploadMode === "file" ? (!audioFile && multiAudioFiles.length === 0 && !pdfFile && !pdfTempId) : (!lectureUrl.trim() && lectureUrls.filter(u => u.trim()).length === 0))}
                 className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 text-white font-black text-sm py-4 rounded-2xl transition shadow-[0_0_20px_rgba(99,102,241,0.15)] flex items-center justify-center gap-2"
               >
-                {quota <= 0 ? (
+                {deviceAbuse ? (
+                  <><Lock className="w-4 h-4" /> 🚫 الجهاز مستخدم للتجربة المجانية من قبل</>
+                ) : quota <= 0 ? (
                   <><Lock className="w-4 h-4" /> 🚫 رصيدك غير كافٍ للبدء (0 دقيقة)</>
                 ) : (
                   <>✨ ابدأ صياغة ملزمتك الذكية ✨</>
