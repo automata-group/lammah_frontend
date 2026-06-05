@@ -577,7 +577,7 @@ function NotebookCreatorContent() {
       <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-8 relative z-10">
         {/* Left Form Settings Panel: 5 columns */}
         <div className="lg:col-span-5 space-y-6">
-          {isFreeTrial && (
+          {isFreeTrial && !deviceAbuse && (
             <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl flex items-start gap-3 text-amber-200">
               <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
               <div className="text-right">
@@ -938,7 +938,7 @@ function NotebookCreatorContent() {
                   <div className="flex-1">
                     <p className="text-sm font-black text-rose-200 mb-1">🚫 تم استخدام التجربة المجانية على هذا الجهاز</p>
                     <p className="text-[11px] text-rose-300/70 leading-relaxed">
-                      {deviceAbuseMessage || "عذراً! تم استخدام التجربة المجانية بالفعل على هذا الجهاز بحساب آخر. يرجى الاشتراك للاستمرار. 🚀"}
+                      {deviceAbuseMessage || "🚫 عذراً! التجربة المجانية غير متوفرة لأنها استُخدمت بالفعل على هذا الجهاز. يرجى الاشتراك للاستمرار. 🚀"}
                     </p>
                     <button
                       onClick={() => router.push("/plans")}
