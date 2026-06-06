@@ -1123,7 +1123,7 @@ function DashboardContent() {
 
                 <div className="grid md:grid-cols-2 gap-6 mb-8">
                   {/* Audio File Dropzone */}
-                  <div className={`relative group border-2 border-dashed rounded-2xl sm:rounded-[2rem] p-4 sm:p-10 flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-[1.01] ${audioFile || multiAudioFiles.length > 0 ? 'border-indigo-500 bg-indigo-500/5 shadow-[0_8px_32px_rgba(99,102,241,0.08)]' : 'border-slate-800 hover:border-indigo-500/40 hover:bg-slate-900/10 cursor-pointer'} ${uploadMode === "url" ? "opacity-30 pointer-events-none" : ""} ${quota !== null && quota <= 0 ? "opacity-30 pointer-events-none" : ""} ${deviceAbuse ? "opacity-30 pointer-events-none" : ""}`}>
+                  <div className={`relative group border-2 border-dashed rounded-2xl sm:rounded-[2rem] p-4 sm:p-10 flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-[1.01] ${audioFile || multiAudioFiles.length > 0 ? 'border-indigo-500 bg-indigo-500/5 shadow-[0_8px_32px_rgba(99,102,241,0.08)]' : 'border-slate-800 hover:border-indigo-500/40 hover:bg-slate-900/10 cursor-pointer'} ${uploadMode === "url" ? "opacity-30 pointer-events-none" : ""} ${quota !== null && quota <= 0 && !isFreeTrial ? "opacity-30 pointer-events-none" : ""} ${deviceAbuse ? "opacity-30 pointer-events-none" : ""}`}>
                     {isFreeTrial ? (
                       <div
                         onClick={(e) => {
@@ -1234,7 +1234,7 @@ function DashboardContent() {
                   </div>
 
                   {/* PDF Slide Dropzone */}
-                  <div className={`relative group border-2 border-dashed rounded-2xl sm:rounded-[2rem] p-4 sm:p-10 flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-[1.01] ${pdfFile ? 'border-purple-500 bg-purple-500/5 shadow-[0_8px_32px_rgba(168,85,247,0.08)]' : 'border-slate-800 hover:border-purple-500/40 hover:bg-slate-900/10 cursor-pointer'} ${quota !== null && quota <= 0 ? "opacity-30 pointer-events-none" : ""} ${deviceAbuse ? "opacity-30 pointer-events-none" : ""}`}>
+                  <div className={`relative group border-2 border-dashed rounded-2xl sm:rounded-[2rem] p-4 sm:p-10 flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-[1.01] ${pdfFile ? 'border-purple-500 bg-purple-500/5 shadow-[0_8px_32px_rgba(168,85,247,0.08)]' : 'border-slate-800 hover:border-purple-500/40 hover:bg-slate-900/10 cursor-pointer'} ${quota !== null && quota <= 0 && !isFreeTrial ? "opacity-30 pointer-events-none" : ""} ${deviceAbuse ? "opacity-30 pointer-events-none" : ""}`}>
                     {isFreeTrial ? (
                       <div
                         onClick={(e) => {
@@ -1359,7 +1359,7 @@ function DashboardContent() {
                 </AnimatePresence>
 
                 {/* Free Trial Banner */}
-                {isFreeTrial && !deviceAbuse && quota !== null && quota > 0 && (
+                {isFreeTrial && !deviceAbuse && (
                   <div className="mb-6 flex items-start gap-3 bg-indigo-500/10 border border-indigo-500/30 px-5 py-4 rounded-2xl text-right text-indigo-200">
                     <Sparkles className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5 animate-pulse" />
                     <div className="flex-1">
@@ -1372,7 +1372,7 @@ function DashboardContent() {
                 )}
 
                 {/* Zero Quota Lock Banner */}
-                {quota !== null && quota <= 0 && (
+                {quota !== null && quota <= 0 && !isFreeTrial && (
                   <div className="mb-6 relative overflow-hidden rounded-2xl border border-rose-500/30 bg-gradient-to-br from-rose-950/60 via-slate-950/80 to-rose-950/40 backdrop-blur-xl p-5 text-right shadow-[0_0_30px_rgba(239,68,68,0.08)]">
                     {/* Glow pulse */}
                     <div className="absolute inset-0 rounded-2xl bg-rose-500/5 animate-pulse pointer-events-none" />
@@ -1424,12 +1424,12 @@ function DashboardContent() {
                 {/* Ultimate Futuristic Action Trigger Button */}
                 <button 
                   onClick={() => handleProcess()} 
-                  disabled={isProcessing || quota !== null && quota <= 0 || deviceAbuse || (uploadMode === "file" ? (!audioFile && multiAudioFiles.length === 0 && !pdfFile && !pdfTempId) : (!lectureUrl.trim() && lectureUrls.filter(u => u.trim()).length === 0)) || isAudioUploading || (uploadMode === "file" && multiAudioFiles.some(item => item.isUploading)) || isPdfUploading}
+                  disabled={isProcessing || (quota !== null && quota <= 0 && !isFreeTrial) || deviceAbuse || (uploadMode === "file" ? (!audioFile && multiAudioFiles.length === 0 && !pdfFile && !pdfTempId) : (!lectureUrl.trim() && lectureUrls.filter(u => u.trim()).length === 0)) || isAudioUploading || (uploadMode === "file" && multiAudioFiles.some(item => item.isUploading)) || isPdfUploading}
                   className="w-full bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 hover:from-indigo-400 hover:to-pink-400 text-white font-black py-5.5 rounded-2xl shadow-xl shadow-indigo-950/40 hover:shadow-indigo-500/25 transition-all duration-300 transform active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none"
                 >
                   {isProcessing ? (
                     <span className="flex items-center justify-center text-sm font-black"><Loader2 className="w-5 h-5 ml-2.5 animate-spin" />جاري التوليد والتلخيص...</span>
-                  ) : quota !== null && quota <= 0 ? (
+                  ) : (quota !== null && quota <= 0 && !isFreeTrial) ? (
                     <span className="flex items-center justify-center text-sm font-black"><Lock className="w-5 h-5 ml-2.5" />🚫 رصيدك غير كافٍ للبدء (0 دقيقة)</span>
                   ) : (isAudioUploading || isPdfUploading || (uploadMode === "file" && multiAudioFiles.some(item => item.isUploading))) ? (
                     <span className="flex items-center justify-center text-sm font-black"><Loader2 className="w-5 h-5 ml-2.5 animate-spin" />جاري رفع المحاضرة والملفات بأمان...</span>
