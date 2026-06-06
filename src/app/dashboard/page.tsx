@@ -49,6 +49,7 @@ function DashboardContent() {
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [deviceAbuse, setDeviceAbuse] = useState<boolean>(false);
   const [deviceAbuseMessage, setDeviceAbuseMessage] = useState<string | null>(null);
+  const [showDemoModal, setShowDemoModal] = useState<'audio' | 'pdf' | 'youtube' | null>(null);
 
   const fetchChatUsage = async () => {
     if (!session) return;
@@ -73,12 +74,14 @@ function DashboardContent() {
   const [isAudioUploading, setIsAudioUploading] = useState(false);
   const [isPdfUploading, setIsPdfUploading] = useState(false);
 
-  const isBasicPlan = planName.includes("طالب") || planName.includes("أساسي") || planName === "مجاني";
+  const isDemoLecture = currentHistoryId === "4198557f-5b1b-48ac-91a8-d8129de8ca0b";
+  const isBasicPlan = (planName.includes("طالب") || planName.includes("أساسي") || planName === "مجاني") && !isDemoLecture;
   const isFreeTrial = !planName || planName === "free" || planName === "مجاني" || planName.includes("مجاني") || planName.toLowerCase().includes("free");
 
-  const subscriptionLimit = (planName.includes("الذهبية") || planName.includes("النخبة") || planName.includes("Elite") || planName.includes("برو") || planName.includes("VIP")) ? 100 :
-    (planName.includes("الميدتيرم") || planName.includes("التفوق") || planName.includes("متقدم") || planName.includes("Premium")) ? 25 :
-      5; // Default for Basic/Rescue/Student (الإنقاذ/الأساسية)
+  const subscriptionLimit = isDemoLecture ? 100 :
+    (planName.includes("الذهبية") || planName.includes("النخبة") || planName.includes("Elite") || planName.includes("برو") || planName.includes("VIP")) ? 100 :
+      (planName.includes("الميدتيرم") || planName.includes("التفوق") || planName.includes("متقدم") || planName.includes("Premium")) ? 25 :
+        5; // Default for Basic/Rescue/Student (الإنقاذ/الأساسية)
 
   // UI States for Expansion
   const [activeTab, setActiveTab] = useState("notes");
@@ -314,7 +317,7 @@ function DashboardContent() {
       }
     };
     fetchHistory();
-  }, [session]);
+  }, [session, searchParams]);
 
   // Fetch quota on load - SHOW ERRORS
   const [userFullName, setUserFullName] = useState<string | null>(null);
@@ -392,12 +395,50 @@ function DashboardContent() {
     fetchChatUsage();
   }, [session]);
 
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [loading, user, router]);
+
+
   const handleProcess = async (forceRawFiles: boolean = false) => {
     const hasAudioFile = !!audioFile || multiAudioFiles.length > 0;
     const hasLectureUrl = (uploadMode === "url" && lectureUrl.trim().length > 0) || (uploadMode === "url" && lectureUrls.filter(u => u.trim()).length > 0);
     const hasPdfOnly = !hasAudioFile && !hasLectureUrl && (!!pdfFile || !!pdfTempId);
     if (!hasAudioFile && !hasLectureUrl && !hasPdfOnly) {
       setError(uploadMode === "url" ? "يرجى إدخال رابط المحاضرة أولاً." : "يرجى إرفاق ملف صوتي أو ملف PDF/PPTX للمعالجة.");
+      return;
+    }
+    
+    if (isFreeTrial) {
+      setIsProcessing(true);
+      setError(null);
+      setResult(null);
+      setIsStreaming(false);
+      setTimeLeft(5);
+      setProgressStep("📥 جاري رفع واستلام الملف الافتراضي...");
+      
+      setTimeout(() => {
+        setProgressStep("🎧 جاري تفريغ المحاضرة صوتياً بدقة عالية بواسطة محركات لمّاح الذكية...");
+      }, 1250);
+
+      setTimeout(() => {
+        setProgressStep("🧠 جاري تحليل النص وتوليد الملخص والخرائط الذهنية بواسطة ذكاء لمّاح للجامعات...");
+      }, 2500);
+
+      setTimeout(() => {
+        setProgressStep("✨ جاري إعداد البطاقات التعليمية والأسئلة المتوقعة وتنسيق الملف النهائي...");
+      }, 3750);
+
+      setTimeout(() => {
+        setProgressStep("🎉 تم معالجة المحاضرة بنجاح! جاري الانتقال لدفتر الملاحظات...");
+        setTimeout(() => {
+          router.push(`/dashboard?history_id=4198557f-5b1b-48ac-91a8-d8129de8ca0b`);
+          setIsProcessing(false);
+        }, 1000);
+      }, 5000);
+
       return;
     }
     if (!session) { router.replace("/login"); return; }
@@ -1008,9 +1049,13 @@ function DashboardContent() {
                     <button
                       type="button"
                       onClick={() => {
-                        setUploadMode("url");
-                        setLectureUrl("");
-                        setLectureUrls([""]);
+                        if (isFreeTrial) {
+                          setShowDemoModal('youtube');
+                        } else {
+                          setUploadMode("url");
+                          setLectureUrl("");
+                          setLectureUrls([""]);
+                        }
                       }}
                       className={`px-5 py-2.5 rounded-xl text-xs font-black tracking-wide transition-all duration-300 flex items-center gap-1.5 ${uploadMode === "url" ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-950/60" : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"}`}
                     >
@@ -1079,28 +1124,39 @@ function DashboardContent() {
                 <div className="grid md:grid-cols-2 gap-6 mb-8">
                   {/* Audio File Dropzone */}
                   <div className={`relative group border-2 border-dashed rounded-2xl sm:rounded-[2rem] p-4 sm:p-10 flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-[1.01] ${audioFile || multiAudioFiles.length > 0 ? 'border-indigo-500 bg-indigo-500/5 shadow-[0_8px_32px_rgba(99,102,241,0.08)]' : 'border-slate-800 hover:border-indigo-500/40 hover:bg-slate-900/10 cursor-pointer'} ${uploadMode === "url" ? "opacity-30 pointer-events-none" : ""} ${quota !== null && quota <= 0 ? "opacity-30 pointer-events-none" : ""} ${deviceAbuse ? "opacity-30 pointer-events-none" : ""}`}>
-                    <input type="file" accept="audio/*" multiple onChange={(e) => {
-                      const files = e.target.files;
-                      if (files && files.length > 0) {
-                        if (files.length === 1 && multiAudioFiles.length === 0) {
-                          setAudioFile(files[0]);
-                          setAudioUploadProgress(0);
-                          setAudioTempId(null);
-                          uploadToTemp(files[0], 'audio');
+                    {isFreeTrial ? (
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setShowDemoModal('audio');
+                        }}
+                        className="absolute inset-0 z-20 cursor-pointer"
+                      />
+                    ) : (
+                      <input type="file" accept="audio/*" multiple onChange={(e) => {
+                        const files = e.target.files;
+                        if (files && files.length > 0) {
+                          if (files.length === 1 && multiAudioFiles.length === 0) {
+                            setAudioFile(files[0]);
+                            setAudioUploadProgress(0);
+                            setAudioTempId(null);
+                            uploadToTemp(files[0], 'audio');
+                          }
+                          
+                          const newFiles = Array.from(files).map(file => ({
+                            id: Math.random().toString(36).substring(7),
+                            file,
+                            progress: 0,
+                            isUploading: true
+                          }));
+                          setMultiAudioFiles(prev => [...prev, ...newFiles]);
+                          newFiles.forEach(item => {
+                            uploadSingleMultiAudio(item.id, item.file);
+                          });
                         }
-                        
-                        const newFiles = Array.from(files).map(file => ({
-                          id: Math.random().toString(36).substring(7),
-                          file,
-                          progress: 0,
-                          isUploading: true
-                        }));
-                        setMultiAudioFiles(prev => [...prev, ...newFiles]);
-                        newFiles.forEach(item => {
-                          uploadSingleMultiAudio(item.id, item.file);
-                        });
-                      }
-                    }} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                      }} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                    )}
                     
                     {audioFile || multiAudioFiles.length > 0 ? (
                       <div className="text-center w-full z-20 relative">
@@ -1179,19 +1235,30 @@ function DashboardContent() {
 
                   {/* PDF Slide Dropzone */}
                   <div className={`relative group border-2 border-dashed rounded-2xl sm:rounded-[2rem] p-4 sm:p-10 flex flex-col items-center justify-center transition-all duration-500 transform hover:scale-[1.01] ${pdfFile ? 'border-purple-500 bg-purple-500/5 shadow-[0_8px_32px_rgba(168,85,247,0.08)]' : 'border-slate-800 hover:border-purple-500/40 hover:bg-slate-900/10 cursor-pointer'} ${quota !== null && quota <= 0 ? "opacity-30 pointer-events-none" : ""} ${deviceAbuse ? "opacity-30 pointer-events-none" : ""}`}>
-                    <input type="file" accept={isBasicPlan ? "application/pdf" : "application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,.pptx"} onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file && isBasicPlan && file.name.endsWith('.pptx')) {
-                        setError("رفع وتحويل ملفات الباوربوينت (PPTX) حصري للباقات المتقدمة و VIP 🎉 يرجى ترقية باقتك من صفحة الباقات.");
-                        setPdfFile(null);
-                        e.target.value = "";
-                      } else if (file) {
-                        setPdfFile(file);
-                        setPdfUploadProgress(0);
-                        setPdfTempId(null);
-                        uploadToTemp(file, 'pdf');
-                      }
-                    }} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                    {isFreeTrial ? (
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setShowDemoModal('pdf');
+                        }}
+                        className="absolute inset-0 z-20 cursor-pointer"
+                      />
+                    ) : (
+                      <input type="file" accept={isBasicPlan ? "application/pdf" : "application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,.pptx"} onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file && isBasicPlan && file.name.endsWith('.pptx')) {
+                          setError("رفع وتحويل ملفات الباوربوينت (PPTX) حصري للباقات المتقدمة و VIP 🎉 يرجى ترقية باقتك من صفحة الباقات.");
+                          setPdfFile(null);
+                          e.target.value = "";
+                        } else if (file) {
+                          setPdfFile(file);
+                          setPdfUploadProgress(0);
+                          setPdfTempId(null);
+                          uploadToTemp(file, 'pdf');
+                        }
+                      }} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                    )}
                     
                     {pdfFile ? (
                       <div className="text-center w-full z-20 relative">
@@ -1293,12 +1360,12 @@ function DashboardContent() {
 
                 {/* Free Trial Banner */}
                 {isFreeTrial && !deviceAbuse && quota !== null && quota > 0 && (
-                  <div className="mb-6 flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 px-5 py-4 rounded-2xl text-right text-amber-200">
-                    <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                  <div className="mb-6 flex items-start gap-3 bg-indigo-500/10 border border-indigo-500/30 px-5 py-4 rounded-2xl text-right text-indigo-200">
+                    <Sparkles className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5 animate-pulse" />
                     <div className="flex-1">
-                      <p className="text-xs font-black">وضع التجربة المجانية نشط 🎁</p>
-                      <p className="text-[11px] text-amber-100/75 leading-relaxed mt-1">
-                        سيتم معالجة أول 5 دقائق فقط من التسجيل الصوتي وأول 6 صفحات فقط من مستند العرض المرفق. للاستمتاع بمعالجة غير محدودة، يرجى ترقية باقتك.
+                      <p className="text-xs font-black">وضع التجربة الافتراضية نشط 🧪</p>
+                      <p className="text-[11px] text-slate-350 leading-relaxed mt-1">
+                        أنت حالياً في وضع التجربة الافتراضية لـ «لمّاح». لتجربة المنصة بكافة ميزاتها الاحترافية مجاناً وبدون قيود، انقر فوق <strong>تسجيل المحاضرة الصوتية</strong> أو <strong>شرائح العرض (PDF)</strong> بالأسفل لتحميل ملف المحاضرة النموذجية الفاخرة «تشفير البلوك والستريم سايفر»، ثم اضغط على الزر الكبير بالأسفل لبدء المحاكاة السريعة والانتقال فوراً لدفتر الملاحظات الذكي!
                       </p>
                     </div>
                   </div>
@@ -1662,13 +1729,13 @@ function DashboardContent() {
                       {(result?.annotations?.mcqs?.length > 0 || result?.annotations?.flashcards?.length > 0) && (
                         <button onClick={() => setActiveTab("quiz")} className={`flex-1 min-w-[65px] sm:min-w-[100px] flex flex-col sm:flex-row items-center justify-center py-2.5 sm:py-3.5 rounded-xl sm:rounded-[1.1rem] text-[10px] sm:text-xs md:text-sm font-black transition-all duration-300 gap-1 ${activeTab === "quiz" ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.2)] scale-[0.98]" : "text-slate-400 hover:text-emerald-300 hover:bg-slate-800/50 border border-transparent"}`}>
                           <BrainCircuit className="w-4 h-4 sm:w-5 sm:h-5" />
-                          <span>الأسئلة</span>
+                          <span>اختبر نفسك 📝</span>
                         </button>
                       )}
                       {currentHistoryId && (
                         <button onClick={() => setActiveTab("chat")} className={`flex-1 min-w-[65px] sm:min-w-[100px] flex flex-col sm:flex-row items-center justify-center py-2.5 sm:py-3.5 rounded-xl sm:rounded-[1.1rem] text-[10px] sm:text-xs md:text-sm font-black transition-all duration-300 gap-1 ${activeTab === "chat" ? "bg-blue-500/15 border border-blue-500/30 text-blue-300 shadow-[0_0_20px_rgba(59,130,246,0.2)] scale-[0.98]" : "text-slate-400 hover:text-blue-300 hover:bg-slate-800/50 border border-transparent"}`}>
                           <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                          <span>تحدث</span>
+                          <span>المحادثة 💬</span>
                         </button>
                       )}
                     </div>
@@ -2049,6 +2116,159 @@ function DashboardContent() {
                   {isOnboardUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : "حفظ الاسم وتأكيد الحساب 🚀"}
                 </button>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Virtual Demo Modal */}
+      <AnimatePresence>
+        {showDemoModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-slate-900 border border-indigo-500/30 rounded-[2.5rem] p-6 sm:p-8 max-w-lg w-full shadow-2xl text-center relative overflow-hidden"
+              dir="rtl"
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setShowDemoModal(null)}
+                className="absolute top-4 left-4 p-2 text-slate-400 hover:text-white bg-slate-950/50 hover:bg-slate-950 rounded-full transition-all border border-slate-800"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-3xl rounded-full pointer-events-none" />
+              
+              {showDemoModal === 'audio' && (
+                <>
+                  <div className="w-16 h-16 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-indigo-500/30">
+                    <FileAudio className="w-8 h-8 text-indigo-400" />
+                  </div>
+                  <h3 className="text-2xl font-black text-white mb-2">استيراد محاضرة تجريبية 🎙️</h3>
+                  <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+                    أنت حالياً في النسخة التجريبية. لتجربة سرعة ودقة محرك لمّاح، تفضل بتحميل المحاضرة الصوتية المميزة من نظامنا السحابي:
+                  </p>
+                  
+                  <div className="bg-slate-950/60 border border-slate-800 p-5 rounded-2xl text-right mb-6">
+                    <p className="text-xs text-slate-500 mb-1">اسم الملف التجريبي:</p>
+                    <p className="text-sm font-black text-indigo-300 mb-3" dir="ltr">محاضرة_تشفير_البلوك_والستريم_سايفر.mp3</p>
+                    <div className="flex justify-between items-center text-xs text-slate-400 border-t border-slate-800/60 pt-3">
+                      <span>حجم الملف: 12.4 ميجابايت</span>
+                      <span>المدة: 57 دقيقة</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setShowDemoModal(null);
+                      const mockFile = new File(["demo_audio"], "محاضرة_تشفير_البلوك_والستريم_سايفر.mp3", { type: "audio/mp3" });
+                      setAudioFile(mockFile);
+                      setAudioUploadProgress(0);
+                      setIsAudioUploading(true);
+                      
+                      let progress = 0;
+                      const interval = setInterval(() => {
+                        progress += 10;
+                        setAudioUploadProgress(progress);
+                        if (progress >= 100) {
+                          clearInterval(interval);
+                          setIsAudioUploading(false);
+                          setAudioTempId("demo_temp_audio_id");
+                        }
+                      }, 100);
+                    }}
+                    className="w-full py-4 bg-gradient-to-l from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black rounded-xl shadow-lg transition-all transform active:scale-[0.98] flex justify-center items-center gap-2 animate-pulse hover:animate-none"
+                  >
+                    استيراد الملف التجريبي وبدء المعالجة 🚀
+                  </button>
+                </>
+              )}
+
+              {showDemoModal === 'pdf' && (
+                <>
+                  <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-purple-500/30">
+                    <FileText className="w-8 h-8 text-purple-400" />
+                  </div>
+                  <h3 className="text-2xl font-black text-white mb-2">استيراد ملف شرائح تجريبي 📁</h3>
+                  <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+                    أنت حالياً في النسخة التجريبية. لتجربة آلية استخراج وتظليل الشرائح وتنسيق الملاحظات، تفضل باستيراد ملف الـ PDF التجريبي:
+                  </p>
+                  
+                  <div className="bg-slate-950/60 border border-slate-850 p-5 rounded-2xl text-right mb-6">
+                    <p className="text-xs text-slate-500 mb-1">اسم الملف التجريبي:</p>
+                    <p className="text-sm font-black text-purple-300 mb-3" dir="ltr">سلايدات_تشفير_البلوك_والستريم_سايفر.pdf</p>
+                    <div className="flex justify-between items-center text-xs text-slate-400 border-t border-slate-800/60 pt-3">
+                      <span>حجم الملف: 4.1 ميجابايت</span>
+                      <span>عدد الصفحات: 58 صفحة</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setShowDemoModal(null);
+                      const mockFile = new File(["demo_pdf"], "سلايدات_تشفير_البلوك_والستريم_سايفر.pdf", { type: "application/pdf" });
+                      setPdfFile(mockFile);
+                      setPdfUploadProgress(0);
+                      setIsPdfUploading(true);
+                      
+                      let progress = 0;
+                      const interval = setInterval(() => {
+                        progress += 10;
+                        setPdfUploadProgress(progress);
+                        if (progress >= 100) {
+                          clearInterval(interval);
+                          setIsPdfUploading(false);
+                          setPdfTempId("demo_temp_pdf_id");
+                        }
+                      }, 100);
+                    }}
+                    className="w-full py-4 bg-gradient-to-l from-purple-600 via-purple-500 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black rounded-xl shadow-lg transition-all transform active:scale-[0.98] flex justify-center items-center gap-2 animate-pulse hover:animate-none"
+                  >
+                    استيراد الملف التجريبي وبدء المعالجة 🚀
+                  </button>
+                </>
+              )}
+
+              {showDemoModal === 'youtube' && (
+                <>
+                  <div className="w-16 h-16 bg-rose-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-rose-500/30">
+                    <Share2 className="w-8 h-8 text-rose-455" />
+                  </div>
+                  <h3 className="text-2xl font-black text-white mb-2">ميزة الروابط حصرية للمشتركين 🔒</h3>
+                  <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+                    معالجة روابط يوتيوب والمواقع السحابية متوفرة حصرياً للباقات المدفوعة. لتجربة الميزات مجاناً، تفضل بتشغيل المحاضرة الافتراضية الذكية:
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={() => {
+                        setShowDemoModal(null);
+                        router.push("/plans");
+                      }}
+                      className="flex-1 py-3.5 bg-gradient-to-l from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black rounded-xl text-sm transition-all"
+                    >
+                      عرض باقات الاشتراك 👑
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowDemoModal(null);
+                        setShowDemoModal('audio');
+                      }}
+                      className="flex-1 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold rounded-xl text-sm border border-slate-700 transition-all"
+                    >
+                      تجربة المحاضرة الافتراضية 🎙️
+                    </button>
+                  </div>
+                </>
+              )}
             </motion.div>
           </motion.div>
         )}
