@@ -1912,7 +1912,7 @@ function DashboardContent() {
                     {activeTab === "chat" && (
                       <motion.div key="chat" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="flex flex-col h-[500px] sm:h-[650px] lg:h-[700px] bg-slate-950/40 backdrop-blur-3xl border border-blue-500/15 rounded-2xl sm:rounded-[2.5rem] shadow-[0_25px_60px_rgba(0,0,0,0.3)] overflow-hidden relative z-10 group">
 
-                        {isBasicPlan && (
+                        {(isBasicPlan || (isFreeTrial && !isDemoLecture)) && (
                           <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-xl p-4 sm:p-8 text-center border border-blue-500/20">
                             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(59,130,246,0.3)] border border-blue-500/30">
                               <Lock className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400" />
@@ -1927,7 +1927,7 @@ function DashboardContent() {
                           </div>
                         )}
 
-                        <div className={`flex flex-col h-full relative z-10 ${isBasicPlan ? "opacity-20 pointer-events-none select-none blur-[10px] transition-all" : ""}`}>
+                        <div className={`flex flex-col h-full relative z-10 ${(isBasicPlan || (isFreeTrial && !isDemoLecture)) ? "opacity-20 pointer-events-none select-none blur-[10px] transition-all" : ""}`}>
                           <div className="bg-slate-900/60 backdrop-blur-md p-4 sm:p-6 border-b border-slate-800/80 flex flex-col relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-[50px] rounded-full pointer-events-none -mr-10 -mt-10"></div>
                             <h3 className="text-lg sm:text-xl font-black flex items-center text-blue-400 relative z-10 drop-shadow-md">
