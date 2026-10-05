@@ -676,7 +676,13 @@ function DashboardContent() {
         if (cached) {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setRecentLogs(parsed.slice(0, 6));
+            const cleanCached = parsed.filter(
+              (item: any) =>
+                item.id !== "4198557f-5b1b-48ac-91a8-d8129de8ca0b" &&
+                !item.metadata?.is_demo &&
+                !item.metadata?.title?.includes("تشفير البلوك")
+            );
+            setRecentLogs(cleanCached.slice(0, 6));
             setLoadingRecentLogs(false);
           }
         }
@@ -689,13 +695,19 @@ function DashboardContent() {
       })
         .then((r) => r.json())
         .then((data) => {
-          const fresh = data.logs || [];
-          if (Array.isArray(fresh)) {
-            setRecentLogs(fresh.slice(0, 6));
-            try {
-              localStorage.setItem("lammah_cached_history", JSON.stringify(fresh));
-            } catch {}
-          }
+          const rawFresh = data.logs || [];
+          const fresh = Array.isArray(rawFresh)
+            ? rawFresh.filter(
+                (item: any) =>
+                  item.id !== "4198557f-5b1b-48ac-91a8-d8129de8ca0b" &&
+                  !item.metadata?.is_demo &&
+                  !item.metadata?.title?.includes("تشفير البلوك")
+              )
+            : [];
+          setRecentLogs(fresh.slice(0, 6));
+          try {
+            localStorage.setItem("lammah_cached_history", JSON.stringify(fresh));
+          } catch {}
           setLoadingRecentLogs(false);
         })
         .catch(() => setLoadingRecentLogs(false));

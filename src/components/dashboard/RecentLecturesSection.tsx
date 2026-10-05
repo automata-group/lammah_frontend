@@ -38,7 +38,14 @@ export default function RecentLecturesSection({
     }
   };
 
-  const displayLogs = recentLogs.slice(0, 4);
+  const displayLogs = recentLogs
+    .filter(
+      (log) =>
+        !log.metadata?.is_demo &&
+        log.id !== "4198557f-5b1b-48ac-91a8-d8129de8ca0b" &&
+        !log.metadata?.title?.includes("تشفير البلوك")
+    )
+    .slice(0, 4);
 
   return (
     <div className="space-y-3.5 w-full">
@@ -97,13 +104,10 @@ export default function RecentLecturesSection({
                 className="min-w-[260px] max-w-[285px] sm:min-w-0 sm:max-w-none shrink-0 snap-start rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex flex-col justify-between hover:border-indigo-300 dark:hover:border-indigo-500/40 shadow-xs hover:shadow-sm transition-all cursor-pointer group"
               >
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                  <div className="flex items-center text-[11px] text-slate-400 dark:text-slate-500 font-medium">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
                       {dateStr}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] border border-indigo-100/80 dark:border-indigo-500/20">
-                      ملخص جاهز
                     </span>
                   </div>
 

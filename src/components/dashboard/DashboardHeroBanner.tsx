@@ -34,10 +34,6 @@ export default function DashboardHeroBanner({
           <div className="absolute -left-10 -bottom-10 w-44 h-44 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
 
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold mb-2.5">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-              <span>مساعدك الدراسي المتقدم</span>
-            </div>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
               أهلاً بك، {displayName} 👋
             </h1>
