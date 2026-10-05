@@ -96,7 +96,7 @@ export function OnboardingNameModal({
             </div>
             <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">أهلاً بك في عائلة لمّاح! 🌟</h3>
             <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mb-6 leading-relaxed">
-              يسعدنا انضمامك إلينا! يرجى تحديد اسمك المعتمد الذي ترغب في أن يطبع على دفاتر ملازمك في المتجر ويظهر لزملائك الطلاب.
+              يسعدنا انضمامك إلينا! يرجى تحديد اسمك المعتمد الذي ترغب في أن يطبع على دفاترك في المتجر ويظهر لزملائك الطلاب.
             </p>
 
             <form onSubmit={handleSaveOnboardName} className="space-y-4">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileAudio, FileText, Sparkles, Upload, Loader2, 
@@ -24,6 +24,17 @@ export default function HeroSimulation({
   const [showDemoModal, setShowDemoModal] = useState<"audio" | "pdf" | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showResultPopup, setShowResultPopup] = useState(false);
+
+  // Prevent background page scrolling when demo modal/result popup is open
+  useEffect(() => {
+    if (showResultPopup || showDemoModal) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [showResultPopup, showDemoModal]);
 
   // Mock handling the demo import
   const handleImportDemo = (type: "audio" | "pdf") => {
@@ -245,7 +256,7 @@ export default function HeroSimulation({
         {showResultPopup && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-start justify-center bg-slate-100/80 dark:bg-slate-950/90 backdrop-blur-2xl px-2 sm:px-4 pt-24 sm:pt-28 pb-12 sm:pb-16 overflow-y-auto"
+            className="fixed inset-0 z-[100] flex items-start justify-center bg-slate-100/80 dark:bg-slate-950/90 backdrop-blur-2xl px-2 sm:px-4 pt-24 sm:pt-28 pb-12 sm:pb-16 overflow-y-auto overscroll-contain"
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}

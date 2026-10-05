@@ -58,10 +58,9 @@ export default function DashboardPdfViewer({
             <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
-            <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight">دفتر التلخيص الذكي</h2>
-            <p className="text-[8px] sm:text-[9px] text-indigo-600 dark:text-indigo-300/70 font-black tracking-widest mt-0.5 uppercase">
-              Smart Annotated Notebook
-            </p>
+            <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight">
+              ملف التلخيص المخطط
+            </h2>
           </div>
         </div>
 
@@ -70,7 +69,7 @@ export default function DashboardPdfViewer({
             onClick={() => router.push("/plans")}
             className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-950/80 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-300 px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center shadow-xs hover:shadow-sm w-full sm:w-auto text-center justify-center text-xs cursor-pointer"
           >
-            <Lock className="w-3.5 h-3.5 ml-1.5 text-amber-500" /> تنزيل الدفتر (للمشتركين)
+            <Lock className="w-3.5 h-3.5 ml-1.5 text-amber-500" /> تنزيل الملف المخطط (للمشتركين)
           </button>
         ) : (
           <div className="flex flex-wrap items-center gap-2">

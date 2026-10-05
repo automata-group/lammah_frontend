@@ -56,8 +56,8 @@ export default function FeaturesSection() {
       iconColor: "text-cyan-600 dark:text-cyan-400"
     },
     {
-      title: "متجر الملازم الأول من نوعه",
-      description: "انشر ملازمك وملخصاتك التي تم توليدها وبعها لزملائك في الجامعة لتحقيق دخل حقيقي، أو تصفح المتجر لشراء ملخصات الطلاب المتميزين.",
+      title: "متجر الدفاتر الأول من نوعه",
+      description: "انشر دفاترك وملخصاتك التي تم توليدها وبعها لزملائك في الجامعة لتحقيق دخل حقيقي، أو تصفح المتجر لشراء ملخصات الطلاب المتميزين.",
       icon: ShoppingBag,
       color: "from-amber-400 to-orange-500",
       bgLight: "bg-amber-50",
@@ -98,7 +98,7 @@ export default function FeaturesSection() {
           </h2>
           
           <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl text-center leading-relaxed font-medium">
-            كل ما تحتاجه لتفوقك الدراسي في مكان واحد؛ من تفريغ المحاضرات وتوليد الملازم الجمالية إلى الامتحانات، المتجر، والدروس الخصوصية.
+            كل ما تحتاجه لتفوقك الدراسي في مكان واحد؛ من تفريغ المحاضرات وتوليد الدفاتر الجمالية إلى الامتحانات، المتجر، والدروس الخصوصية.
           </p>
         </div>
 

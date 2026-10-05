@@ -169,8 +169,7 @@ export default function DemoResultUI({ actionText, onAction }: DemoResultUIProps
                 <BookOpen className="w-5 h-5 sm:w-7 sm:h-7 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">دفتر التلخيص الذكي</h2>
-                <p className="text-[9px] sm:text-[10px] text-indigo-600 dark:text-indigo-300/70 font-black tracking-[0.2em] mt-1 uppercase">SMART ANNOTATED NOTEBOOK</p>
+                <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">ملف مخطط</h2>
               </div>
             </div>
 
@@ -192,7 +191,7 @@ export default function DemoResultUI({ actionText, onAction }: DemoResultUIProps
             <iframe
               src="/demo/sample-notebook.pdf#toolbar=0"
               className="w-full h-[380px] sm:h-[520px] lg:h-[660px] rounded-lg sm:rounded-[1.25rem] bg-white dark:bg-slate-900 transition-all border border-slate-200 dark:border-slate-950/50"
-              title="Smart Annotated Notebook"
+              title="ملف مخطط"
             />
           </div>
         </div>

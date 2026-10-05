@@ -14,7 +14,7 @@ export default function Footer() {
         </div>
         <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-xs font-bold text-slate-600 dark:text-slate-400">
           <Link href="/plans" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">الباقات والأسعار</Link>
-          <Link href="/marketplace" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">متجر الملازم</Link>
+          <Link href="/marketplace" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">متجر الدفاتر</Link>
           <Link href="/terms" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">الشروط والأحكام</Link>
           <Link href="/privacy" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">سياسة الخصوصية</Link>
         </div>

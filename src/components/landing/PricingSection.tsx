@@ -63,7 +63,7 @@ export default function PricingSection() {
             استثمر في راحتك وتفوقك الدراسي
           </h2>
           <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base max-w-2xl mx-auto font-medium leading-relaxed">
-            من التلخيص الأكاديمي السريع قبل الامتحانات إلى توليد أفخم الملازم الملونة القابلة للطباعة وبيعها بالمتجر للأرباح!
+            من التلخيص الأكاديمي السريع قبل الامتحانات إلى توليد أفخم الدفاتر الملونة القابلة للطباعة وبيعها بالمتجر للأرباح!
           </p>
         </div>
 
@@ -81,7 +81,7 @@ export default function PricingSection() {
 
               let subtitle = "لتصفح المتجر والمذاكرة السريعة.";
               if (isGoldPlan) {
-                subtitle = "الباقة الشاملة لأوائل الدفعات! رصيد عملاق للفصل كاملاً مع توليد الملازم الجمالية وبيعها بالمتجر للأرباح.";
+                subtitle = "الباقة الشاملة لأوائل الدفعات! رصيد عملاق للفصل كاملاً مع توليد الدفاتر الجمالية وبيعها بالمتجر للأرباح.";
               } else if (isMidPlan) {
                 subtitle = "الاشتراك الشهري الأكثر طلباً لتوديع تراكم المحاضرات! رصيد متجدد يغطي كافة مساقاتك بذكاء.";
               } else if (isRescuePlan) {
@@ -227,7 +227,7 @@ export default function PricingSection() {
                               <Check className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
                             </div>
                             <span className="leading-relaxed">
-                              <strong className="text-slate-900 dark:text-white font-bold">توليد الملازم والدفاتر</strong> فائقة التنسيق (PDF جاهز للطباعة)
+                              <strong className="text-slate-900 dark:text-white font-bold">توليد الدفاتر الذكية</strong> فائقة التنسيق (PDF جاهز للطباعة)
                             </span>
                           </div>
 
@@ -236,7 +236,7 @@ export default function PricingSection() {
                               <Check className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
                             </div>
                             <span className="leading-relaxed">
-                              <strong className="text-slate-900 dark:text-white font-bold">رخصة بائع معتمد:</strong> نشر وبيع الملازم بالمتجر
+                              <strong className="text-slate-900 dark:text-white font-bold">رخصة بائع معتمد:</strong> نشر وبيع الدفاتر بالمتجر
                             </span>
                           </div>
                         </>
@@ -247,7 +247,7 @@ export default function PricingSection() {
                               <Lock className="w-2.5 h-2.5 text-slate-400 dark:text-slate-500" />
                             </div>
                             <span className="leading-relaxed">
-                              توليد الملازم والدفاتر الأكاديمية <span className="text-[10px] text-slate-400 dark:text-slate-500">(خاص بباقة النخبة)</span>
+                              توليد الدفاتر الأكاديمية <span className="text-[10px] text-slate-400 dark:text-slate-500">(خاص بباقة النخبة)</span>
                             </span>
                           </div>
 
@@ -256,7 +256,7 @@ export default function PricingSection() {
                               <Lock className="w-2.5 h-2.5 text-slate-400 dark:text-slate-500" />
                             </div>
                             <span className="leading-relaxed">
-                              رخصة بائع معتمد ونشر الملازم <span className="text-[10px] text-slate-400 dark:text-slate-500">(خاص بباقة النخبة)</span>
+                              رخصة بائع معتمد ونشر الدفاتر <span className="text-[10px] text-slate-400 dark:text-slate-500">(خاص بباقة النخبة)</span>
                             </span>
                           </div>
                         </>

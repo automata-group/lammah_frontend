@@ -166,14 +166,14 @@ export default function UserBehaviorAnalytics({ sessionToken }: UserBehaviorAnal
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
-              رادار الزوار والتحليل السلوكي الذكي 📡
+              رادار الزوار والنشاط المباشر 📡
             </h2>
-            <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] border border-indigo-200/60 dark:border-indigo-800/60">
-              نظام محلي متكامل
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] border border-emerald-200/60 dark:border-emerald-800/60">
+              مباشر
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            تتبع تفصيلي لخط سير كل طالب، النقرات، الأخطاء التقنية، وتحليل ذكي للرحلة لمعرفة أين تعثر وماذا يحتاج.
+            متابعة فورية للطلاب المتصلين، الزيارات اليومية، والتوزيع الجغرافي ونوع الأجهزة بكل وضوح وبدون تعقيد.
           </p>
         </div>
 
@@ -210,12 +210,12 @@ export default function UserBehaviorAnalytics({ sessionToken }: UserBehaviorAnal
         </div>
       </div>
 
-      {/* ── 2. Real-Time Radar Metric Cards ── */}
+      {/* ── 2. Clean Executive Metric Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1: Live Visitors */}
         <div className="bg-white dark:bg-[#0b0f19] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">الزوار النشطون الآن</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">الطلاب المتصلون الآن</span>
             <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
               <Activity className="w-4 h-4 animate-pulse" />
             </div>
@@ -229,47 +229,55 @@ export default function UserBehaviorAnalytics({ sessionToken }: UserBehaviorAnal
         {/* Metric 2: Today Sessions */}
         <div className="bg-white dark:bg-[#0b0f19] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">زيارات اليوم (Sessions)</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">زيارات اليوم</span>
             <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 flex items-center justify-center">
               <Users className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-black text-slate-900 dark:text-white font-mono">{todayCount}</span>
-            <span className="text-[11px] text-slate-400 font-bold">منذ منتصف الليل</span>
+            <span className="text-[11px] text-slate-400 font-bold">جلسة اليوم</span>
           </div>
         </div>
 
-        {/* Metric 3: Drop-Offs (Friction Points) */}
+        {/* Metric 3: Top City */}
         <div className="bg-white dark:bg-[#0b0f19] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-amber-600 dark:text-amber-400">نقاط الانسحاب (Drop-offs)</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center">
-              <AlertTriangle className="w-4 h-4" />
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">المدينة الأكثر نشاطاً</span>
+            <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center">
+              <MapPin className="w-4 h-4" />
             </div>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-amber-600 dark:text-amber-400 font-mono">{dropOffs}</span>
-            <span className="text-[11px] text-slate-400 font-bold">خرجوا قبل الإكمال</span>
+          <div className="truncate">
+            <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white block truncate">
+              {data?.cities?.[0]?.city || "فلسطين"}
+            </span>
+            <span className="text-[11px] text-purple-600 dark:text-purple-400 font-bold font-mono">
+              {data?.cities?.[0]?.count ? `${data.cities[0].count} زيارات` : "جاري الرصد"}
+            </span>
           </div>
         </div>
 
-        {/* Metric 4: Rage Clicks */}
+        {/* Metric 4: Dominant Device */}
         <div className="bg-white dark:bg-[#0b0f19] border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-rose-600 dark:text-rose-400">نقرات الغضب (Rage Clicks)</span>
-            <div className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center">
-              <Flame className="w-4 h-4" />
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">الجهاز الأبرز</span>
+            <div className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 flex items-center justify-center">
+              <Monitor className="w-4 h-4" />
             </div>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-rose-600 dark:text-rose-400 font-mono">{rageClicksCount}</span>
-            <span className="text-[11px] text-slate-400 font-bold">نقرات متكررة بارتباك</span>
+          <div className="truncate">
+            <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white block truncate">
+              {data?.devices?.[0]?.device || "كمبيوتر مكتبي"}
+            </span>
+            <span className="text-[11px] text-sky-600 dark:text-sky-400 font-bold font-mono">
+              {data?.devices?.[0]?.count ? `${data.devices[0].count} زيارات` : "جاري الرصد"}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* ── 3. Geo Distribution (Palestine Cities & Arab Countries) ── */}
+      {/* ── 3. Geo Distribution & Devices Breakdown ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Palestinian & Arab Cities */}
@@ -315,7 +323,7 @@ export default function UserBehaviorAnalytics({ sessionToken }: UserBehaviorAnal
           </div>
         </div>
 
-        {/* Devices & OS Breakdown */}
+        {/* Devices Breakdown */}
         <div className="bg-white dark:bg-[#0b0f19] border border-slate-200/80 dark:border-slate-800 p-6 rounded-3xl shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -324,7 +332,7 @@ export default function UserBehaviorAnalytics({ sessionToken }: UserBehaviorAnal
               </div>
               <div>
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white">الأجهزة والمتصفحات المستخدمة</h3>
-                <span className="text-[11px] text-slate-400 block">هل يستخدمون الهواتف أم الكمبيوتر للمذاكرة؟</span>
+                <span className="text-[11px] text-slate-400 block">الهواتف، الأجهزة اللوحية والكمبيوتر</span>
               </div>
             </div>
             <span className="text-xs font-bold text-purple-600 dark:text-purple-400">تحليل الأجهزة 💻</span>
@@ -347,67 +355,6 @@ export default function UserBehaviorAnalytics({ sessionToken }: UserBehaviorAnal
                 </div>
               );
             })}
-          </div>
-        </div>
-
-      </div>
-
-      {/* ── 4. Friction Points & Rage Clicks Alerts ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* Friction / Drop Offs */}
-        <div className="bg-white dark:bg-[#0b0f19] border border-amber-200/80 dark:border-amber-500/20 p-6 rounded-3xl shadow-xs space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-600 flex items-center justify-center">
-              <AlertTriangle className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="font-bold text-sm text-slate-900 dark:text-white">أبرز صفحات الخروج والتردد 🛑</h3>
-              <span className="text-[11px] text-slate-400 block">أين يتوقف الطالب ويغلق الموقع دون أن يكمل؟</span>
-            </div>
-          </div>
-
-          <div className="space-y-2 pt-2">
-            {(data?.drop_off_paths || []).length === 0 ? (
-              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold text-center">
-                ممتاز! لم يتم تسجيل أي نقاط انسحاب حرجة اليوم ✨
-              </div>
-            ) : (
-              data?.drop_off_paths.map((p: any, idx: number) => (
-                <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/30 text-xs font-bold">
-                  <span className="text-slate-800 dark:text-slate-200 font-mono" dir="ltr">{p.path}</span>
-                  <span className="text-amber-700 dark:text-amber-400">{p.count} حالات انسحاب</span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Rage Clicks */}
-        <div className="bg-white dark:bg-[#0b0f19] border border-rose-200/80 dark:border-rose-500/20 p-6 rounded-3xl shadow-xs space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950 text-rose-600 flex items-center justify-center">
-              <Flame className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="font-bold text-sm text-slate-900 dark:text-white">أزرار تسببت في نقرات غاضبة 😤</h3>
-              <span className="text-[11px] text-slate-400 block">أزرار ضغط عليها الطالب 4 مرات متتالية بسرعة (علامة تعليق أو بطء)</span>
-            </div>
-          </div>
-
-          <div className="space-y-2 pt-2">
-            {(data?.rage_clicks || []).length === 0 ? (
-              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold text-center">
-                رائع! لم تسجل أي نقرات غضب، التفاعل سلس جداً 🎯
-              </div>
-            ) : (
-              data?.rage_clicks.map((rc: any, idx: number) => (
-                <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200/60 dark:border-rose-900/30 text-xs font-bold">
-                  <span className="text-slate-800 dark:text-slate-200">{rc.title}</span>
-                  <span className="text-rose-600 dark:text-rose-400">{rc.count} نقرات متتالية</span>
-                </div>
-              ))
-            )}
           </div>
         </div>
 

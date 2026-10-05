@@ -543,9 +543,6 @@ function DashboardContent() {
             localStorage.setItem("cached_user_plan", data.plan_name || "");
           } catch {}
         }
-        if (!data.full_name || data.full_name.trim() === "" || data.full_name === "طالب متميز") {
-          setShowNameOnboarding(true);
-        }
         setError(null);
       }
     } catch (e: any) {

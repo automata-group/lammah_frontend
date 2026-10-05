@@ -89,8 +89,8 @@ const INTERESTS_OPTIONS = [
 
 const STUDY_STYLES = [
   { 
-    id: "تلاخيص وملازم PDF", 
-    label: "تلاخيص وملازم PDF", 
+    id: "تلاخيص ودفاتر PDF", 
+    label: "تلاخيص ودفاتر PDF", 
     desc: "ملفات دراسية جاهزة للقراءة والطباعة",
     icon: FileText 
   },

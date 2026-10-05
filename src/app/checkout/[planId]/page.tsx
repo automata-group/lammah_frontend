@@ -202,7 +202,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ planId: str
                    </span>
                  </div>
                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                   بصفتك مشتركاً في باقة النخبة، ستحصل على رخصة بائع لنشر ملازمك بالمتجر. يرجى كتابة اسمك واختيار يوزر نيم فريد لا يتكرر لتمييز هويتك.
+                   بصفتك مشتركاً في باقة النخبة، ستحصل على رخصة بائع لنشر دفاترك بالمتجر. يرجى كتابة اسمك واختيار يوزر نيم فريد لا يتكرر لتمييز هويتك.
                  </p>
 
                  <div className="space-y-1.5">

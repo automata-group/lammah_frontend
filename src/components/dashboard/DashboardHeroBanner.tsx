@@ -57,7 +57,7 @@ export default function DashboardHeroBanner({
             </button>
 
             <span className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60 px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-slate-700/50 hidden sm:inline font-medium">
-              صوت • فيديو • ملازم PDF
+              صوت • فيديو • ملفات PDF
             </span>
           </div>
         </div>
@@ -94,7 +94,7 @@ export default function DashboardHeroBanner({
               </div>
 
               <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed line-clamp-2">
-                حدّد جامعتك وتخصصك لمطابقة ملازمك بدقة ونيل الرصيد الترحيبي
+                حدّد جامعتك وتخصصك لمطابقة دفاترك بدقة ونيل الرصيد الترحيبي
               </p>
             </div>
 
@@ -127,7 +127,7 @@ export default function DashboardHeroBanner({
                 مساحة المذاكرة
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
-                ملاحظات، خرائط ذهنية واختبارات تجريبية
+                ملاحظات ومراجعة دراسية ذكية
               </p>
             </div>
           </div>
@@ -145,10 +145,10 @@ export default function DashboardHeroBanner({
             </div>
             <div className="min-w-0">
               <h4 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
-                دفتر المحاضرات والملازم
+                دفاتر المحاضرات
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
-                تصفح جميع محاضراتك وملازمك الدراسية
+                تصفح جميع محاضراتك ودفاترك الدراسية
               </p>
             </div>
           </div>

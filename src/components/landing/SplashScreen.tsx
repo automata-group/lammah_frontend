@@ -146,7 +146,7 @@ export default function SplashScreen() {
               </div>
 
               <p className="text-xs sm:text-base font-semibold text-slate-300 max-w-sm mx-auto leading-relaxed">
-                منصة التلخيص الذكي وتوليد الملازم لطلبة الجامعات
+                منصة التلخيص الذكي وتوليد الدفاتر لطلبة الجامعات
               </p>
 
               <div className="flex items-center justify-center gap-3 text-[11px] sm:text-xs text-slate-500 font-medium pt-0.5">

@@ -95,7 +95,7 @@ export default function VaultLibraryModal({
                   مكتبة ملفاتي الدراسية
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  تصفح ملازمك وكتبك المحفوظة وتابع المذاكرة وتدوين الملاحظات.
+                  تصفح دفاترك وكتبك المحفوظة وتابع المذاكرة وتدوين الملاحظات.
                 </p>
               </div>
             </div>
