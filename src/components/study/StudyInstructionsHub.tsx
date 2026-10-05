@@ -503,7 +503,7 @@ export default function StudyInstructionsHub({
             }
           }
         }}
-        className={`relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-950 text-white p-6 sm:p-10 shadow-2xl transition-all duration-200 border ${
+        className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-950 text-white p-5 sm:p-7 shadow-xl transition-all duration-200 border ${
           isHeroDragOver 
             ? "border-indigo-400 ring-4 ring-indigo-500/30 scale-[0.99]" 
             : "border-indigo-500/20"
@@ -511,149 +511,52 @@ export default function StudyInstructionsHub({
       >
         {/* Dragging over Hero Banner Active Overlay */}
         {isHeroDragOver && (
-          <div className="absolute inset-0 z-30 bg-indigo-950/95 backdrop-blur-md rounded-[2.5rem] border-3 border-dashed border-indigo-400 flex flex-col items-center justify-center p-6 text-center animate-fadeIn pointer-events-none">
-            <div className="w-16 h-16 rounded-3xl bg-indigo-500/20 border border-indigo-400/40 text-white flex items-center justify-center mb-3 animate-bounce">
-              <Upload className="w-8 h-8 text-indigo-300" />
+          <div className="absolute inset-0 z-30 bg-indigo-950/95 backdrop-blur-md rounded-3xl border-3 border-dashed border-indigo-400 flex flex-col items-center justify-center p-6 text-center animate-fadeIn pointer-events-none">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-400/40 text-white flex items-center justify-center mb-2.5 animate-bounce">
+              <Upload className="w-7 h-7 text-indigo-300" />
             </div>
-            <h3 className="text-xl sm:text-2xl font-black text-white mb-1.5">
+            <h3 className="text-lg sm:text-xl font-black text-white mb-1">
               أفلت ملفك هنا للفتح المباشر 📂
             </h3>
-            <p className="text-xs sm:text-sm text-indigo-200 max-w-md leading-relaxed">
+            <p className="text-xs text-indigo-200 max-w-md leading-relaxed">
               يدعم ملفات PDF، عروض البوربوينت (.pptx)، والصور — بالذاكرة المؤقتة وبسرعة فائقة!
             </p>
           </div>
         )}
         
         {/* Ambient Glowing Aura */}
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-1/4 w-80 h-80 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col items-center text-center max-w-3xl mx-auto space-y-5">
+        <div className="relative z-10 flex flex-col items-center text-center max-w-xl mx-auto space-y-3.5 py-1">
           
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-indigo-200 text-xs font-bold shadow-xs">
-            <GraduationCap className="w-3.5 h-3.5 text-indigo-300" />
-            <span>مساحة المذاكرة والتدوين الذكي ✍️</span>
-          </div>
-
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
-            ماذا تريد أن تدوّن أو تدرس اليوم؟ ✍️
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight">
+            ماذا تريد أن تدرس اليوم؟ 📚
           </h1>
 
-          <p className="text-xs sm:text-base text-indigo-100/80 font-medium max-w-xl leading-relaxed">
-            اختر نوع الدفتر للبدء بالكتابة فوراً، أو اسحب وارفع سلايداتك ومستنداتك الدراسية.
+          <p className="text-xs sm:text-sm text-indigo-100/80 font-medium max-w-md leading-relaxed">
+            ارفع سلايداتك ومستنداتك الدراسية للبدء بالمذاكرة فوراً.
           </p>
 
-          {/* Quick Writing & Study Action Cards (Hero Actions) */}
-          <div className="w-full pt-1">
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-3.5 max-w-2xl mx-auto">
-              
-              {/* Option 1: Ruled Notebook */}
-              <button
-                type="button"
-                onClick={() => onCreateBlankNotebook && onCreateBlankNotebook("ruled")}
-                className="group p-4 rounded-3xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 flex flex-col items-center gap-2 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-amber-500/20 cursor-pointer"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-amber-400/20 text-amber-300 flex items-center justify-center group-hover:scale-110 transition">
-                  <Baseline className="w-6 h-6" />
-                </div>
-                <div>
-                  <span className="text-xs sm:text-sm font-black text-white block">
-                    دفتر مسطر
-                  </span>
-                  <span className="text-[10px] text-indigo-200 block mt-0.5">
-                    تدوين A4 مسطر
-                  </span>
-                </div>
-              </button>
-
-              {/* Option 2: Blank Sheet */}
-              <button
-                type="button"
-                onClick={() => onCreateBlankNotebook && onCreateBlankNotebook("blank")}
-                className="group p-4 rounded-3xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 flex flex-col items-center gap-2 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/20 cursor-pointer"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-emerald-400/20 text-emerald-300 flex items-center justify-center group-hover:scale-110 transition">
-                  <Square className="w-6 h-6" />
-                </div>
-                <div>
-                  <span className="text-xs sm:text-sm font-black text-white block">
-                    صفحة بيضاء
-                  </span>
-                  <span className="text-[10px] text-indigo-200 block mt-0.5">
-                    رسم وتلخيص حر
-                  </span>
-                </div>
-              </button>
-
-              {/* Option 3: Math Grid */}
-              <button
-                type="button"
-                onClick={() => onCreateBlankNotebook && onCreateBlankNotebook("grid")}
-                className="group p-4 rounded-3xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 flex flex-col items-center gap-2 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-cyan-500/20 cursor-pointer"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-cyan-400/20 text-cyan-300 flex items-center justify-center group-hover:scale-110 transition">
-                  <Grid className="w-6 h-6" />
-                </div>
-                <div>
-                  <span className="text-xs sm:text-sm font-black text-white block">
-                    شبكة مربعات
-                  </span>
-                  <span className="text-[10px] text-indigo-200 block mt-0.5">
-                    قوانين ومسائل
-                  </span>
-                </div>
-              </button>
-
-              {/* Option 4: Direct Upload */}
-              <button
-                type="button"
-                onClick={() => handleTriggerUpload()}
-                className="group p-4 rounded-3xl bg-indigo-600/70 hover:bg-indigo-600 backdrop-blur-md border border-indigo-400/40 flex flex-col items-center gap-2 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/30 cursor-pointer"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-white/20 text-white flex items-center justify-center group-hover:scale-110 transition">
-                  <Upload className="w-6 h-6" />
-                </div>
-                <div>
-                  <span className="text-xs sm:text-sm font-black text-white block">
-                    رفع مادة دراسية
-                  </span>
-                  <span className="text-[10px] text-indigo-200 block mt-0.5">
-                    PDF أو بوربوينت
-                  </span>
-                </div>
-              </button>
-
-              {/* Option 5: Vault Library */}
-              <button
-                type="button"
-                onClick={onOpenVault}
-                className="group p-4 rounded-3xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 flex flex-col items-center gap-2 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20 cursor-pointer relative"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-purple-400/20 text-purple-300 flex items-center justify-center group-hover:scale-110 transition">
-                  <FolderOpen className="w-6 h-6" />
-                  {vaultDocsCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-indigo-500 text-white w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center border-2 border-indigo-900">
-                      {vaultDocsCount}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <span className="text-xs sm:text-sm font-black text-white block">
-                    مكتبة ملفاتي
-                  </span>
-                  <span className="text-[10px] text-indigo-200 block mt-0.5">
-                    المستندات المحفوظة
-                  </span>
-                </div>
-              </button>
-
-            </div>
-          </div>
-
-          {/* Direct Drop Hint */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-indigo-200 text-xs font-medium">
-            <Upload className="w-3.5 h-3.5 text-indigo-300" />
-            <span>يمكنك أيضاً سحب وإفلات أي ملف (PDF، بوربوينت، أو صور) هنا للبدء مباشرة 📂</span>
+          {/* Single Action: Upload Study Material */}
+          <div className="pt-1.5">
+            <button
+              type="button"
+              onClick={() => handleTriggerUpload()}
+              className="group px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 backdrop-blur-md border border-indigo-400/40 flex items-center gap-3 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-indigo-500/30 cursor-pointer text-white shadow-lg shadow-indigo-900/50"
+            >
+              <div className="w-8 h-8 rounded-xl bg-white/20 text-white flex items-center justify-center group-hover:scale-110 transition shrink-0">
+                <Upload className="w-4 h-4" />
+              </div>
+              <div className="text-right">
+                <span className="text-xs sm:text-sm font-black block">
+                  رفع مادة دراسية
+                </span>
+                <span className="text-[10px] text-indigo-200 block">
+                  PDF أو بوربوينت
+                </span>
+              </div>
+            </button>
           </div>
 
         </div>
