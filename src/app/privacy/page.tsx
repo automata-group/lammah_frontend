@@ -141,6 +141,13 @@ export default function PrivacyPage() {
                       <span className="text-slate-400 text-base">إحصائيات تقنية مثل معدل استخدام الخدمة ونوع الجهاز، لمساعدتنا في تحسين الأداء وحل المشاكل التقنية.</span>
                     </div>
                   </li>
+                  <li className="flex gap-4">
+                    <CheckCircle2 className="w-6 h-6 text-indigo-400 flex-shrink-0 mt-1" />
+                    <div>
+                      <strong className="block text-white mb-1">البيانات المالية وعمليات التحويل</strong>
+                      <span className="text-slate-400 text-base">نظراً لأن تسوية الباقات تتم عبر التحويل المالي المباشر (تطبيق ريفلكت أو الحسابات البنكية)، فإن المنصة <strong>لا تطلب ولا تخزن أي أرقام بطاقات ائتمانية أو بيانات بنكية سرية إطلاقاً</strong>، ويقتصر التوثيق على رقم الطلب وصورة إشعار التحويل لتفعيل الحساب.</span>
+                    </div>
+                  </li>
                 </ul>
               </div>
             </section>
@@ -180,15 +187,15 @@ export default function PrivacyPage() {
             <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
 
             <section id="sharing" className="scroll-mt-24">
-              <h2 className="text-3xl font-black text-white mb-6">4. مشاركة البيانات مع أطراف ثالثة</h2>
+              <h2 className="text-3xl font-black text-white mb-6">4. مشاركة البيانات والخصوصية</h2>
               <div className="bg-amber-500/10 border border-amber-500/20 p-8 rounded-3xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-2 h-full bg-amber-500" />
-                <h3 className="text-2xl font-black text-amber-300 mb-4">نحن لا نبيع بياناتك إطلاقاً</h3>
+                <h3 className="text-2xl font-black text-amber-300 mb-4">نحن لا نبيع أو نشارك بياناتك إطلاقاً</h3>
                 <p className="text-amber-200/90 leading-relaxed mb-4">
-                  تظل بياناتك ملكاً لك. مشاركتنا للبيانات تقتصر حصرياً على <strong>مزودي خدمات الذكاء الاصطناعي</strong> (مثل OpenAI، Anthropic عبر OpenRouter) لغرض وحيد وهو <strong>تحليل النص ومعالجته لتوفير الخدمة</strong>.
+                  تظل بياناتك وملفاتك الأكاديمية ملكاً خاصاً بك بالكامل. وتتم معالجة المحتوى حصرياً وبشكل آمن ومشفر لغرض وحيد وهو <strong>تحليل النصوص وتجهيز الملخصات والمخرجات الدراسية التي طلبتها</strong>.
                 </p>
                 <p className="text-amber-200/70 text-sm font-bold bg-black/20 p-3 rounded-lg border border-amber-500/10 inline-block">
-                  ملاحظة هامة: لدينا اتفاقيات صارمة مع هؤلاء المزودين تمنعهم من استخدام محتواك (Zero-Data Retention Policy) لتدريب نماذجهم مستقبلاً.
+                  التزام بالخصوصية: نطبق معايير أمان صارمة تضمن عدم استخدام ملفاتك أو نصوصك لتدريب أي نماذج ذكاء اصطناعي عامة، وتبقى موادك محمية ومحصورة بحسابك فقط.
                 </p>
               </div>
             </section>

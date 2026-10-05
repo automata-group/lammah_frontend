@@ -11,9 +11,9 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isLocalDev: boolean;
-  signInWithGoogle: () => Promise<{ error: any }>;
+  signInWithGoogle: (nextPath?: string) => Promise<{ error: any }>;
   signInWithEmail: (email: string, password: string) => Promise<{ error: any }>;
-  signUpWithEmail: (email: string, password: string) => Promise<{ error: any }>;
+  signUpWithEmail: (email: string, password: string, nextPath?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -26,10 +26,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error || !session) {
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      // 1. Instant session restoration from local cache (0ms delay)
       setSession(session);
-      setUser(session?.user ?? null);
+      setUser(session.user);
       setLoading(false);
+
+      // 2. Validate in background without stalling the app UI
+      supabase.auth.getUser().then(({ data: userData, error: userError }) => {
+        if (userError || !userData?.user) {
+          supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+        } else {
+          setUser(userData.user);
+        }
+      }).catch(() => {});
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -57,9 +76,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return url.endsWith('/') ? url.slice(0, -1) : url;
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (nextPath = '/dashboard') => {
     const base = getURL();
-    const redirectPath = '/auth/callback?next=/dashboard';
+    const cleanNext = nextPath.startsWith('/') ? nextPath : `/${nextPath}`;
+    const redirectPath = `/auth/callback?next=${encodeURIComponent(cleanNext)}`;
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -74,11 +94,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signUpWithEmail = async (email: string, password: string) => {
+  const signUpWithEmail = async (email: string, password: string, nextPath = '/dashboard') => {
+    const cleanNext = nextPath.startsWith('/') ? nextPath : `/${nextPath}`;
     const { data, error } = await supabase.auth.signUp({ 
       email, 
       password,
-      options: { emailRedirectTo: `${getURL()}/dashboard` }
+      options: { emailRedirectTo: `${getURL()}${cleanNext}` }
     });
     return { error };
   };

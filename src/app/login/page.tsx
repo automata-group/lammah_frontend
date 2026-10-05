@@ -1,18 +1,28 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
-export default function LoginPage() {
+function LoginRedirectContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    router.replace("/");
-  }, [router]);
+    const qs = searchParams.toString();
+    router.replace(qs ? `/auth?${qs}` : "/auth");
+  }, [router, searchParams]);
 
   return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center">
-      <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
+    <div className="min-h-screen bg-slate-50 dark:bg-[#030712] flex items-center justify-center">
+      <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginRedirectContent />
+    </Suspense>
   );
 }

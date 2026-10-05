@@ -1,41 +1,86 @@
 "use client";
 
 import React, { useState, useEffect, useRef, Suspense } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import { getFingerprint as getThumbmark } from '@thumbmarkjs/thumbmarkjs';
 import { 
   BookOpen, Sparkles, Lock, ArrowLeft, Upload, FileText, 
   User, CheckCircle, Download, AlertTriangle, PlayCircle, Loader2,
-  Plus, X, Crown
+  Plus, X, Crown, History, LogOut, Sun, Moon, LayoutDashboard, ShoppingBag,
+  ExternalLink, Eye, GraduationCap
 } from "lucide-react";
+import AppHeader from "@/components/AppHeader";
+import SmartGenerateButton from "@/components/SmartGenerateButton";
 
 function NotebookCreatorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const historyId = searchParams.get("history_id");
-  const { session, loading: authLoading } = useAuth();
-  const [planName, setPlanName] = useState<string>("free");
-  const [quota, setQuota] = useState<number>(0);
+  const jobIdParam = searchParams.get("job_id");
+  const titleParam = searchParams.get("title");
+  const studentNameParam = searchParams.get("student_name");
+  const { session, loading: authLoading, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const [quotaFetched, setQuotaFetched] = useState<boolean>(false);
+  const [planName, setPlanName] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("cached_user_plan") || "";
+    }
+    return "";
+  });
+  const [canGenerateNotebook, setCanGenerateNotebook] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const cachedFlag = localStorage.getItem("cached_can_generate_notebook");
+      if (cachedFlag !== null) return cachedFlag === "true";
+      const cachedPlan = (localStorage.getItem("cached_user_plan") || "").toLowerCase();
+      return Boolean(
+        (cachedPlan.includes("الذهبية") || cachedPlan.includes("النخبة") || cachedPlan.includes("elite") || cachedPlan.includes("100") || cachedPlan.includes("full term")) &&
+        !cachedPlan.includes("الإنقاذ") && !cachedPlan.includes("الميدتيرم") && !cachedPlan.includes("التفوق") && !cachedPlan.includes("الأساسية") && !cachedPlan.includes("مجاني") && cachedPlan !== "free"
+      );
+    }
+    return false;
+  });
+  const [quota, setQuota] = useState<number | null>(() => {
+    if (typeof window !== "undefined") {
+      const cachedQuota = localStorage.getItem("cached_user_quota");
+      if (cachedQuota !== null && !isNaN(Number(cachedQuota))) return Number(cachedQuota);
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    try {
+      const cachedPlan = localStorage.getItem("cached_user_plan");
+      if (cachedPlan) setPlanName(cachedPlan);
+      const cachedQuota = localStorage.getItem("cached_user_quota");
+      if (cachedQuota !== null && !isNaN(Number(cachedQuota))) setQuota(Number(cachedQuota));
+      const cachedFlag = localStorage.getItem("cached_can_generate_notebook");
+      if (cachedFlag !== null) setCanGenerateNotebook(cachedFlag === "true");
+    } catch {}
+  }, []);
   const [fullName, setFullName] = useState<string>("طالب متميز");
-  const [checkingAuth, setCheckingAuth] = useState<boolean>(true);
   const [deviceAbuse, setDeviceAbuse] = useState<boolean>(false);
   const [deviceAbuseMessage, setDeviceAbuseMessage] = useState<string | null>(null);
 
   // -- FINGERPRINTING LOGIC --
   const getFingerprint = async () => {
-    if (typeof window === "undefined") return "";
-    let fp = localStorage.getItem("device_id_v3");
-    if (!fp) {
-      try {
-        fp = await getThumbmark();
-        localStorage.setItem("device_id_v3", fp);
-      } catch (e) {
-        console.error("Device ID generation failed:", e);
-        fp = `fallback_${Math.random().toString(36).substring(7)}`;
-      }
+    if (typeof window !== "undefined") {
+      const existing = localStorage.getItem("device_id_v3");
+      if (existing) return existing;
     }
-    return fp;
+    try {
+      const fp = await getThumbmark();
+      if (typeof window !== "undefined") {
+        localStorage.setItem("device_id_v3", fp);
+      }
+      return fp;
+    } catch (e) {
+      console.error("Device ID generation failed:", e);
+      return `fallback_${Math.random().toString(36).substring(7)}`;
+    }
   };
 
   const getDeviceMetadata = async () => {
@@ -63,8 +108,8 @@ function NotebookCreatorContent() {
   };
 
   // Form states
-  const [lectureTitle, setLectureTitle] = useState<string>("");
-  const [customStudentName, setCustomStudentName] = useState<string>("");
+  const [lectureTitle, setLectureTitle] = useState<string>(() => titleParam || "");
+  const [customStudentName, setCustomStudentName] = useState<string>(() => studentNameParam || "");
   const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
   const [lectureUrls, setLectureUrls] = useState<string[]>([""]);
   const [lectureUrl, setLectureUrl] = useState<string>("");
@@ -72,6 +117,8 @@ function NotebookCreatorContent() {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [notebookType, setNotebookType] = useState<"university" | "course_podcast">("university");
+  const [languageMode, setLanguageMode] = useState<"bilingual" | "english" | "arabic">("bilingual");
+  const [paperStyle, setPaperStyle] = useState<"ruled" | "grid" | "dotted">("ruled");
   
   interface UploadedAudio {
     id: string;
@@ -95,7 +142,16 @@ function NotebookCreatorContent() {
   const [progressStep, setProgressStep] = useState<string>("");
   const [progressMessage, setProgressMessage] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ downloadUrl: string; previewUrl?: string; title: string } | null>(null);
+  const [result, setResult] = useState<{ downloadUrl: string; previewUrl?: string; title: string; isPrep?: boolean } | null>(() => {
+    if (jobIdParam) {
+      return {
+        downloadUrl: `/api/v1/notebook/download/${jobIdParam}.pdf`,
+        previewUrl: "",
+        title: titleParam || "دفتر دراسي"
+      };
+    }
+    return null;
+  });
 
   // Fetch current user quota and plan name when authLoading changes or session changes
   useEffect(() => {
@@ -116,34 +172,61 @@ function NotebookCreatorContent() {
         .then(async r => {
           const data = await r.json();
           if (r.ok) {
-            setPlanName(data.plan_name || "free");
-            setQuota(data.quota_remaining || 0);
+            const rawPlan = data.plan_name || "free";
+            setPlanName(rawPlan);
+            setQuota(data.quota_remaining ?? 0);
             setFullName(data.full_name || "طالب متميز");
             setCustomStudentName(data.full_name || "طالب متميز");
             setDeviceAbuse(!!data.device_abuse);
             setDeviceAbuseMessage(data.device_abuse_message || null);
+
+            const p = rawPlan.toLowerCase();
+            const isEligible = Boolean(
+              data.can_generate_notebook ||
+              ((p.includes("الذهبية") || p.includes("النخبة") || p.includes("elite") || p.includes("100") || p.includes("full term")) &&
+              !p.includes("الإنقاذ") && !p.includes("الميدتيرم") && !p.includes("التفوق") && !p.includes("الأساسية") && !p.includes("مجاني") && p !== "free")
+            );
+            setCanGenerateNotebook(isEligible);
+            setQuotaFetched(true);
+
+            if (typeof window !== "undefined") {
+              try {
+                localStorage.setItem("cached_user_quota", String(data.quota_remaining ?? 0));
+                localStorage.setItem("cached_user_plan", rawPlan);
+                localStorage.setItem("cached_can_generate_notebook", String(isEligible));
+              } catch {}
+            }
+          } else {
+            setQuotaFetched(true);
           }
         })
-        .catch(e => console.error("Failed to load quota info:", e))
-        .finally(() => setCheckingAuth(false));
+        .catch(e => {
+          console.error("Failed to load quota info:", e);
+          setQuotaFetched(true);
+        });
       };
       fetchQuota();
-    } else {
-      setCheckingAuth(false);
     }
   }, [session, authLoading]);
 
-  // Load saved notebook from history_id if present
+  // Sync from query params if navigated
+  useEffect(() => {
+    if (jobIdParam) {
+      setResult({
+        downloadUrl: `/api/v1/notebook/download/${jobIdParam}.pdf`,
+        previewUrl: "",
+        title: titleParam || "دفتر دراسي"
+      });
+      if (titleParam) setLectureTitle(titleParam);
+      if (studentNameParam) setCustomStudentName(studentNameParam);
+    }
+  }, [jobIdParam, titleParam, studentNameParam]);
+
+  // Load saved notebook from history_id if job_id was not provided
   useEffect(() => {
     const fetchNotebookHistory = async () => {
-      if (session && historyId) {
+      if (session && historyId && !jobIdParam) {
         setIsProcessing(true);
-        setProgressStep("الأرشيف");
-        setProgressMessage("جاري استرجاع دفترك الدراسي الفاخر من الأرشيف... 📚");
-        
-        // Remove query param to prevent loop on subsequent re-renders
-        window.history.replaceState({}, document.title, window.location.pathname);
-
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
         try {
           const response = await fetch(`${apiUrl}/api/v1/subscription/history/${historyId}`, {
@@ -152,22 +235,27 @@ function NotebookCreatorContent() {
             }
           });
           
-          if (!response.ok) throw new Error("الملزمة غير موجودة أو تم حذفها");
+          if (!response.ok) throw new Error("الدفتر غير موجود أو تم حذفه");
           
           const data = await response.json();
           if (data?.metadata?.job_id) {
+            const isDocOnly = data.metadata.is_prep !== undefined
+              ? !!data.metadata.is_prep
+              : (data.metadata.has_audio !== undefined ? !data.metadata.has_audio : !data.metadata.transcript?.trim());
+
             setLectureTitle(data.metadata.title || "دفتر دراسي");
-            setCustomStudentName(data.metadata.student_name || fullName);
+            setCustomStudentName(data.metadata.student_name || "طالب متميز");
             setResult({
               downloadUrl: `/api/v1/notebook/download/${data.metadata.job_id}.pdf`,
               previewUrl: data.metadata.preview_url || "",
-              title: data.metadata.title || "دفتر دراسي"
+              title: data.metadata.title || "دفتر دراسي",
+              isPrep: isDocOnly
             });
           } else {
-            throw new Error("هذا الأرشيف لا يحتوي على ملف ملزمة جاهز.");
+            throw new Error("هذا الأرشيف لا يحتوي على ملف جاهز.");
           }
         } catch (err: any) {
-          setError(err.message || "حدث خطأ أثناء تحميل تفاصيل الملزمة.");
+          setError(err.message || "حدث خطأ أثناء تحميل تفاصيل الدفتر.");
         } finally {
           setIsProcessing(false);
           setProgressStep("");
@@ -176,7 +264,7 @@ function NotebookCreatorContent() {
       }
     };
     fetchNotebookHistory();
-  }, [session, historyId, fullName]);
+  }, [session, historyId, jobIdParam]);
 
   // Handle file uploads
   const uploadTempFile = (file: File, isAudio: boolean) => {
@@ -193,14 +281,17 @@ function NotebookCreatorContent() {
 
     const xhr = new XMLHttpRequest();
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
-    const uploaderUrl = process.env.NEXT_PUBLIC_UPLOADER_URL || apiUrl;
+    let uploaderUrl = process.env.NEXT_PUBLIC_UPLOADER_URL || apiUrl;
+    if (uploaderUrl.includes("8080") || uploaderUrl.includes(":8000")) {
+      uploaderUrl = apiUrl;
+    }
 
     xhr.open("POST", `${uploaderUrl}/api/v1/summarize/upload-temp`, true);
     if (session?.access_token) {
       xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
     }
 
-    xhr.upload.onprogress = (event) => {
+    xhr.upload.onprogress = (event: ProgressEvent) => {
       if (event.lengthComputable) {
         const percent = Math.round((event.loaded / event.total) * 100);
         if (isAudio) setAudioUploadProgress(percent);
@@ -239,15 +330,18 @@ function NotebookCreatorContent() {
     formData.append('file', file);
 
     const xhr = new XMLHttpRequest();
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-    const uploaderUrl = process.env.NEXT_PUBLIC_UPLOADER_URL || apiUrl;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+    let uploaderUrl = process.env.NEXT_PUBLIC_UPLOADER_URL || apiUrl;
+    if (uploaderUrl.includes("8080") || uploaderUrl.includes(":8000")) {
+      uploaderUrl = apiUrl;
+    }
 
     xhr.open('POST', `${uploaderUrl}/api/v1/summarize/upload-temp`, true);
     if (session?.access_token) {
       xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
     }
 
-    xhr.upload.onprogress = (event) => {
+    xhr.upload.onprogress = (event: ProgressEvent) => {
       if (event.lengthComputable) {
         const percent = Math.round((event.loaded / event.total) * 100);
         setMultiAudioFiles(prev => prev.map(item => item.id === id ? { ...item, progress: percent } : item));
@@ -282,8 +376,8 @@ function NotebookCreatorContent() {
     const hasLectureUrl = (uploadMode === "url" && lectureUrl.trim().length > 0) || (uploadMode === "url" && lectureUrls.filter(u => u.trim()).length > 0);
     const hasPdfFile = !!pdfFile || !!pdfTempId;
 
-    if (!hasAudioFile && !hasLectureUrl && !hasPdfFile) {
-      setError(uploadMode === "url" ? "يرجى إدخال رابط المحاضرة أولاً." : "يرجى إرفاق ملف صوتي، أو رابط محاضرة، أو ملف عرض (PDF/PPTX) أولاً.");
+    if (!hasAudioFile && !hasPdfFile) {
+      setError("يرجى إرفاق ملف صوتي أو ملف عرض (PDF/PPTX) أولاً.");
       return;
     }
 
@@ -328,6 +422,7 @@ function NotebookCreatorContent() {
     if (lectureTitle) formData.append("lecture_title", lectureTitle);
     formData.append("student_name", customStudentName || fullName);
     formData.append("notebook_type", notebookType);
+    formData.append("language_mode", languageMode);
 
     try {
       const response = await fetch(`${apiUrl}/api/v1/notebook/process-notebook`, {
@@ -366,10 +461,12 @@ function NotebookCreatorContent() {
                 setProgressStep(payload.step);
                 setProgressMessage(payload.message);
               } else if (payload.type === "done") {
+                const currentIsDocOnly = !(audioFile || multiAudioFiles.length > 0);
                 setResult({
                   downloadUrl: payload.download_url,
                   previewUrl: payload.preview_url,
-                  title: payload.title
+                  title: payload.title,
+                  isPrep: currentIsDocOnly
                 });
                 setIsProcessing(false);
                 setProgressStep("");
@@ -391,85 +488,97 @@ function NotebookCreatorContent() {
   };
 
   const getFriendlyPlanName = (name: string) => {
-    if (!name || name === "free" || name === "مجاني") return "الباقة المجانية (Free)";
-    if (name.includes("الذهبية") || name === "الباقة الذهبية") return "باقة النخبة (Elite)";
-    if (name.includes("الميدتيرم") || name === "باقة الميدتيرم") return "باقة التفوق (Premium)";
-    if (name.includes("الإنقاذ") || name === "باقة الإنقاذ") return "الباقة الأساسية (Essential)";
+    if (!name || name === "free" || name === "مجاني") return "الباقة المجانية";
+    if (name.includes("الذهبية") || name === "الباقة الذهبية" || name.toLowerCase().includes("elite") || name.toLowerCase().includes("full term")) return "باقة النخبة (Elite - 100 ₪)";
+    if (name.includes("الميدتيرم") || name.includes("التفوق") || name.toLowerCase().includes("premium")) return "باقة التفوق (Premium - 60 ₪)";
+    if (name.includes("الإنقاذ") || name.includes("الأساسية") || name.toLowerCase().includes("essential")) return "الباقة الأساسية (Essential - 25 ₪)";
     return name;
   };
 
-  // If loading session details
-  if (checkingAuth) {
+  const is100Plan = Boolean(
+    canGenerateNotebook ||
+    (planName && (
+      planName.includes("الذهبية") ||
+      planName.includes("النخبة") ||
+      planName.toLowerCase().includes("elite") ||
+      planName.includes("100") ||
+      planName.toLowerCase().includes("full term")
+    ) &&
+    !planName.includes("الإنقاذ") &&
+    !planName.includes("الميدتيرم") &&
+    !planName.includes("التفوق") &&
+    !planName.includes("الأساسية") &&
+    !planName.includes("مجاني") &&
+    planName !== "free")
+  );
+
+  // Minimal loading only during initial auth resolution
+  if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0d131f] flex flex-col justify-center items-center text-white">
-        <Loader2 className="w-12 h-12 animate-spin text-amber-500 mb-4" />
-        <p className="text-slate-400 font-medium">جاري التحقق من الصلاحيات والميزات الحصرية...</p>
+      <div className="min-h-screen bg-slate-50 dark:bg-[#030712] flex items-center justify-center font-sans">
+        <div className="w-8 h-8 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
       </div>
     );
   }
 
-  const isFreeTrial = !planName || planName === "free" || planName === "مجاني";
-  const isGoldPlan = planName.toLowerCase().includes("الذهبية") || planName.toLowerCase().includes("ذهبية") || planName.toLowerCase().includes("elite");
-
-  // PREMIUM PAYWALL (FOR NOT LOGGED IN)
+  // GUEST PAYWALL (FOR NOT LOGGED IN USERS)
   if (!session) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-        {/* Decorative ambient lights */}
-        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-yellow-600/10 rounded-full blur-[120px] pointer-events-none" />
-
-        <div className="max-w-2xl w-full text-center space-y-8 z-10">
+      <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-white flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans" dir="rtl">
+        <div className="max-w-2xl w-full text-center space-y-8 z-10 bg-white dark:bg-[#0b0f19] p-8 sm:p-12 rounded-3xl sm:rounded-[2.5rem] border border-slate-200/90 dark:border-slate-800 shadow-sm">
           <div className="relative inline-block">
-            <div className="w-24 h-24 bg-gradient-to-tr from-amber-500 to-yellow-300 rounded-[2rem] flex items-center justify-center shadow-2xl mx-auto border border-amber-400/30">
-              <Lock className="w-12 h-12 text-slate-900" />
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-300 rounded-[2rem] flex items-center justify-center shadow-lg shadow-amber-500/20 mx-auto border border-amber-400/40">
+              <Lock className="w-10 h-10 sm:w-12 sm:h-12 text-slate-950" />
             </div>
-            <div className="absolute -bottom-2 -right-2 bg-slate-900 border-2 border-amber-400 p-2 rounded-full shadow-lg">
-              <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
+            <div className="absolute -bottom-2 -right-2 bg-white dark:bg-slate-900 border-2 border-amber-400 p-2 rounded-full shadow-xs">
+              <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
             </div>
           </div>
 
-          <div className="space-y-4">
-            <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 bg-clip-text text-transparent leading-tight">
-              صانع دفاتر البائعين الذكية
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-black">
+              <span>👑 خاص وحصري بمشتركي باقة النخبة (100 ₪)</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 dark:from-amber-400 dark:via-yellow-200 dark:to-amber-500 bg-clip-text text-transparent leading-tight">
+              صانع دفاتر التلخيص الجامعية
             </h1>
-            <p className="text-lg md:text-xl text-amber-100/80 font-bold max-w-xl mx-auto leading-relaxed">
-              انتقل من مجرد طالب إلى ناشر وصاحب متجر دراسي! ولّد ملازمك الفخمة بخط يد ربيعي وطابع كلاسيكي لتبعتها لزملائك داخل المنصة.
+            <p className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-amber-100/80 font-bold max-w-xl mx-auto leading-relaxed">
+              حوّل تفريغ محاضراتك وسلايداتك إلى دفتر ملخص متكامل (A4 PDF) بخط يد رقعي جذاب جاهز للطباعة الورقية وللنشر في المتجر! الميزة متاحة حصرياً لأصحاب باقة النخبة.
             </p>
           </div>
 
           {/* Premium Features Highlight */}
-          <div className="grid md:grid-cols-3 gap-6 text-right my-8 max-w-xl mx-auto">
-            <div className="bg-slate-900/60 p-5 rounded-2xl border border-amber-500/20 hover:border-amber-500/40 transition duration-300">
-              <BookOpen className="w-6 h-6 text-amber-400 mb-3" />
-              <h3 className="font-bold text-amber-200 mb-1 text-base">ورق مسطر كلاسيكي</h3>
-              <p className="text-xs text-slate-400">توليد تلقائي على خلفية تحاكي الدفتر المدرسي المسطر.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-right my-6 max-w-xl mx-auto">
+            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-xs">
+              <BookOpen className="w-6 h-6 text-amber-600 dark:text-amber-400 mb-2" />
+              <h3 className="font-bold text-slate-900 dark:text-amber-200 mb-1 text-sm sm:text-base">ورق مسطر كلاسيكي</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">توليد تلقائي فخم على نمط دفتر جامعي منسق بخط رقعي يدوي جذاب.</p>
             </div>
-            <div className="bg-slate-900/60 p-5 rounded-2xl border border-amber-500/20 hover:border-amber-500/40 transition duration-300">
-              <Sparkles className="w-6 h-6 text-amber-400 mb-3" />
-              <h3 className="font-bold text-amber-200 mb-1 text-base">قلم خط عربي يدوي</h3>
-              <p className="text-xs text-slate-400">كتابة عربية بخط رقعي جذاب يحاكي الخط اليدوي للطلاب المتفوقين.</p>
+            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-xs">
+              <Sparkles className="w-6 h-6 text-amber-600 dark:text-amber-400 mb-2" />
+              <h3 className="font-bold text-slate-900 dark:text-amber-200 mb-1 text-sm sm:text-base">رخصة بائع ونشر بالمتجر</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">انشر دفاترك في المتجر بضغطة زر وحدد السعر الذي يناسبك وحقق أرباحاً.</p>
             </div>
-            <div className="bg-slate-900/60 p-5 rounded-2xl border border-amber-500/20 hover:border-amber-500/40 transition duration-300">
-              <User className="w-6 h-6 text-amber-400 mb-3" />
-              <h3 className="font-bold text-amber-200 mb-1 text-base">حقوق ملكية مطبوعة</h3>
-              <p className="text-xs text-slate-400">تضمين اسمك كبائع معتمد وتوقيعك تلقائياً في أسفل الصفحات.</p>
+            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-xs">
+              <User className="w-6 h-6 text-amber-600 dark:text-amber-400 mb-2" />
+              <h3 className="font-bold text-slate-900 dark:text-amber-200 mb-1 text-sm sm:text-base">رصيد 40 محاضرة كاملة</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">رصيد دقائق عملاق يكفي لتغطية جميع مساقاتك الدراسية طوال الفصل.</p>
             </div>
           </div>
 
-          <div className="space-y-4 max-w-sm mx-auto">
+          <div className="space-y-3 max-w-sm mx-auto">
             <button 
-              onClick={() => router.push("/plans")}
-              className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black text-lg py-4 px-8 rounded-2xl shadow-[0_0_30px_rgba(245,158,11,0.3)] transition transform hover:scale-[1.02] flex items-center justify-center gap-3"
+              onClick={() => router.push("/auth?redirect=/notebook")}
+              className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black text-base py-3.5 px-8 rounded-2xl shadow-md shadow-amber-500/20 transition transform hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Sparkles className="w-5 h-5 text-slate-950 fill-slate-950" /> ترقية الباقة الآن للاستفادة
+              <Sparkles className="w-5 h-5 text-slate-950 fill-slate-950" /> تسجيل الدخول للاشتراك
             </button>
             
             <button 
-              onClick={() => router.push("/dashboard")}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold py-3 px-8 rounded-2xl transition border border-slate-800 flex items-center justify-center gap-2"
+              onClick={() => router.push("/plans")}
+              className="w-full bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-3 px-8 rounded-2xl transition border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-sm cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4 ml-1" /> العودة للوحة التحكم
+              <ArrowLeft className="w-4 h-4 ml-1" /> استعراض الباقات والأسعار
             </button>
           </div>
         </div>
@@ -477,62 +586,77 @@ function NotebookCreatorContent() {
     );
   }
 
-  // Lock only for basic paid users (not Gold and not Free Trial)
-  if (!checkingAuth && !isGoldPlan && !isFreeTrial) {
+  // SUBSCRIBED USERS ON LOWER TIERS (FREE, 25 ILS, 60 ILS) PAYWALL
+  if (session && !is100Plan) {
     return (
-      <div className="min-h-screen bg-[#070b13] text-white p-6 relative overflow-hidden flex flex-col justify-center items-center font-sans" dir="rtl">
-        {/* Background Gradients */}
-        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[150px] pointer-events-none" />
-        <div className="absolute bottom-10 left-1/4 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-[180px] pointer-events-none" />
+      <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-hidden" dir="rtl">
+        <AppHeader quota={quota} activePage="notebook" />
 
-        <div className="max-w-2xl text-center space-y-8 bg-slate-900/60 backdrop-blur-2xl border border-amber-500/30 p-12 rounded-[2.5rem] shadow-[0_0_50px_rgba(245,158,11,0.15)] relative">
-          <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-amber-500/30 border border-amber-300/40">
-            <Lock className="w-12 h-12 text-slate-955" />
-          </div>
-
-          <div className="pt-6 space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-black">
-              <Sparkles className="w-3.5 h-3.5 fill-amber-400" /> ميزة حصرية للبائعين المتفوقين
-            </div>
-            <h2 className="text-3xl md:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-yellow-400 to-orange-350">
-              صانع دفاتر البائعين مغلق 🔒
-            </h2>
-            <p className="text-slate-300 text-base leading-relaxed max-w-lg mx-auto">
-              عذراً! ميزة توليد ملازم البائعين الفاخرة المطبوع عليها اسمك وحقوقك وعرضها للبيع في المتجر متاحة حصرياً لأعضاء **باقة النخبة (Elite - 100 شيكل)** فقط.
-            </p>
-          </div>
-
-          {/* Feature Highlights Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-right py-4 border-t border-b border-slate-800/80 my-6">
-            <div className="flex items-start gap-3 bg-slate-950/40 p-4 rounded-2xl border border-slate-850">
-              <span className="text-xl shrink-0">💰</span>
-              <div>
-                <h4 className="font-bold text-amber-200 text-sm">اربح من مبيعاتك</h4>
-                <p className="text-xs text-slate-400 mt-0.5">اصنع دفترك الدراسي وعالجه بدقائقك الذهبية وعين سعرك واربح 100%.</p>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
+          <div className="max-w-2xl w-full text-center space-y-7 bg-white dark:bg-[#0b0f19] p-8 sm:p-12 rounded-3xl sm:rounded-[2.5rem] border border-amber-300/40 dark:border-amber-500/20 shadow-xl shadow-amber-500/5">
+            <div className="relative inline-block">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-300 rounded-[2rem] flex items-center justify-center shadow-lg shadow-amber-500/20 mx-auto border border-amber-300/50">
+                <Lock className="w-10 h-10 sm:w-12 sm:h-12 text-slate-950" />
+              </div>
+              <div className="absolute -bottom-2 -right-2 bg-white dark:bg-slate-900 border-2 border-amber-400 p-2 rounded-full shadow-xs">
+                <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
               </div>
             </div>
-            <div className="flex items-start gap-3 bg-slate-950/40 p-4 rounded-2xl border border-slate-850">
-              <span className="text-xl shrink-0">📝</span>
-              <div>
-                <h4 className="font-bold text-amber-200 text-sm">أوراق مسطرة وحقوق مطبوعة</h4>
-                <p className="text-xs text-slate-400 mt-0.5">خط يدوي رقعي جذاب يحاكي خط المتفوقين مع طباعة اسمك لحفظ ملكيتك.</p>
+
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-black">
+                <span>👑 ميزة حصرية لمشتركي باقة النخبة (100 شيكل)</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 dark:from-amber-400 dark:via-yellow-200 dark:to-amber-500 bg-clip-text text-transparent leading-tight">
+                توليد الدفاتر الأكاديمية الذكية
+              </h1>
+              <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-amber-100/80 font-medium max-w-xl mx-auto leading-relaxed">
+                أهلاً بك يا <span className="font-black text-slate-900 dark:text-white">{fullName}</span>! إن ميزة إنشاء وتوليد الدفاتر الأكاديمية الملونة (PDF) ورخصة البائع المعتمد في المتجر مخصصة حصرياً لأصحاب <span className="font-bold text-amber-600 dark:text-amber-400">باقة النخبة (100 ₪)</span>.
+              </p>
+            </div>
+
+            {/* Current Plan Pill */}
+            <div className="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <span>باقتك الحالية:</span>
+              <span className="font-black text-amber-600 dark:text-amber-400">{getFriendlyPlanName(planName)}</span>
+              {quota !== null && <span className="text-[11px] text-slate-400">({quota} دقيقة متبقية)</span>}
+            </div>
+
+            {/* Feature Comparison / Highlights */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-right my-4 max-w-xl mx-auto">
+              <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-xs">
+                <BookOpen className="w-5 h-5 text-amber-600 dark:text-amber-400 mb-2" />
+                <h3 className="font-bold text-slate-900 dark:text-amber-200 mb-1 text-xs sm:text-sm">دفاتر دراسية A4 ملونة</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">توليد دفاتر متكاملة بخط رقعي جذاب جاهزة للطباعة الورقية.</p>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-xs">
+                <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400 mb-2" />
+                <h3 className="font-bold text-slate-900 dark:text-amber-200 mb-1 text-xs sm:text-sm">رخصة بائع ونشر بالمتجر</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">انشر دفاترك في المتجر بضغطة زر وحقق أرباحاً من مبيعات زملائك.</p>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-xs">
+                <User className="w-5 h-5 text-amber-600 dark:text-amber-400 mb-2" />
+                <h3 className="font-bold text-slate-900 dark:text-amber-200 mb-1 text-xs sm:text-sm">رصيد 40 محاضرة</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">رصيد دقائق ضخم يغطي جميع مساقاتك الدراسية للفصل كاملاً.</p>
               </div>
             </div>
-          </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button 
-              onClick={() => router.push("/plans")}
-              className="bg-gradient-to-r from-amber-500 via-yellow-400 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 px-8 py-4 rounded-2xl font-black text-base transition-all transform hover:scale-[1.03] shadow-lg shadow-amber-500/20"
-            >
-              👑 ترقية حسابك لباقة النخبة (Elite) الآن
-            </button>
-            <button 
-              onClick={() => router.push("/dashboard")}
-              className="bg-slate-950 hover:bg-slate-855 text-slate-300 border border-slate-855 px-8 py-4 rounded-2xl font-bold text-base transition-all"
-            >
-              العودة للوحة التحكم
-            </button>
+            <div className="space-y-3 max-w-sm mx-auto pt-2">
+              <button 
+                onClick={() => router.push("/plans")}
+                className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black text-sm sm:text-base py-3.5 px-8 rounded-2xl shadow-md shadow-amber-500/20 transition transform hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Sparkles className="w-5 h-5 text-slate-950 fill-slate-950" /> ترقية إلى باقة النخبة (100 ₪) الآن
+              </button>
+              
+              <button 
+                onClick={() => router.push("/dashboard")}
+                className="w-full bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-2.5 px-8 rounded-2xl transition border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4 ml-1" /> العودة للوحة التحكم
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -540,206 +664,153 @@ function NotebookCreatorContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-100 p-6 relative overflow-hidden">
-      {/* Visual backgrounds */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/[0.08] rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/[0.08] rounded-full blur-[140px] pointer-events-none" />
+    <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-indigo-500/20 selection:text-indigo-600 transition-colors duration-300">
+      {/* Floating Header */}
+      <AppHeader quota={quota} activePage="notebook" />
 
-      {/* Top Header */}
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-10 gap-4 relative z-10">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => router.push("/dashboard")}
-            className="w-12 h-12 bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-white rounded-2xl transition flex items-center justify-center border border-slate-800/60 shadow-lg"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-black text-white bg-clip-text">صانع دفاتر الطلاب الذكية</h1>
-            <p className="text-xs text-slate-400 font-bold">حوّل محاضراتك وتوقعاتك إلى دفاتر دراسية فخمة مطبوعة باسمك</p>
-          </div>
-        </div>
+      {/* Main Content Area - Generous, beautiful spacing */}
+      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-10">
+        
+        {result ? (
+          // Dedicated Full-Width Notebook Viewer (When opened from history or after generation)
+          <div className="max-w-5xl mx-auto space-y-6">
+            <div className="bg-white dark:bg-[#0b0f19] border border-slate-200/90 dark:border-indigo-500/35 p-5 sm:p-7 rounded-3xl sm:rounded-[2.5rem] shadow-xs relative space-y-6 transition-all">
+              {/* Header: Title + Navigation / Creation Actions */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-white/5">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-center shrink-0">
+                    <CheckCircle className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate">
+                      {result.title || "دفترك الملخص جاهز"}
+                    </h1>
+                    <span className="text-xs text-slate-500 font-medium block mt-0.5">
+                      إعداد الطالب: {customStudentName || fullName || "طالب متميز"}
+                    </span>
+                  </div>
+                </div>
 
-        <div className="bg-slate-900/60 border border-slate-800/80 p-3 rounded-2xl flex items-center gap-4 backdrop-blur-xl shadow-lg">
-          <div className="text-right">
-            <p className="text-[10px] text-slate-450 font-bold">باقة اشتراكك</p>
-            <p className="text-xs font-black text-indigo-400">{getFriendlyPlanName(planName)}</p>
-          </div>
-          <div className="w-[1px] h-8 bg-slate-800" />
-          <div className="text-right">
-            <p className="text-[10px] text-slate-450 font-bold">الحصة المتبقية</p>
-            <p className="text-xs font-black text-slate-100">{quota} دقيقة <span className="text-[9px] text-indigo-450 font-normal mr-1">(الخصم: دقيقة لكل دقيقة صوتية)</span></p>
-          </div>
-        </div>
-      </div>
+                <div className="flex items-center gap-2 self-start sm:self-center flex-wrap">
+                  <button
+                    onClick={() => {
+                      setResult(null);
+                      router.push("/notebook");
+                    }}
+                    className="h-9 px-3.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/15 dark:hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition flex items-center gap-1.5 border border-indigo-200/80 dark:border-indigo-500/30 cursor-pointer shadow-2xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>إنشاء دفتر جديد</span>
+                  </button>
 
-      {/* Main Grid Content */}
-      <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-8 relative z-10">
-        {/* Left Form Settings Panel: 5 columns */}
-        <div className="lg:col-span-5 space-y-6">
-          {isFreeTrial && !deviceAbuse && (
-            <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl flex items-start gap-3 text-amber-200">
-              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-              <div className="text-right">
-                <p className="text-xs font-black">وضع التجربة المجانية نشط 🎁</p>
-                <p className="text-[10px] text-amber-100/75 leading-relaxed mt-1">
-                  كعضو في الفترة التجريبية، يمكنك توليد دفاتر البائعين لكن بحد أقصى 5 دقائق صوتية و6 صفحات عرض للمستند المرفق.
-                </p>
+                  <button
+                    onClick={() => router.push("/history")}
+                    className="h-9 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200/80 dark:border-white/10 cursor-pointer"
+                  >
+                    <History className="w-3.5 h-3.5" />
+                    <span>سجل الدفاتر</span>
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-          <div className="bg-slate-900/60 border border-slate-800/80 p-6 rounded-[2rem] space-y-6 shadow-xl backdrop-blur-xl">
-            <h2 className="text-lg font-black text-slate-200 border-b border-slate-800/80 pb-3 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-indigo-400" /> إنشاء الملزمة ✍️
-            </h2>
 
-            {/* Notebook Type Selection — FIRST thing the user sees */}
-            <div className="space-y-2.5">
-              <label className="text-xs font-bold text-slate-300 block">نوع الملزمة والمحتوى:</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setNotebookType("university")}
-                  className={`p-4 rounded-2xl border text-right transition-all flex flex-col justify-between h-24 ${
-                    notebookType === "university"
-                      ? "border-indigo-500 bg-indigo-500/10 text-white shadow-lg shadow-indigo-500/10"
-                      : "border-slate-800 bg-slate-950/40 text-slate-400 hover:border-slate-700"
-                  }`}
+              {/* Actions Toolbar */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                {/* 1. Primary Action: Download PDF */}
+                {(() => {
+                  const cleanTitle = (result.title || lectureTitle || "المادة الدراسية")
+                    .replace(/^دفتر\s+/, "")
+                    .replace(/^محاضرة\s+/, "")
+                    .replace(/[\\/*?:"<>|]/g, " ")
+                    .trim() || "المادة الدراسية";
+                  const isPrep = result.isPrep ?? !(audioFile || multiAudioFiles.length > 0);
+                  const notebookFilename = `${cleanTitle} - ${isPrep ? "دفتر تحضير سلايدات" : "دفتر مخطط فويسات"} - لمّاح.pdf`;
+                  const sep = result.downloadUrl.includes("?") ? "&" : "?";
+                  const finalDownloadUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}${result.downloadUrl}${sep}download=true&title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`;
+
+                  return (
+                    <a 
+                      href={finalDownloadUrl}
+                      download={notebookFilename}
+                      className="sm:col-span-6 h-11 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 shadow-sm shadow-indigo-600/20 cursor-pointer"
+                    >
+                      <Download className="w-4 h-4 shrink-0" />
+                      <span>تحميل الدفتر (PDF)</span>
+                    </a>
+                  );
+                })()}
+
+                {/* 2. Secondary Action: Fullscreen Preview */}
+                <a 
+                  href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}${result.downloadUrl}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="sm:col-span-3 h-11 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-[0.98] text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 border border-slate-200/80 dark:border-white/10 cursor-pointer"
+                  title="معاينة في نافذة كاملة"
                 >
-                  <span className="text-xs font-black block">🎓 دفتر جامعي</span>
-                  <span className="text-[9.5px] text-slate-450 leading-snug mt-1.5 block">مخصص للمحاضرات الجامعية، أسئلة MCQs، وفخاخ الامتحان</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNotebookType("course_podcast")}
-                  className={`p-4 rounded-2xl border text-right transition-all flex flex-col justify-between h-24 ${
-                    notebookType === "course_podcast"
-                      ? "border-indigo-500 bg-indigo-500/10 text-white shadow-lg shadow-indigo-500/10"
-                      : "border-slate-800 bg-slate-950/40 text-slate-400 hover:border-slate-700"
-                  }`}
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                  <span>ملء الشاشة</span>
+                </a>
+
+                {/* 3. Monetization Action: Publish to Marketplace */}
+                <Link 
+                  href={`/marketplace/publish?pdfUrl=${encodeURIComponent(result.downloadUrl || "")}&previewUrl=${encodeURIComponent(result.previewUrl || "")}&title=${encodeURIComponent(result.title || "")}&studentName=${encodeURIComponent(customStudentName || fullName || "")}`}
+                  className="sm:col-span-3 h-11 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-[0.98] text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 border border-slate-200/80 dark:border-white/10 cursor-pointer"
                 >
-                  <span className="text-xs font-black block">🎙️ دفتر الدورات والبودكاست</span>
-                  <span className="text-[9.5px] text-slate-450 leading-snug mt-1.5 block">خلاصة جوهرية، خطة عمل عملية، عقبات وحلول، وWorkbook</span>
-                </button>
+                  <ShoppingBag className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                  <span>نشر بالمتجر</span>
+                </Link>
               </div>
-            </div>
 
-            {/* Student Name Watermark Input */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-350 block">اسم الكاتب / البائع:</label>
-              <div className="relative">
-                <span className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-500">
-                  <User className="w-5 h-5" />
-                </span>
-                <input 
-                  type="text" 
-                  value={customStudentName} 
-                  onChange={(e) => setCustomStudentName(e.target.value)}
-                  placeholder="مثال: أحمد الطالب المتفوق" 
-                  className="w-full bg-slate-950/70 border border-slate-800 rounded-2xl py-3 pr-11 pl-4 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition font-bold text-xs"
+              {/* PDF Preview Iframe */}
+              <div className="w-full h-[650px] sm:h-[820px] bg-slate-100 dark:bg-slate-950 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-850 relative shadow-inner">
+                <iframe 
+                  src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}${result.downloadUrl}#toolbar=1&navpanes=0`}
+                  className="w-full h-full border-none"
+                  title="Notebook Preview"
                 />
               </div>
             </div>
-
-            {/* Custom Lecture Title Override */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-355 block">عنوان الملزمة (اختياري):</label>
-              <input 
-                type="text" 
-                value={lectureTitle} 
-                onChange={(e) => setLectureTitle(e.target.value)}
-                placeholder="اتركه فارغاً ليقوم الذكاء الاصطناعي بتوليده" 
-                className="w-full bg-slate-950/70 border border-slate-800 rounded-2xl py-3 px-4 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition font-bold text-xs"
-              />
+          </div>
+        ) : historyId && isProcessing ? (
+          <div className="max-w-md mx-auto py-20 text-center space-y-3">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
+              <Loader2 className="w-5 h-5 animate-spin" />
             </div>
-
-            {/* File Upload Fields */}
-            <div className="space-y-4">
-              {/* Tab Selector for Upload Mode */}
-              <div className="flex gap-2 bg-slate-950/70 p-1.5 rounded-2xl border border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUploadMode("file");
-                    setLectureUrls([""]);
-                  }}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${uploadMode === "file" ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/10" : "text-slate-400 hover:text-slate-200"}`}
-                >
-                  📁 رفع ملفات صوتية
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUploadMode("url");
-                    setLectureUrls([""]);
-                  }}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${uploadMode === "url" ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/10" : "text-slate-400 hover:text-slate-200"}`}
-                >
-                  🔗 روابط يوتيوب
-                </button>
-              </div>
-
-              {/* Lecture URL Inputs */}
-              {uploadMode === "url" && (
-                <div className={`space-y-3 bg-slate-950/40 p-4 rounded-2xl border border-slate-850 ${quota <= 0 || deviceAbuse ? "opacity-30 pointer-events-none" : ""}`}>
-                  <label className="text-xs font-bold text-slate-300 block">روابط المحاضرات المراد دمجها بالملزمة:</label>
-                  {lectureUrls.map((url, idx) => (
-                    <div key={idx} className="flex gap-2 items-center">
-                      <input
-                        type="url"
-                        value={url}
-                        onChange={(e) => {
-                          const newUrls = [...lectureUrls];
-                          newUrls[idx] = e.target.value;
-                          setLectureUrls(newUrls);
-                          if (idx === 0) setLectureUrl(e.target.value);
-                        }}
-                        placeholder={idx === 0 ? "ألصق رابط يوتيوب (YouTube) هنا" : `رابط محاضرة إضافي #${idx + 1}`}
-                        className="flex-1 bg-slate-950 border border-slate-850 text-slate-100 p-3.5 rounded-xl focus:outline-none focus:border-indigo-500 text-xs font-semibold"
-                        dir="ltr"
-                      />
-                      {lectureUrls.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newUrls = lectureUrls.filter((_, i) => i !== idx);
-                            setLectureUrls(newUrls);
-                            if (idx === 0) setLectureUrl(newUrls[0] || "");
-                          }}
-                          className="text-slate-500 hover:text-red-400 p-2 shrink-0 transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => setLectureUrls(prev => [...prev, ""])}
-                    className="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1 mt-2 transition-colors"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> إضافة رابط محاضرة آخر 🔗
-                  </button>
-                  <div className="flex justify-between items-center mt-3 border-t border-slate-850 pt-3">
-                    <span className="text-[10px] text-slate-500">
-                      * تواجه مشكلة في التنزيل من يوتيوب؟
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => router.push("/ytdl")}
-                      className="text-[10px] text-emerald-450 hover:text-emerald-350 font-extrabold flex items-center gap-1 transition-colors hover:underline"
-                    >
-                      💡 جرب أداة تحميل MP3 المستقلة
-                    </button>
+          </div>
+        ) : (
+          /* Main Grid Content: 2 Balanced Columns */
+          <div className="grid lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          
+          {/* Form Settings Panel: 6 columns */}
+          <div className="lg:col-span-6 space-y-4">
+            <div className="bg-white dark:bg-[#0b0f19] border border-slate-200/90 dark:border-slate-800 p-6 sm:p-7 rounded-3xl space-y-6 shadow-sm transition-all">
+              {/* Form Header: Clean, modern, focused */}
+              <div className="pb-4 border-b border-slate-100 dark:border-slate-800/80">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0 border border-violet-100 dark:border-violet-500/20 shadow-xs">
+                    <GraduationCap className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100">
+                      إنشاء دفتر ملخص جامعي ذكي
+                    </h2>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* Audio Source Upload */}
-              {uploadMode === "file" && (
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-300 block">صوت أو تسجيل المحاضرة (يمكن اختيار عدة ملفات للدمج):</label>
-                  <div className={`border-2 border-dashed rounded-2xl p-6 text-center hover:border-indigo-500/50 transition cursor-pointer relative bg-slate-950/40 ${audioFile || multiAudioFiles.length > 0 ? "border-indigo-500 bg-indigo-500/5" : "border-slate-850"} ${quota <= 0 || deviceAbuse ? "opacity-30 pointer-events-none" : ""}`}>
+              {/* 1. Lecture Files Upload */}
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                  ملفات المحاضرة
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {/* Audio File Box */}
+                  <div className={`border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-pointer relative flex flex-col justify-center min-h-[115px] ${
+                    audioFile || multiAudioFiles.length > 0 
+                      ? "border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20" 
+                      : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 hover:border-violet-400 hover:bg-violet-50/20 dark:hover:bg-violet-950/20"
+                  } ${(quota !== null && quota <= 0) || deviceAbuse ? "opacity-35 pointer-events-none" : ""}`}>
                     <input 
                       type="file" 
                       accept="audio/*" 
@@ -753,7 +824,6 @@ function NotebookCreatorContent() {
                             setAudioTempId("");
                             uploadTempFile(files[0], true);
                           }
-                          
                           const newFiles = Array.from(files).map(file => ({
                              id: Math.random().toString(36).substring(7),
                              file,
@@ -769,349 +839,224 @@ function NotebookCreatorContent() {
                       className="absolute inset-0 opacity-0 cursor-pointer z-10" 
                     />
                     {audioFile || multiAudioFiles.length > 0 ? (
-                      <div className="text-center w-full z-20 relative select-text">
-                        {multiAudioFiles.length > 1 ? (
-                          <div className="flex flex-col gap-2 max-h-[160px] overflow-y-auto pr-1">
-                            <p className="text-[10px] font-bold text-indigo-300 mb-1">الملفات المحددة للدمج بالملزمة ({multiAudioFiles.length})</p>
-                            {multiAudioFiles.map((item) => (
-                              <div key={item.id} className="flex items-center justify-between bg-slate-900/80 border border-slate-850 p-2 rounded-xl text-[10px]">
-                                <span className="font-semibold text-indigo-100 truncate max-w-[150px] text-right" dir="ltr">{item.file.name}</span>
-                                <div className="flex items-center gap-2">
-                                  {item.isUploading ? (
-                                    <span className="text-[10px] text-indigo-400 font-bold">{item.progress}%</span>
-                                  ) : (
-                                    <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      e.preventDefault();
-                                      setMultiAudioFiles(prev => prev.filter(x => x.id !== item.id));
-                                    }}
-                                    className="text-slate-500 hover:text-red-400 p-0.5"
-                                  >
-                                    <X className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
+                      <div className="w-full z-20 relative flex items-center justify-between text-right gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                            <CheckCircle className="w-4 h-4" />
                           </div>
-                        ) : (
-                          <div className="flex items-center justify-between text-right">
-                            <div className="flex items-center gap-3">
-                              <PlayCircle className="w-8 h-8 text-indigo-500 animate-pulse" />
-                              <div>
-                                <p className="text-xs font-bold text-slate-200 max-w-[180px] truncate">{(audioFile || multiAudioFiles[0]?.file)?.name}</p>
-                                <p className="text-[10px] text-slate-500">{((audioFile || multiAudioFiles[0]?.file)?.size / 1024 / 1024).toFixed(1)} MB</p>
-                              </div>
-                            </div>
-                            {(isAudioUploading || multiAudioFiles[0]?.isUploading) ? (
-                              <div className="text-xs text-indigo-400 font-bold">{audioUploadProgress || multiAudioFiles[0]?.progress}%</div>
-                            ) : (
-                              <div className="flex items-center gap-2">
-                                <CheckCircle className="w-5 h-5 text-emerald-500" />
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                    setAudioFile(null);
-                                    setAudioTempId("");
-                                    setMultiAudioFiles([]);
-                                  }}
-                                  className="text-slate-500 hover:text-red-400 p-1 rounded-lg hover:bg-slate-800"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            )}
+                          <div className="min-w-0 text-right">
+                            <p className="text-xs font-black text-slate-900 dark:text-slate-100 truncate max-w-[130px]">
+                              {audioFile ? audioFile.name : `${multiAudioFiles.length} تسجيلات صوتية`}
+                            </p>
+                            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">
+                              {isAudioUploading || multiAudioFiles.some(x => x.isUploading) ? "جاري الرفع..." : "جاهز للتحليل"}
+                            </p>
                           </div>
-                        )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setAudioFile(null);
+                            setAudioTempId("");
+                            setMultiAudioFiles([]);
+                          }}
+                          className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
+                          title="إلغاء الملف"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
                     ) : (
-                      <div className="space-y-2 py-2">
-                        <Upload className="w-8 h-8 text-slate-500 mx-auto" />
-                        <p className="text-xs font-bold text-slate-400">اسحب أو اختر ملفات صوت المحاضرات</p>
-                        <p className="text-[10px] text-slate-600">يمكنك اختيار عدة أجزاء لدمجها بملزمة واحدة فخمة</p>
+                      <div className="space-y-1 pointer-events-none">
+                        <div className="w-8 h-8 rounded-xl bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 flex items-center justify-center mx-auto">
+                          <Upload className="w-4 h-4" />
+                        </div>
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          ملف الصوت
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-medium">
+                          MP3, M4A, WAV
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* PDF / Slides Box */}
+                  <div className={`border-2 border-dashed rounded-2xl p-4 text-center transition-all cursor-pointer relative flex flex-col justify-center min-h-[115px] ${
+                    pdfFile 
+                      ? "border-violet-500 bg-violet-50/40 dark:bg-violet-950/20" 
+                      : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 hover:border-violet-400 hover:bg-violet-50/20 dark:hover:bg-violet-950/20"
+                  } ${(quota !== null && quota <= 0) || deviceAbuse ? "opacity-35 pointer-events-none" : ""}`}>
+                    <input 
+                      type="file" 
+                      accept=".pdf,.pptx,.ppt,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation" 
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          setPdfFile(e.target.files[0]);
+                          uploadTempFile(e.target.files[0], false);
+                        }
+                      }} 
+                      className="absolute inset-0 opacity-0 cursor-pointer z-10" 
+                    />
+                    {pdfFile ? (
+                      <div className="w-full z-20 relative flex items-center justify-between text-right gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0">
+                            <FileText className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0 text-right">
+                            <p className="text-xs font-black text-slate-900 dark:text-slate-100 truncate max-w-[130px]">{pdfFile.name}</p>
+                            <p className="text-[10px] text-violet-600 dark:text-violet-400 font-bold mt-0.5">{isPdfUploading ? `${pdfUploadProgress}%` : "جاهز للربط"}</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setPdfFile(null);
+                            setPdfTempId("");
+                          }}
+                          className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
+                          title="إلغاء الملف"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-1 pointer-events-none">
+                        <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center mx-auto">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          السلايدات (اختياري)
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-medium">
+                          PDF أو PowerPoint
+                        </p>
                       </div>
                     )}
                   </div>
                 </div>
-              )}
-
-              {/* PDF/PPT Slide Upload */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-300 block">ملف السلايدات PowerPoint أو PDF (اختياري):</label>
-                <div className={`border-2 border-dashed border-slate-850 rounded-2xl p-4 text-center hover:border-indigo-500/50 transition cursor-pointer relative bg-slate-950/40 ${quota <= 0 || deviceAbuse ? "opacity-30 pointer-events-none" : ""}`}>
-                  <input 
-                    type="file" 
-                    accept=".pdf,.pptx,.ppt,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation" 
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) {
-                        setPdfFile(e.target.files[0]);
-                        uploadTempFile(e.target.files[0], false);
-                      }
-                    }} 
-                    className="absolute inset-0 opacity-0 cursor-pointer" 
-                  />
-                  {pdfFile ? (
-                    <div className="flex items-center justify-between text-right">
-                      <div className="flex items-center gap-3">
-                        <FileText className="w-8 h-8 text-blue-500" />
-                        <div>
-                          <p className="text-xs font-bold text-slate-200 max-w-[180px] truncate">{pdfFile.name}</p>
-                          <p className="text-[10px] text-slate-500">{(pdfFile.size / 1024 / 1024).toFixed(1)} MB</p>
-                        </div>
-                      </div>
-                      {isPdfUploading ? (
-                        <div className="text-xs text-indigo-400 font-bold">{pdfUploadProgress}%</div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="w-5 h-5 text-emerald-500" />
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              e.preventDefault();
-                              setPdfFile(null);
-                              setPdfTempId("");
-                            }}
-                            className="text-slate-500 hover:text-red-400 p-1 rounded-lg hover:bg-slate-800"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-2 py-2">
-                      <Upload className="w-8 h-8 text-slate-500 mx-auto" />
-                      <p className="text-xs font-bold text-slate-400">اسحب أو اختر ملف PowerPoint أو PDF</p>
-                      <p className="text-[10px] text-slate-600">لتوليد شروحات الشرائح مباشرة داخل الدفتر</p>
-                    </div>
-                  )}
-                </div>
               </div>
-            </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className="bg-rose-950/50 border border-rose-500/50 p-4 rounded-2xl flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-                <p className="text-xs font-bold text-rose-200 leading-relaxed text-right">{error}</p>
-              </div>
-            )}
-
-            {/* Zero Quota Lock Banner — Notebook */}
-            {quota <= 0 && (
-              <div className="relative overflow-hidden rounded-2xl border border-rose-500/30 bg-gradient-to-br from-rose-950/60 via-slate-950/80 to-rose-950/40 backdrop-blur-xl p-5 text-right shadow-[0_0_30px_rgba(239,68,68,0.08)]">
-                <div className="absolute inset-0 rounded-2xl bg-rose-500/5 animate-pulse pointer-events-none" />
-                <div className="relative z-10 flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center shrink-0 shadow-inner">
-                    <Lock className="w-5 h-5 text-rose-400" />
+              {/* 2. Booklet Metadata: Author & Title */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    اسم الطالب (اختياري)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+                      <User className="w-4 h-4" />
+                    </span>
+                    <input 
+                      type="text" 
+                      value={customStudentName} 
+                      onChange={(e) => setCustomStudentName(e.target.value)}
+                      placeholder="اسمك على الغلاف" 
+                      className="w-full bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl py-2.5 pr-10 pl-3.5 text-xs font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-violet-500 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500/20 shadow-2xs transition-all"
+                    />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-black text-rose-200 mb-1">🚫 رصيدك صفر — لا يمكن بدء المعالجة</p>
-                    <p className="text-[11px] text-rose-300/70 leading-relaxed">
-                      لا يمكن رفع أي ملف صوتي، PDF، أو رابط يوتيوب حتى تقوم بتجديد رصيدك. اشترك في باقة مناسبة لتستمر في إنشاء ملازمك.
-                    </p>
-                    <button
-                      onClick={() => router.push("/plans")}
-                      className="mt-3 inline-flex items-center gap-1.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400 text-white font-black text-xs px-4 py-2 rounded-xl transition-all shadow-lg shadow-rose-500/20 hover:scale-[1.03]"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" /> شحن الرصيد والاشتراك الآن
-                    </button>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    عنوان الدفتر (اختياري)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+                      <FileText className="w-4 h-4" />
+                    </span>
+                    <input 
+                      type="text" 
+                      value={lectureTitle} 
+                      onChange={(e) => setLectureTitle(e.target.value)}
+                      placeholder="اسم المادة أو المحاضرة" 
+                      className="w-full bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl py-2.5 pr-10 pl-3.5 text-xs font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-violet-500 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-violet-500/20 shadow-2xs transition-all"
+                    />
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* Device Abuse Lock Banner — Notebook */}
-            {deviceAbuse && (
-              <div className="relative overflow-hidden rounded-2xl border border-rose-500/30 bg-gradient-to-br from-rose-950/60 via-slate-950/80 to-rose-950/40 backdrop-blur-xl p-5 text-right shadow-[0_0_30px_rgba(239,68,68,0.08)]">
-                <div className="absolute inset-0 rounded-2xl bg-rose-500/5 animate-pulse pointer-events-none" />
-                <div className="relative z-10 flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center shrink-0 shadow-inner">
-                    <Lock className="w-5 h-5 text-rose-400" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-black text-rose-200 mb-1">🚫 تم استخدام التجربة المجانية على هذا الجهاز</p>
-                    <p className="text-[11px] text-rose-300/70 leading-relaxed">
-                      {deviceAbuseMessage || "🚫 عذراً! التجربة المجانية غير متوفرة لأنها استُخدمت بالفعل على هذا الجهاز. يرجى الاشتراك للاستمرار. 🚀"}
-                    </p>
-                    <button
-                      onClick={() => router.push("/plans")}
-                      className="mt-3 inline-flex items-center gap-1.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400 text-white font-black text-xs px-4 py-2 rounded-xl transition-all shadow-lg shadow-rose-500/20 hover:scale-[1.03]"
-                    >
-                      <Crown className="w-3.5 h-3.5" /> شحن الرصيد والاشتراك الآن
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Submit Action Button */}
-            {!isProcessing ? (
-              <button 
-                onClick={startNotebookProcessing}
-                disabled={isAudioUploading || isPdfUploading || quota <= 0 || deviceAbuse || (uploadMode === "file" ? (!audioFile && multiAudioFiles.length === 0 && !pdfFile && !pdfTempId) : (!lectureUrl.trim() && lectureUrls.filter(u => u.trim()).length === 0))}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 text-white font-black text-sm py-4 rounded-2xl transition shadow-[0_0_20px_rgba(99,102,241,0.15)] flex items-center justify-center gap-2"
-              >
-                {deviceAbuse ? (
-                  <><Lock className="w-4 h-4" /> 🚫 الجهاز مستخدم للتجربة المجانية من قبل</>
-                ) : quota <= 0 ? (
-                  <><Lock className="w-4 h-4" /> 🚫 رصيدك غير كافٍ للبدء (0 دقيقة)</>
-                ) : (
-                  <>✨ ابدأ صياغة ملزمتك الذكية ✨</>
-                )}
-              </button>
-            ) : (
-              <div className="space-y-4">
-                {/* Live Processing Indicator */}
-                <div className="bg-slate-950 border border-indigo-500/20 p-4 rounded-2xl text-center space-y-3">
-                  <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mx-auto" />
-                  <div className="space-y-1">
-                    <p className="text-xs text-indigo-400 font-black">الخطوة {progressStep}</p>
-                    <p className="text-xs text-slate-200 font-bold leading-relaxed">{progressMessage}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Preview/Result Mockup Notebook Canvas: 7 columns */}
-        <div className="lg:col-span-7 space-y-6">
-          {result ? (
-            // Success & PDF View Frame
-            <div className="bg-slate-900/30 border border-indigo-500/35 p-6 rounded-[2rem] shadow-2xl relative space-y-6 backdrop-blur-xl">
-              <div className="flex justify-between items-center mb-2">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-6 h-6 text-emerald-500" />
-                  <h2 className="text-xl font-black text-indigo-300">تم توليد دفترك الدراسي المتميز!</h2>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button 
-                    onClick={() => {
-                      // Navigate to publish page with query params
-                      const params = new URLSearchParams({
-                        pdfUrl: result.downloadUrl,
-                        previewUrl: result.previewUrl || "",
-                        title: result.title,
-                        studentName: customStudentName || fullName
-                      });
-                      router.push(`/marketplace/publish?${params.toString()}`);
-                    }}
-                    className="bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 px-5 py-2 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-lg border border-emerald-400/20"
+              {/* 3. Language Selection */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                  لغة الصياغة والشرح
+                </label>
+                <div className="grid grid-cols-3 gap-2 p-1.5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setLanguageMode("bilingual")}
+                    className={`py-2.5 px-2 rounded-xl transition-all cursor-pointer text-xs font-bold flex items-center justify-center overflow-visible min-h-[42px] ${
+                      languageMode === "bilingual"
+                        ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs font-black border border-slate-200/80 dark:border-white/10"
+                        : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                    }`}
                   >
-                    🛒 انشر للبيع في المتجر
+                    <span className="whitespace-nowrap overflow-visible leading-relaxed">ثنائي اللغة</span>
                   </button>
-                  <a 
-                    href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}${result.downloadUrl}`}
-                    download
-                    className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-5 py-2 rounded-xl font-black text-xs transition flex items-center gap-1.5 shadow-lg border border-indigo-400/20"
+                  <button
+                    type="button"
+                    onClick={() => setLanguageMode("arabic")}
+                    className={`py-2.5 px-2 rounded-xl transition-all cursor-pointer text-xs font-bold flex items-center justify-center overflow-visible min-h-[42px] ${
+                      languageMode === "arabic"
+                        ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs font-black border border-slate-200/80 dark:border-white/10"
+                        : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                    }`}
                   >
-                    <Download className="w-4 h-4" /> تنزيل الملزمة (PDF)
-                  </a>
+                    <span className="whitespace-nowrap overflow-visible leading-relaxed">عربي كامل</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLanguageMode("english")}
+                    className={`py-2.5 px-2 rounded-xl transition-all cursor-pointer text-xs font-bold flex items-center justify-center overflow-visible min-h-[42px] ${
+                      languageMode === "english"
+                        ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs font-black border border-slate-200/80 dark:border-white/10"
+                        : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <span className="whitespace-nowrap overflow-visible leading-relaxed">English</span>
+                  </button>
                 </div>
               </div>
 
-              {/* PDF Preview Iframe */}
-              <div className="w-full h-[650px] bg-slate-950 rounded-2xl overflow-hidden border border-slate-850 relative">
-                <iframe 
-                  src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}${result.downloadUrl}`}
-                  className="w-full h-full border-none"
-                  title="Aesthetic Notebook Preview"
+              {/* 4. Submit Button */}
+              <div className="pt-2">
+                <SmartGenerateButton
+                  onClick={startNotebookProcessing}
+                  disabled={isAudioUploading || isPdfUploading}
+                  isProcessing={isProcessing}
+                  progressStep={progressStep}
+                  progressMessage={progressMessage}
+                  quota={quota}
+                  deviceAbuse={deviceAbuse}
+                  text="توليد دفتر ملخص للمحاضرة للامتحان ✨"
+                  variant="pill"
+                  size="md"
                 />
               </div>
             </div>
-          ) : (
-            // Beautiful Notebook ruled mock page preview
-            <div className="bg-slate-900/60 border border-slate-800/80 p-6 rounded-[2rem] shadow-2xl space-y-4 backdrop-blur-xl">
-              <h3 className="text-base font-black text-slate-200 flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-indigo-400" /> معاينة شكل ورق ملزمتك الكلاسيكية
-              </h3>
+          </div>
 
-              {/* Luxurious Leather/Bronze notebook cover binder around the paper sheet */}
-              <div className="w-full bg-gradient-to-br from-[#2b170c] via-[#1b0e07] to-[#0c0603] rounded-[2.2rem] p-5 border-2 border-[#8C6D4F]/30 shadow-2xl relative overflow-hidden">
-                {/* Spiral/Ring binder rings simulated on the left edge */}
-                <div className="absolute top-0 bottom-0 left-6 w-[2px] bg-slate-950/80 z-20" />
-                <div className="absolute top-1/2 left-4 -translate-y-1/2 flex flex-col gap-6 z-25">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="w-6 h-2.5 bg-gradient-to-r from-slate-400 via-slate-100 to-slate-500 rounded-full border border-slate-950 shadow-md transform -rotate-12" />
-                  ))}
-                </div>
-                
-                {/* Lined Paper Canvas Simulated Notebook Page */}
-                <div className="w-full bg-[#FAF8F5] rounded-[1.6rem] p-8 border border-[#e4d5c9] shadow-2xl min-h-[620px] text-right font-serif relative overflow-hidden">
-                  {/* RTL Standard Red Vertical Margin line */}
-                  <div className="absolute right-[65px] top-0 bottom-0 w-[1.5px] bg-rose-200" />
-
-                  {/* Horizontal Ruled Lines */}
-                  <div className="absolute inset-0 flex flex-col justify-between py-16 pointer-events-none px-[15px]">
-                    {Array.from({ length: 18 }).map((_, idx) => (
-                      <div key={idx} className="w-full border-b border-dashed border-amber-200/50 h-[28px]" />
-                    ))}
-                  </div>
-
-                  {/* Simulated Handwritten Notebook Content */}
-                  <div className="relative z-10 space-y-8 pr-12 pl-6 pb-16">
-                    {/* Notebook Header */}
-                    <div className="flex justify-between items-center border-b-2 border-amber-900/20 pb-2 text-[10px] text-amber-900/60 font-mono font-bold">
-                      <span>التاريخ: {new Date().toLocaleDateString("ar-EG")}</span>
-                      <span>المادة: محاضرة الطالب المتميزة</span>
-                    </div>
-
-                    {/* Handwritten Title */}
-                    <h4 className="text-amber-900 font-extrabold text-2xl tracking-wide font-sans mt-4">
-                      كيف يظهر دفترك للطلاب؟ 📝✨
-                    </h4>
-
-                    {/* Bullet Handwritten Points with soft highlighter highlights */}
-                    <div className="space-y-6 text-slate-800 text-sm font-medium leading-relaxed">
-                      <p className="flex items-start gap-2">
-                        <span className="text-amber-700 font-black shrink-0">📍</span>
-                        <span>
-                          سيتم صياغة ملخصك بلغة عربية دراسية شيقة ومرتبة على شكل فقرات وملاحظات منظمة جداً كأنها مكتوبة بـ <span className="bg-[#EFE7DA] px-1.5 py-0.5 rounded text-amber-950 font-bold border border-amber-200">قلم تظليل كلاسيكي</span>.
-                        </span>
-                      </p>
-
-                      <p className="flex items-start gap-2">
-                        <span className="text-amber-700 font-black shrink-0">📍</span>
-                        <span>
-                          يستخرج النظام تلقائياً جميع المصطلحات الصعبة بالإنجليزية مثل <span className="bg-[#EFE7DA] px-1 rounded border border-amber-200 font-bold text-amber-950">Gene Therapy</span> ويقوم بتظليلها لتظهر بأبهى حلة.
-                        </span>
-                      </p>
-
-                      {/* Lined callout preview */}
-                      <div className="bg-[#F5EFEB] border border-[#D3C2B5] p-4 rounded-xl space-y-2 text-slate-800">
-                        <span className="bg-amber-800 text-amber-50 text-[10px] font-black px-2 py-0.5 rounded">💡 تنبيه المذاكرة</span>
-                        <p className="text-xs font-bold leading-relaxed">
-                          الدفاتر المنسقة بطريقة بصرية وأسهم ملونة ترفع نسبة استذكار الطلاب وتزيد مبيعات ملزمتك بنسبة 200%! 📈🚀
-                        </p>
-                      </div>
-
-                      <p className="flex items-start gap-2">
-                        <span className="text-amber-700 font-black shrink-0">📍</span>
-                        <span>
-                          يمكنك تعديل اسمك كطالب بائع وسيقوم النظام بطباعة جملة **"تم إعداد هذا التلخيص بواسطة الطالب: [اسمك]"** في ذيل كل صفحة لحماية حقوقك.
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Notebook Footer Watermark */}
-                  <div className="absolute bottom-6 left-8 right-8 border-t border-amber-900/10 pt-4 flex justify-between text-[9px] text-amber-900/60 font-bold z-15">
-                    <span>متجر لمّاح للملازم</span>
-                    <span>تم إعداد هذا التفريغ بواسطة: {customStudentName || fullName}</span>
-                    <span>صفحة المعاينة</span>
-                  </div>
-                </div>
+          {/* Right Placeholder Mockup Canvas: 6 columns */}
+          <div className="lg:col-span-6 space-y-4">
+            <div className="bg-white dark:bg-[#0b0f19] border border-slate-200/90 dark:border-slate-800 rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center justify-center min-h-[460px] shadow-sm">
+              <div className="w-14 h-14 rounded-2xl bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-100 dark:border-violet-500/20 flex items-center justify-center mb-4 shadow-xs">
+                <BookOpen className="w-7 h-7" />
               </div>
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
+                مساحة عرض الدفتر
+              </h3>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 max-w-sm leading-relaxed">
+                ارفع ملفات المحاضرة واضغط على زر التوليد ليظهر لك الدفتر كملف PDF جاهز للمعاينة والتحميل والطباعة فوراً هنا.
+              </p>
             </div>
-          )}
+          </div>
         </div>
+      )}
       </div>
     </div>
   );
@@ -1119,7 +1064,7 @@ function NotebookCreatorContent() {
 
 export default function NotebookCreatorPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><div className="text-white">جاري التحميل...</div></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-slate-50 dark:bg-[#030712] animate-pulse" />}>
       <NotebookCreatorContent />
     </Suspense>
   );

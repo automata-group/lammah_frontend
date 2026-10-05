@@ -1,15 +1,39 @@
 "use client";
+
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, User, Package, Calendar, LogOut, Shield, Fingerprint, Edit3, Check, X, BookOpen, Trash2, Pencil, Eye, Sparkles } from "lucide-react";
+import { 
+  Loader2, User, Package, Calendar, LogOut, Shield, 
+  Fingerprint, Edit3, Check, X, BookOpen, Trash2, Pencil, 
+  Eye, Sparkles, ChevronLeft, ArrowRight, ShieldCheck, Mail, GraduationCap
+} from "lucide-react";
+import AppHeader from "@/components/AppHeader";
+import StudentProfileModal from "@/components/StudentProfileModal";
 
 export default function ProfilePage() {
   const { user, session, loading, signOut } = useAuth();
   const router = useRouter();
   const [info, setInfo] = useState<any>(null);
   const [loadingInfo, setLoadingInfo] = useState(true);
+  const [academicProfile, setAcademicProfile] = useState<any>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  const fetchAcademicProfile = () => {
+    if (session?.access_token) {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/student-profile`, {
+        headers: { "Authorization": `Bearer ${session.access_token}` }
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data?.academic_profile) {
+            setAcademicProfile(data.academic_profile);
+          }
+        })
+        .catch(() => {});
+    }
+  };
 
   const refreshInfo = () => {
     if (session) {
@@ -20,6 +44,7 @@ export default function ProfilePage() {
         setInfo(data);
         setLoadingInfo(false);
       }).catch(() => setLoadingInfo(false));
+      fetchAcademicProfile();
     }
   };
 
@@ -99,7 +124,7 @@ export default function ProfilePage() {
   }, [session]);
 
   const handleDeleteNotebook = async (notebookId: string) => {
-    if (!confirm("هل أنت متأكد من رغبتك في حذف هذه الملزمة نهائياً من المتجر؟")) return;
+    if (!confirm("هل أنت متأكد من رغبتك في حذف هذا الدفتر نهائياً من المتجر؟")) return;
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/marketplace/${notebookId}`, {
         method: "DELETE",
@@ -109,17 +134,17 @@ export default function ProfilePage() {
       if (response.ok) {
         fetchMyNotebooks();
       } else {
-        alert(data.detail || "فشل حذف الملزمة.");
+        alert(data.detail || "فشل حذف الدفتر.");
       }
     } catch (e) {
-      alert("فشل الاتصال بالخادم لحذف الملزمة.");
+      alert("فشل الاتصال بالخادم لحذف الدفتر.");
     }
   };
 
   const handleSaveEditNotebook = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editTitle.trim()) {
-      setEditError("يرجى إدخال عنوان الملزمة.");
+      setEditError("يرجى إدخال عنوان الدفتر.");
       return;
     }
     setIsSavingNotebook(true);
@@ -151,10 +176,10 @@ export default function ProfilePage() {
         setEditingNotebook(null);
         fetchMyNotebooks();
       } else {
-        setEditError(data.detail || "فشل تعديل الملزمة.");
+        setEditError(data.detail || "فشل تعديل الدفتر.");
       }
     } catch (err) {
-      setEditError("فشل الاتصال بالخادم لتعديل الملزمة.");
+      setEditError("فشل الاتصال بالخادم لتعديل الدفتر.");
     } finally {
       setIsSavingNotebook(false);
     }
@@ -162,36 +187,61 @@ export default function ProfilePage() {
 
   const handleSignOut = async () => {
     await signOut();
-    router.replace("/login");
+    router.replace("/auth");
   };
 
-  if (loading || !user) return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-400 animate-spin" /></div>;
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/auth?redirect=/profile");
+    }
+  }, [loading, user, router]);
 
   const profile = info?.profile;
   const sub = info?.active_subscription;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-100 p-8 pb-20" dir="rtl">
-      <div className="max-w-2xl mx-auto">
-        <button onClick={() => router.push("/dashboard")} className="text-slate-400 hover:text-indigo-300 text-sm mb-8 block transition-colors">← العودة للوحة التحكم</button>
+    <main className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-indigo-500/20 selection:text-indigo-600 transition-colors duration-300" dir="rtl">
+      
+      {/* Unified App Header */}
+      <AppHeader quota={info?.quota_remaining} activePage="profile" />
 
-        <div className="flex justify-between items-end mb-8">
-          <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-l from-indigo-300 via-purple-300 to-indigo-400">حسابي</h1>
-          <div className="text-slate-400 text-sm font-medium">معرف المستخدم: <span className="font-mono text-indigo-400/70">{user.id.slice(0, 8)}...</span></div>
+      {/* Background Soft Mesh Glows */}
+      <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-10 left-1/4 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[140px] pointer-events-none" />
+
+      <div className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 relative z-10 space-y-8">
+        
+        {/* Header Title Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold mb-2">
+              <User className="w-3.5 h-3.5" />
+              الملف الشخصي والاشتراك
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">إعدادات الحساب 👤</h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">إدارة معلوماتك الشخصية، رصيد الدقائق، ودفاترك في المتجر</p>
+          </div>
+
+          <button 
+            onClick={() => router.push("/dashboard")} 
+            className="self-start sm:self-auto flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all shadow-xs cursor-pointer"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            العودة للرئيسية
+          </button>
         </div>
 
-        {loadingInfo ? (
-          <div className="text-center py-20"><Loader2 className="w-10 h-10 text-indigo-400 animate-spin mx-auto" /></div>
-        ) : (
-          <div className="space-y-6">
-            {/* Profile Card */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              className="bg-slate-800/40 border border-slate-700/50 rounded-[2.5rem] p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-3xl -mr-16 -mt-16 rounded-full group-hover:bg-indigo-500/20 transition-colors" />
-
-              <div className="flex flex-col sm:flex-row sm:items-center mb-8 relative z-10 gap-6">
-                <div className="w-20 h-20 bg-gradient-to-br from-indigo-500/30 to-purple-500/30 rounded-3xl flex items-center justify-center shrink-0 border border-indigo-500/20 shadow-inner">
-                  <User className="w-10 h-10 text-indigo-300" />
+        <div className="space-y-6 sm:space-y-8">
+            
+            {/* Profile Info Card */}
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }} 
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xs"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center mb-8 gap-5 sm:gap-6">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 rounded-2xl sm:rounded-3xl flex items-center justify-center shrink-0 text-indigo-600 dark:text-indigo-400 shadow-inner">
+                  <User className="w-8 h-8 sm:w-10 sm:h-10" />
                 </div>
                 
                 <div className="flex-1 space-y-2">
@@ -201,74 +251,81 @@ export default function ProfilePage() {
                         <input
                           type="text"
                           value={newName}
-                          onChange={(e) => setNewName(e.target.value)}
-                          placeholder="اكتب اسمك الجديد هنا..."
-                          className="bg-slate-900/80 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-2 text-white text-sm outline-none transition"
+                          onChange={(e) => setNewName(e.target.value.replace(/[^a-zA-Z\u0600-\u06FF\s]/g, ""))}
+                          placeholder="اكتب اسمك الجديد هنا (أحرف فقط)..."
+                          className="bg-slate-50 dark:bg-slate-950 border border-indigo-400 focus:border-indigo-600 rounded-xl px-4 py-2 text-slate-900 dark:text-white text-sm outline-none transition font-medium"
                         />
                         <button
                           onClick={handleUpdateName}
                           disabled={isUpdatingName}
-                          className="bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-xl transition flex items-center justify-center shrink-0"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white p-2.5 rounded-xl transition flex items-center justify-center shrink-0 cursor-pointer shadow-xs"
                           title="حفظ"
                         >
                           {isUpdatingName ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                         </button>
                         <button
                           onClick={() => { setIsEditingName(false); setNameError(""); }}
-                          className="bg-slate-700 hover:bg-slate-650 text-slate-350 p-2 rounded-xl transition flex items-center justify-center shrink-0"
+                          className="bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300 p-2.5 rounded-xl transition flex items-center justify-center shrink-0 cursor-pointer"
                           title="إلغاء"
                         >
                           <X className="w-4 h-4" />
                         </button>
                       </div>
-                      {nameError && <p className="text-rose-450 text-[10px] font-bold">{nameError}</p>}
+                      {nameError && <p className="text-rose-600 text-xs font-bold">{nameError}</p>}
                     </div>
                   ) : (
                     <div>
-                      <div className="flex items-center gap-3">
-                        <h2 className="text-2xl font-bold text-white">{profile?.full_name || user.email?.split('@')[0] || "مستخدم لمّاح"}</h2>
+                      <div className="flex items-center gap-2.5">
+                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{profile?.full_name || user?.email?.split('@')[0] || "مستخدم لمّاح"}</h2>
                         <button
                           onClick={() => {
-                            setNewName(profile?.full_name || user.email?.split('@')[0] || "");
+                            setNewName(profile?.full_name || user?.email?.split('@')[0] || "");
                             setIsEditingName(true);
                             setNameError("");
                           }}
-                          className="text-slate-400 hover:text-indigo-400 p-1.5 rounded-lg hover:bg-slate-800/40 transition"
+                          className="text-slate-400 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-slate-800 transition cursor-pointer"
                           title="تعديل الاسم"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
                       </div>
-                      <p className="text-indigo-300/70 text-sm font-mono tracking-wider" dir="ltr">{user.email}</p>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-mono tracking-wider mt-0.5" dir="ltr">{user?.email}</p>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Device Fingerprint Status */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-                <div className="bg-slate-900/60 rounded-2xl p-5 border border-slate-700/50 hover:border-indigo-500/30 transition-colors">
-                  <div className="flex items-center text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">
-                    <Fingerprint className="w-4 h-4 ml-2 text-indigo-400" />البصمة الرقمية
+              {/* Device Fingerprint Status Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800">
+                  <div className="flex items-center text-slate-500 dark:text-slate-400 text-xs font-bold mb-2">
+                    <Fingerprint className="w-4 h-4 ml-2 text-indigo-600 dark:text-indigo-400" />البصمة الرقمية
                   </div>
-                  <p className="font-mono text-sm text-slate-300 truncate dir-ltr">
-                    {profile?.device_fingerprint
-                      ? profile.device_fingerprint.slice(0, 20) + "..."
-                      : "—"}
+                  <p className="font-mono text-xs text-slate-700 dark:text-slate-300 truncate" dir="ltr">
+                    {profile?.device_fingerprint ? (
+                      profile.device_fingerprint.slice(0, 24) + "..."
+                    ) : loadingInfo ? (
+                      <span className="inline-block h-3.5 w-32 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                    ) : (
+                      "—"
+                    )}
                   </p>
                 </div>
-                <div className="bg-slate-900/60 rounded-2xl p-5 border border-slate-700/50 hover:border-indigo-500/30 transition-colors">
-                  <div className="flex items-center text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">
-                    <Shield className="w-4 h-4 ml-2 text-indigo-400" />حالة الحساب
+
+                <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800">
+                  <div className="flex items-center text-slate-500 dark:text-slate-400 text-xs font-bold mb-2">
+                    <Shield className="w-4 h-4 ml-2 text-indigo-600 dark:text-indigo-400" />حالة الحساب
                   </div>
-                  <div className="flex items-center">
+                  <div>
                     {profile?.device_fingerprint ? (
-                      <div className="flex items-center text-green-400 font-bold bg-green-400/10 px-4 py-1 rounded-full border border-green-400/20 shadow-[0_0_15px_rgba(74,222,128,0.1)]">
-                        <span className="ml-2">✓</span> موثق بالبصمة
+                      <div className="inline-flex items-center text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 text-xs">
+                        <Check className="w-3.5 h-3.5 ml-1" /> موثق بالبصمة
                       </div>
+                    ) : loadingInfo ? (
+                      <span className="inline-block h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse" />
                     ) : (
-                      <div className="flex items-center text-amber-400 font-bold bg-amber-400/10 px-4 py-1 rounded-full border border-amber-400/20">
-                        <span className="ml-2">⚠</span> في انتظار البصمة
+                      <div className="inline-flex items-center text-amber-700 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-500/10 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-500/20 text-xs">
+                        <span className="ml-1">⚠</span> في انتظار البصمة
                       </div>
                     )}
                   </div>
@@ -276,83 +333,218 @@ export default function ProfilePage() {
               </div>
             </motion.div>
 
-            {/* Subscription Card */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-              className="bg-slate-800/40 border border-indigo-500/20 rounded-[2.5rem] p-8 backdrop-blur-xl relative overflow-hidden group">
-              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-purple-500/10 blur-3xl rounded-full" />
+            {/* Academic Profile & Interests Card */}
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ delay: 0.05 }}
+              className="bg-white dark:bg-slate-900/60 border border-purple-200 dark:border-purple-500/20 rounded-3xl p-6 sm:p-8 shadow-xs"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-purple-50 dark:bg-purple-500/15 rounded-2xl text-purple-600 dark:text-purple-400">
+                    <GraduationCap className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                      الملف الأكاديمي والاهتمامات 🎓
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                      بيانات جامعتك وتخصصك واهتماماتك الدراسية المخصصة
+                    </p>
+                  </div>
+                </div>
 
-              <h3 className="text-xl font-bold flex items-center mb-8 text-indigo-300 relative z-10">
-                <div className="p-2 bg-indigo-500/20 rounded-lg ml-3"><Package className="w-5 h-5" /></div>
-                نظام الاشتراك والحصص
+                <button
+                  type="button"
+                  onClick={() => setShowProfileModal(true)}
+                  className="self-start sm:self-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs shadow-md shadow-purple-600/20 flex items-center gap-2 transition cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>تعديل الاهتمامات والبيانات ✏️</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+                <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800">
+                  <span className="text-[11px] font-bold text-slate-400 block mb-1">الجامعة أو الكلية</span>
+                  <span className="text-sm font-black text-slate-800 dark:text-slate-200">
+                    {academicProfile?.university || <span className="text-slate-400 italic font-normal">لم تُحدد بعد</span>}
+                  </span>
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800">
+                  <span className="text-[11px] font-bold text-slate-400 block mb-1">التخصص الجامعي</span>
+                  <span className="text-sm font-black text-slate-800 dark:text-slate-200">
+                    {academicProfile?.major || <span className="text-slate-400 italic font-normal">لم يُحدد بعد</span>}
+                  </span>
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800">
+                  <span className="text-[11px] font-bold text-slate-400 block mb-1">المستوى الدراسي</span>
+                  <span className="text-sm font-black text-slate-800 dark:text-slate-200">
+                    {academicProfile?.academic_year || <span className="text-slate-400 italic font-normal">غير محدد</span>}
+                  </span>
+                </div>
+              </div>
+
+              {/* Interests & Study Style */}
+              <div className="space-y-3">
+                <div>
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400 block mb-2">مجالات الاهتمام:</span>
+                  {Array.isArray(academicProfile?.interests) && academicProfile.interests.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {academicProfile.interests.map((interest: string, idx: number) => (
+                        <span key={idx} className="px-3 py-1 bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 rounded-xl text-xs font-bold">
+                          {interest}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-slate-400 italic">لا توجد اهتمامات محددة حالياً. انقر على تعديل لاختيار اهتماماتك.</span>
+                  )}
+                </div>
+
+                {academicProfile?.study_preference && (
+                  <div className="pt-2 text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                    <span className="font-bold text-slate-700 dark:text-slate-300">النمط المفضل:</span>
+                    <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-lg">
+                      {academicProfile.study_preference}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+
+            {/* Subscription Card */}
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ delay: 0.08 }}
+              className="bg-white dark:bg-slate-900/60 border border-indigo-200 dark:border-indigo-500/20 rounded-3xl p-6 sm:p-8 shadow-xs"
+            >
+              <h3 className="text-lg sm:text-xl font-black flex items-center mb-6 text-slate-900 dark:text-white">
+                <div className="p-2 bg-indigo-50 dark:bg-indigo-500/15 rounded-xl ml-3 text-indigo-600 dark:text-indigo-400">
+                  <Package className="w-5 h-5" />
+                </div>
+                نظام الاشتراك والحصص 👑
               </h3>
 
-              {sub ? (
-                <div className="space-y-4 relative z-10">
-                  <div className="flex justify-between items-center bg-slate-900/60 rounded-2xl p-5 border border-slate-700/30 group/item hover:bg-indigo-500/5 transition-all">
-                    <span className="text-slate-400 text-sm font-medium">الباقة الحالية</span>
-                    <span className="font-black text-xl text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">{sub.subscription_plans?.name || "باقة مخصصة"}</span>
+              {loadingInfo && !info ? (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800">
+                    <span className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm font-bold">الباقة الحالية</span>
+                    <div className="h-6 w-28 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
                   </div>
-                  <div className="flex justify-between items-center bg-slate-900/60 rounded-2xl p-5 border border-slate-700/30 hover:bg-indigo-500/5 transition-all">
-                    <span className="text-slate-400 text-sm font-medium">الرصيد المتبقي (دقائق معالجة)</span>
-                    <div className="flex flex-col items-end">
-                      <span className="font-black text-2xl text-green-400">{info?.quota_remaining || 0}</span>
-                      <span className="text-[10px] text-slate-500 uppercase tracking-tighter">من أصل {sub.subscription_plans?.lecture_quota || "—"}</span>
-                    </div>
+
+                  <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800">
+                    <span className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm font-bold">الرصيد المتبقي (دقائق معالجة)</span>
+                    <div className="h-7 w-20 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
                   </div>
+
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-slate-900/60 rounded-2xl p-5 border border-slate-700/30">
-                      <div className="flex items-center text-slate-400 text-xs mb-2"><Calendar className="w-4 h-4 ml-2" />ينتهي في</div>
-                      <span className="font-mono text-sm text-slate-200">{sub.expires_at ? new Date(sub.expires_at).toLocaleDateString("ar-EG", { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}</span>
+                    <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800">
+                      <div className="h-3.5 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse mb-2" />
+                      <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
                     </div>
-                    <div className="bg-slate-900/60 rounded-2xl p-5 border border-slate-700/30">
-                      <div className="flex items-center text-slate-400 text-xs mb-2"><Shield className="w-4 h-4 ml-2" />حالة الباقة</div>
-                      <span className={`font-bold ${sub.status === "active" ? "text-green-400" : "text-red-400"}`}>{sub.status === "active" ? "نشطة وموثقة" : "منتهية"}</span>
+                    <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800">
+                      <div className="h-3.5 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse mb-2" />
+                      <div className="h-4 w-20 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
                     </div>
                   </div>
-                  <button onClick={() => router.push("/plans")}
-                    className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black rounded-2xl shadow-lg shadow-indigo-900/20 transition-all mt-4 transform active:scale-[0.98]">
-                    تطوير الاشتراك للحصول على ميزات أكبر
+                </div>
+              ) : sub ? (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800">
+                    <span className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm font-bold">الباقة الحالية</span>
+                    <span className="font-black text-base sm:text-lg text-indigo-600 dark:text-indigo-400">{sub.subscription_plans?.name || "باقة مخصصة"}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800">
+                    <span className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm font-bold">الرصيد المتبقي (دقائق معالجة)</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-black text-2xl text-emerald-600 dark:text-emerald-400 tabular-nums">{info?.quota_remaining || 0}</span>
+                      <span className="text-xs text-slate-500 font-bold">دقيقة</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800">
+                      <div className="flex items-center text-slate-500 dark:text-slate-400 text-xs mb-1 font-bold">
+                        <Calendar className="w-3.5 h-3.5 ml-1.5 text-indigo-600 dark:text-indigo-400" />
+                        ينتهي في
+                      </div>
+                      <span className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200">
+                        {sub.expires_at ? new Date(sub.expires_at).toLocaleDateString("ar-EG", { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800">
+                      <div className="flex items-center text-slate-500 dark:text-slate-400 text-xs mb-1 font-bold">
+                        <ShieldCheck className="w-3.5 h-3.5 ml-1.5 text-indigo-600 dark:text-indigo-400" />
+                        حالة الباقة
+                      </div>
+                      <span className={`font-black text-xs sm:text-sm ${sub.status === "active" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600"}`}>
+                        {sub.status === "active" ? "نشطة وموثقة ✓" : "منتهية"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => router.push("/plans")}
+                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-lg shadow-indigo-600/20 transition-all mt-4 transform active:scale-[0.98] text-sm cursor-pointer"
+                  >
+                    شحن رصيد أو ترقية الباقة ✨
                   </button>
                 </div>
               ) : (
-                <div className="text-center py-10 relative z-10">
-                  <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700">
-                    <Package className="w-8 h-8 text-slate-600" />
+                <div className="text-center py-8">
+                  <div className="w-14 h-14 bg-indigo-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3 text-indigo-600 dark:text-indigo-400">
+                    <Package className="w-7 h-7" />
                   </div>
-                  <p className="text-slate-400 mb-6 font-medium italic">أنت تستخدم النسخة المجانية المحدودة حالياً</p>
-                  <button onClick={() => router.push("/plans")}
-                    className="px-12 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-2xl shadow-xl hover:shadow-indigo-500/20 transition-all transform hover:-translate-y-1">
-                    اشترك الآن في إحدى الباقات
+                  <p className="text-slate-600 dark:text-slate-400 mb-5 font-bold text-xs sm:text-sm">أنت تستخدم النسخة التجريبية المجانية حالياً</p>
+                  <button 
+                    onClick={() => router.push("/plans")}
+                    className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-lg shadow-indigo-600/20 transition-all text-xs sm:text-sm cursor-pointer"
+                  >
+                    اشترك الآن في إحدى باقات الشحن ✨
                   </button>
                 </div>
               )}
             </motion.div>
 
             {/* Published Notebooks Card */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-              className="bg-slate-800/40 border border-slate-700/50 rounded-[2.5rem] p-8 backdrop-blur-xl relative overflow-hidden group">
-              <div className="absolute -top-10 -left-10 w-40 h-40 bg-emerald-500/5 blur-3xl rounded-full" />
-              
-              <h3 className="text-xl font-bold flex items-center mb-8 text-emerald-450 relative z-10">
-                <div className="p-2 bg-emerald-500/10 rounded-lg ml-3"><BookOpen className="w-5 h-5 text-emerald-400" /></div>
-                ملازمي المعروضة للبيع بالمتجر 🛒
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ delay: 0.14 }}
+              className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xs"
+            >
+              <h3 className="text-lg sm:text-xl font-black flex items-center mb-6 text-slate-900 dark:text-white">
+                <div className="p-2 bg-emerald-50 dark:bg-emerald-500/15 rounded-xl ml-3 text-emerald-600 dark:text-emerald-400">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                دفاتري المعروضة للبيع بالمتجر 🛒
               </h3>
 
               {loadingNotebooks ? (
-                <div className="text-center py-10"><Loader2 className="w-8 h-8 text-emerald-400 animate-spin mx-auto" /></div>
+                <div className="text-center py-8">
+                  <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto" />
+                  <p className="text-xs text-slate-500 font-bold mt-2">جاري تحميل الدفاتر...</p>
+                </div>
               ) : myNotebooks.length === 0 ? (
-                <div className="text-center py-10 text-slate-500 italic relative z-10">
-                  لم تقم بنشر أي ملزمة للبيع حتى الآن. ملازمك الإبداعية يمكنها أن تدر عليك أرباحاً بمجرد نشرها! 💸
+                <div className="text-center py-8 text-slate-500 font-medium text-xs sm:text-sm leading-relaxed max-w-md mx-auto">
+                  لم تقم بنشر أي دفتر للبيع حتى الآن. دفاترك الإبداعية يمكنها أن تدر عليك أرباحاً بمجرد نشرها في متجر المنصة! 💸
                 </div>
               ) : (
-                <div className="space-y-4 relative z-10">
+                <div className="space-y-3 sm:space-y-4">
                   {myNotebooks.map((nb) => (
-                    <div key={nb.id} className="bg-slate-900/60 rounded-2xl p-5 border border-slate-700/30 hover:border-slate-650 transition flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div key={nb.id} className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
-                        <h4 className="font-bold text-slate-200 text-base mb-1">{nb.title}</h4>
-                        <div className="flex flex-wrap gap-4 text-xs text-slate-400 mt-2">
-                          <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5 text-emerald-400" /> {nb.views_count || 0} معاينات</span>
-                          <span className="flex items-center gap-1">💰 السعر: ₪{nb.price}</span>
+                        <h4 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base mb-1">{nb.title}</h4>
+                        <div className="flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                          <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> {nb.views_count || 0} معاينات</span>
+                          <span className="flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200">💰 السعر: {nb.price} شيكل</span>
                           <span className="flex items-center gap-1">📄 {nb.page_count} صفحات</span>
                         </div>
                       </div>
@@ -365,7 +557,6 @@ export default function ProfilePage() {
                             setEditPrice(nb.price);
                             setEditDescription(nb.description || "");
                             
-                            // Parse name and university
                             const nameMatch = (nb.student_name || "").match(/^([^\(]+)(?:\(([^\)]+)\))?/);
                             const parsedName = nameMatch ? nameMatch[1].trim() : nb.student_name || "";
                             const parsedUni = nameMatch && nameMatch[2] ? nameMatch[2].trim() : "";
@@ -395,7 +586,6 @@ export default function ProfilePage() {
                               setShowEditCustomUni(false);
                             }
 
-                            // Parse Reflect details safely using new RegExp to keep TSX compiler happy
                             const reflectStr = nb.reflect_details || "";
                             const prefixMatch = reflectStr.match(new RegExp("(?:\\+972|\\+970)"));
                             const parsedPrefix = prefixMatch ? prefixMatch[0] : "+972";
@@ -412,13 +602,13 @@ export default function ProfilePage() {
 
                             setEditError("");
                           }}
-                          className="bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                          className="bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-600/10 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                         >
                           <Pencil className="w-3.5 h-3.5" /> تعديل
                         </button>
                         <button
                           onClick={() => handleDeleteNotebook(nb.id)}
-                          className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                          className="bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" /> حذف
                         </button>
@@ -432,55 +622,57 @@ export default function ProfilePage() {
             {/* Edit Notebook Modal */}
             <AnimatePresence>
               {editingNotebook && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
-                  <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-                    className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-[2.5rem] p-6 md:p-8 shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] md:max-h-[85vh]">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-3xl rounded-full pointer-events-none" />
-                    
-                    <h3 className="text-xl font-black text-white mb-4 flex items-center gap-2 flex-shrink-0 relative z-10">
-                      <Sparkles className="w-5 h-5 text-indigo-400" /> تعديل تفاصيل الملزمة
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+                  <motion.div 
+                    initial={{ scale: 0.95, opacity: 0 }} 
+                    animate={{ scale: 1, opacity: 1 }} 
+                    exit={{ scale: 0.95, opacity: 0 }}
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh] md:max-h-[85vh]"
+                  >
+                    <h3 className="text-lg font-black text-slate-900 dark:text-white mb-4 flex items-center gap-2 flex-shrink-0">
+                      <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> تعديل تفاصيل الدفتر
                     </h3>
 
-                    <form onSubmit={handleSaveEditNotebook} className="flex flex-col flex-1 min-h-0 relative z-10">
+                    <form onSubmit={handleSaveEditNotebook} className="flex flex-col flex-1 min-h-0">
                       {/* Scrollable form fields */}
-                      <div className="flex-1 overflow-y-auto space-y-4 pr-1.5 pl-0.5 py-1 mb-2 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
-                        <div className="space-y-1.5">
-                          <label className="text-xs text-slate-400 font-bold block">عنوان الملزمة</label>
+                      <div className="flex-1 overflow-y-auto space-y-4 pr-1 pl-1 py-1 mb-2">
+                        <div className="space-y-1">
+                          <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block">عنوان الدفتر</label>
                           <input
                             required
                             type="text"
                             value={editTitle}
                             onChange={e => setEditTitle(e.target.value)}
                             placeholder="اكتب العنوان..."
-                            className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none transition"
+                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none transition"
                           />
                         </div>
 
-                        <div className="space-y-1.5">
-                          <label className="text-xs text-slate-400 font-bold block">سعر الملزمة (بالشيكل)</label>
+                        <div className="space-y-1">
+                          <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block">سعر الدفتر (بالشيكل)</label>
                           <input
                             required
                             type="number"
                             min="1"
                             value={editPrice}
                             onChange={e => setEditPrice(parseFloat(e.target.value) || 0)}
-                            className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none transition animate-none"
+                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none transition"
                           />
                         </div>
 
-                        <div className="space-y-1.5">
-                          <label className="text-xs text-slate-400 font-bold block">اسم كاتب الملزمة (يطبع بخط اليد)</label>
+                        <div className="space-y-1">
+                          <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block">اسم كاتب الدفتر (يطبع بخط اليد)</label>
                           <input
                             type="text"
                             value={editStudentName}
                             onChange={e => setEditStudentName(e.target.value)}
                             placeholder="اسمك الكامل..."
-                            className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none transition"
+                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none transition"
                           />
                         </div>
 
-                        <div className="space-y-1.5">
-                          <label className="text-xs text-slate-400 font-bold block">الجامعة التي تدرس بها</label>
+                        <div className="space-y-1">
+                          <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block">الجامعة التي تدرس بها</label>
                           <select 
                             required 
                             value={showEditCustomUni ? "other" : editUniversity} 
@@ -494,7 +686,7 @@ export default function ProfilePage() {
                                 setEditUniversity(val);
                               }
                             }}
-                            className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none transition cursor-pointer font-semibold"
+                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none transition cursor-pointer font-medium"
                           >
                             <option value="" disabled>اختر جامعتك...</option>
                             <option value="جامعة النجاح الوطنية">جامعة النجاح الوطنية</option>
@@ -515,41 +707,41 @@ export default function ProfilePage() {
                         </div>
 
                         {showEditCustomUni && (
-                          <div className="space-y-1.5 bg-slate-950/40 p-3 rounded-2xl border border-slate-800/60">
-                            <label className="text-[10px] text-slate-400 font-bold block">اكتب اسم الجامعة المخصص 🏫</label>
+                          <div className="space-y-1 bg-slate-50 dark:bg-slate-950/40 p-3 rounded-2xl border border-slate-200 dark:border-slate-800/60">
+                            <label className="text-[10px] text-slate-500 font-bold block">اكتب اسم الجامعة المخصص 🏫</label>
                             <input 
                               required 
                               type="text" 
                               value={editUniversity} 
                               onChange={e => setEditUniversity(e.target.value)} 
                               placeholder="مثال: جامعة القاهرة..."
-                              className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none transition" 
+                              className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2 text-slate-900 dark:text-white text-sm outline-none transition" 
                             />
                           </div>
                         )}
 
-                        <div className="space-y-1.5">
-                          <label className="text-xs text-slate-400 font-bold block">نبذة أو وصف عن الملزمة</label>
+                        <div className="space-y-1">
+                          <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block">نبذة أو وصف عن الدفتر</label>
                           <textarea
                             rows={3}
                             value={editDescription}
                             onChange={e => setEditDescription(e.target.value)}
-                            placeholder="وصف محتوى الملزمة..."
-                            className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none transition resize-none"
+                            placeholder="وصف محتوى الدفتر..."
+                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-slate-900 dark:text-white text-sm outline-none transition resize-none font-medium"
                           />
                         </div>
 
-                        {/* Reflect details editing */}
-                        <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800/80 space-y-3">
-                          <label className="text-[10px] text-indigo-400 font-bold block">تفاصيل محفظة ريفلكت لاستلام الأرباح 💳</label>
+                        {/* Electronic Payment details editing */}
+                        <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+                          <label className="text-xs text-indigo-600 dark:text-indigo-400 font-bold block">بيانات الدفع والتحصيل الإلكتروني 💳</label>
                           
-                          <div className="space-y-2">
-                            <label className="text-[10px] text-slate-400 font-bold block">رقم هاتف محفظة ريفلكت (مع تحديد البادئة) <span className="text-rose-500 font-black">*</span></label>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] text-slate-500 font-bold block">رقم هاتف حساب الدفع الإلكتروني / الآيبان <span className="text-rose-500 font-black">*</span></label>
                             <div className="flex gap-2">
                               <select 
                                 value={editReflectPrefix} 
                                 onChange={e => setEditReflectPrefix(e.target.value)}
-                                className="bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-2.5 text-white text-xs focus:border-indigo-500 outline-none font-bold cursor-pointer"
+                                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-slate-900 dark:text-white text-xs focus:border-indigo-500 outline-none font-bold cursor-pointer"
                               >
                                 <option value="+972">+972</option>
                                 <option value="+970">+970</option>
@@ -561,40 +753,40 @@ export default function ProfilePage() {
                                 placeholder="مثال: 598298930" 
                                 value={editReflectPhone} 
                                 onChange={e => setEditReflectPhone(e.target.value.replace(/\D/g, ""))}
-                                className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-white text-xs focus:border-indigo-500 outline-none font-mono tracking-wider" 
+                                className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-900 dark:text-white text-xs focus:border-indigo-500 outline-none font-mono" 
                               />
                             </div>
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[10px] text-slate-400 font-bold block">اسم صاحب الحساب الكامل في تطبيق ريفلكت <span className="text-rose-500 font-black">*</span></label>
+                            <label className="text-[10px] text-slate-500 font-bold block">اسم صاحب الحساب الكامل <span className="text-rose-500 font-black">*</span></label>
                             <input 
                               required 
                               type="text" 
                               placeholder="مثال: أحمد يوسف علي" 
                               value={editReflectAccount} 
                               onChange={e => setEditReflectAccount(e.target.value)}
-                              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-white text-xs focus:border-indigo-500 outline-none font-medium" 
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-900 dark:text-white text-xs focus:border-indigo-500 outline-none font-medium" 
                             />
                           </div>
                         </div>
 
-                        {editError && <p className="text-rose-450 text-xs font-bold">{editError}</p>}
+                        {editError && <p className="text-rose-600 text-xs font-bold">{editError}</p>}
                       </div>
 
                       {/* Fixed actions at bottom */}
-                      <div className="flex gap-3 pt-4 border-t border-slate-800/60 flex-shrink-0 mt-2">
+                      <div className="flex gap-2.5 pt-4 border-t border-slate-200 dark:border-slate-800 flex-shrink-0 mt-2">
                         <button
                           type="submit"
                           disabled={isSavingNotebook}
-                          className="flex-1 py-3 bg-indigo-650 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg transition disabled:opacity-50"
+                          className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition disabled:opacity-50 text-xs sm:text-sm cursor-pointer"
                         >
-                          {isSavingNotebook ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "حفظ التعديلات"}
+                          {isSavingNotebook ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "حفظ التعديلات"}
                         </button>
                         <button
                           type="button"
                           onClick={() => setEditingNotebook(null)}
-                          className="px-6 py-3 bg-slate-800 hover:bg-slate-750 text-slate-350 font-bold rounded-xl transition"
+                          className="px-5 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl transition text-xs sm:text-sm cursor-pointer"
                         >
                           إلغاء
                         </button>
@@ -605,14 +797,28 @@ export default function ProfilePage() {
               )}
             </AnimatePresence>
 
-            {/* Sign Out */}
-            <button onClick={handleSignOut}
-              className="w-full py-5 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 text-red-400 font-black rounded-2xl transition-all flex items-center justify-center group">
-              <LogOut className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />تسجيل الخروج من النظام
+            {/* Sign Out Button */}
+            <button 
+              onClick={handleSignOut}
+              className="w-full py-4 bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400 font-black rounded-2xl transition-all flex items-center justify-center group cursor-pointer text-sm"
+            >
+              <LogOut className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              تسجيل الخروج من الحساب
             </button>
+
           </div>
-        )}
       </div>
+
+      <StudentProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        session={session}
+        initialData={academicProfile}
+        onSuccess={(updated) => {
+          setAcademicProfile(updated);
+          refreshInfo();
+        }}
+      />
     </main>
   );
 }

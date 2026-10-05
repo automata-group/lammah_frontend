@@ -129,12 +129,14 @@ export default function TermsPage() {
             <section id="service" className="scroll-mt-24">
               <h2 className="text-3xl font-black text-white mb-6">2. وصف الخدمة</h2>
               <p>
-                لمّاح هي منصة "برمجيات كخدمة" (SaaS) تعليمية توفر أدوات تعتمد على تقنيات الذكاء الاصطناعي التوليدي لغايات:
+                لمّاح هي منصة تعليمية ذكية متكاملة توفر حلولاً دراسية قائمة على تقنيات الذكاء الاصطناعي الأكاديمي لخدمة الطلاب الجامعيين:
               </p>
               <ul className="list-disc space-y-3 mr-6 mt-4 text-slate-400 marker:text-indigo-500">
-                <li>تلخيص المحاضرات الصوتية والمرئية والمكتوبة.</li>
-                <li>توفير واجهة تفاعلية (Chatbot) مبنية على سياق المستندات المرفوعة.</li>
-                <li>التفريغ الصوتي الذكي المدعوم بتقنية Whisper.</li>
+                <li><strong>بيئة المذاكرة التفاعلية (Focus Study):</strong> استعراض وتخطيط شرائح المحاضرات (PDF وPowerPoint)، تدوين الملاحظات الصوتية والمكتوبة، وتفعيل أدوات الحفظ النشط وشريط الإخفاء ودبابيس أولويات الامتحان.</li>
+                <li><strong>تلخيص وتفريغ المحاضرات:</strong> تحويل التسجيلات الصوتية ومقاطع يوتيوب إلى تفريغ دقيق وملخصات تفاعلية مرتبطة بشرائح المادة.</li>
+                <li><strong>توليد الملازم الذكية (Smart Notebook):</strong> إعداد وتنسيق ملازم ملونة وجداول مقارنة وأسئلة امتحانات متوقعة جاهزة للطباعة والدراسة.</li>
+                <li><strong>متجر الملازم والملخصات (Marketplace):</strong> بيئة آمنة لتبادل وشراء الملازم والملخصات الدراسية بين الطلاب.</li>
+                <li><strong>المساعد الأكاديمي الذكي:</strong> محادثة ذكية فورية مخصصة لكل محاضرة تجيب على استفسارات الطالب بناءً على محتوى الشرح الفعلي فقط.</li>
               </ul>
             </section>
 
@@ -172,18 +174,22 @@ export default function TermsPage() {
             <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
 
             <section id="payments" className="scroll-mt-24">
-              <h2 className="text-3xl font-black text-white mb-6">4. الدفع والاشتراكات</h2>
+              <h2 className="text-3xl font-black text-white mb-6">4. آلية الدفع والاشتراكات</h2>
               <p className="mb-6">
-                تتم عمليات الدفع عبر بوابات إلكترونية آمنة ومرخصة من قبل <strong className="text-white">سلطة النقد الفلسطينية (PMA)</strong> لضمان حماية بياناتك المالية.
+                تتم تسوية الاشتراكات وشراء الباقات عبر <strong className="text-white">التحويل المالي المباشر</strong> باستخدام القنوات المصرفية والمحافظ الرقمية المعتمدة في فلسطين (تطبيق ريفلكت Reflect، حسابات بنك فلسطين والبنك العربي)، ثم إرسال إشعار التحويل الرسمي عبر الواتساب المعتمد لتأكيد الطلب وتفعيل الحساب.
               </p>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="bg-indigo-900/10 border border-indigo-500/20 p-6 rounded-2xl">
-                  <h4 className="text-indigo-300 font-bold mb-2">التجديد التلقائي</h4>
-                  <p className="text-sm text-slate-400">تُجدد الاشتراكات تلقائياً في نهاية الدورة (أسبوعية/شهرية) ما لم يتم الإلغاء المسبق من الإعدادات.</p>
+                  <h4 className="text-indigo-300 font-bold mb-2">لا يوجد تجديد تلقائي (No Auto-Renewal)</h4>
+                  <p className="text-sm text-slate-400 leading-relaxed">
+                    نظراً لعدم تفعيل بوابات الخصم الإلكتروني المباشر حالياً، لا يتم تجديد أي باقة تلقائياً ولا يتم حفظ أو خصم أي مبالغ من بطاقات المستخدمين. ينتهي الاشتراك تلقائياً بنهاية مدته المحددة، والتجديد يتم فقط بطلب وتحويل جديد باختيار الطالب.
+                  </p>
                 </div>
                 <div className="bg-purple-900/10 border border-purple-500/20 p-6 rounded-2xl">
-                  <h4 className="text-purple-300 font-bold mb-2">سياسة الاسترداد</h4>
-                  <p className="text-sm text-slate-400">نظراً لطبيعة الخدمات الرقمية، لا يتم استرداد المبالغ المدفوعة للاشتراكات النشطة إلا في حالات القوة القاهرة.</p>
+                  <h4 className="text-purple-300 font-bold mb-2">سياسة الرصيد والاسترجاع العادل</h4>
+                  <p className="text-sm text-slate-400 leading-relaxed">
+                    يعتمد "لمّاح" نظام الاسترجاع التلقائي العادل؛ فلا يُخصم رصيد الباقة إلا بعد اكتمال المعالجة بنجاح. وفي حال وجود أي خلل فني مثبت حال دون الاستفادة من الخدمة، يحق للطالب التواصل مع الدعم لإعادة الرصيد أو تمديد صلاحية الباقة.
+                  </p>
                 </div>
               </div>
             </section>

@@ -1,23 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;600;700;800;900&family=Almarai:wght@300;400;700;800&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Aref+Ruqaa:wght@400;700&family=Baloo+Bhaijaan+2:wght@400;600;700;800&family=Cairo:wght@300;400;600;700;900&family=Caveat:wght@400;600;700&family=Changa:wght@400;600;700;800&family=El+Messiri:wght@400;600;700&family=Katibeh&family=Lalezar&family=Lateef:wght@400;600;700&family=Marhey:wght@400;600;700&family=Noto+Kufi+Arabic:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;600;700&family=Reem+Kufi:wght@400;600;700&family=Tajawal:wght@300;400;500;700;900&display=swap');
 @import "tailwindcss";
-@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark, .dark *));
 
 :root {
-  --background: #020617;
-  --foreground: #f8fafc;
+  --background: #f8fafc;
+  --foreground: #0f172a;
   --primary: #6366f1;
   --primary-glow: rgba(99, 102, 241, 0.15);
+}
+
+.dark {
+  --background: #020617;
+  --foreground: #f8fafc;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-tajawal), ui-sans-serif, system-ui;
+  --font-sans: 'Alexandria', ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans);
+  font-family: 'Alexandria', ui-sans-serif, system-ui, sans-serif;
   overflow-x: hidden;
 }
 
@@ -29,22 +36,23 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Hidden per user request */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
+  display: none;
+  width: 0px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: transparent;
 }
 
 /* Premium Animations */
@@ -72,3 +80,68 @@ body {
 .glow-border-animate:hover::after {
   opacity: 1;
 }
+
+/* Explicit Responsive Utilities */
+@media (min-width: 768px) {
+  .mobile-only,
+  div.mobile-only,
+  button.mobile-only,
+  nav.mobile-only {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Arabic Handwriting Font Utilities */
+.font-handwriting {
+  font-family: 'Marhey', 'Aref Ruqaa', 'Caveat', cursive, sans-serif !important;
+}
+
+.font-ruqaa {
+  font-family: 'Aref Ruqaa', cursive, serif !important;
+}
+
+.font-kufi {
+  font-family: 'Reem Kufi', sans-serif !important;
+}
+
+.font-marhey {
+  font-family: 'Marhey', cursive, sans-serif !important;
+}
+
+/* Dashboard Hero Banner - Comfortable Eye-friendly Dark Mode */
+.hero-dashboard-banner {
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 50%, #6b21a8 100%);
+  border: 1px solid transparent;
+}
+
+html.dark .hero-dashboard-banner,
+.dark .hero-dashboard-banner {
+  background: #0b0f19 !important;
+  background-image: none !important;
+  border: 1px solid #1e293b !important;
+  box-shadow: none !important;
+}
+
+html.dark .hero-quote-box,
+.dark .hero-quote-box {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid #1e293b !important;
+}
+
