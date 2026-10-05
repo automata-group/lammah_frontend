@@ -408,14 +408,9 @@ export default function StudyInstructionsHub({
   const [isDragOver, setIsDragOver] = useState(false);
   const [isHeroDragOver, setIsHeroDragOver] = useState(false);
   
-  // Search & filter state
+  // Search & filter state (strictly for uploaded files)
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState<"all" | "notebooks" | "pdf" | "pptx">("all");
-  
-  // Quick Scratchpad / Sticky note state
-  const [stickyColor, setStickyColor] = useState<string>("yellow");
-  const [scratchpadInput, setScratchpadInput] = useState("");
-  const [scratchpadSavedMsg, setScratchpadSavedMsg] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<"all" | "pdf" | "pptx">("all");
 
   const handleTriggerUpload = (filter?: string) => {
     if (fileInputRef.current) {
@@ -428,26 +423,17 @@ export default function StudyInstructionsHub({
     }
   };
 
-  const handleAddScratchpadNote = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!scratchpadInput.trim()) return;
-    if (onSaveQuickNote) {
-      onSaveQuickNote(scratchpadInput.trim(), stickyColor);
-      setScratchpadInput("");
-      setScratchpadSavedMsg(true);
-      setTimeout(() => setScratchpadSavedMsg(false), 2500);
-    }
-  };
-
-  // Filter vault documents based on search query and category
+  // Filter vault documents based on search query and category (only uploaded files)
   const filteredDocuments = useMemo(() => {
     return vaultDocuments.filter((doc) => {
+      // Exclude blank notebooks / templates from other sections
+      if (doc.type === "blank_notebook") return false;
+
       const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase());
       if (!matchesSearch) return false;
       if (activeFilter === "all") return true;
-      if (activeFilter === "notebooks") return doc.type === "blank_notebook" || doc.name.includes("دفتر");
-      if (activeFilter === "pdf") return doc.type === "pdf" || (!doc.name.includes("بوربوينت") && !doc.name.includes("دفتر"));
-      if (activeFilter === "pptx") return doc.type === "pptx_converted" || doc.name.includes("بوربوينت");
+      if (activeFilter === "pdf") return doc.type === "pdf" || (!doc.name.includes("بوربوينت") && !doc.name.endsWith(".pptx"));
+      if (activeFilter === "pptx") return doc.type === "pptx_converted" || doc.name.includes("بوربوينت") || doc.name.endsWith(".pptx");
       return true;
     });
   }, [vaultDocuments, searchQuery, activeFilter]);
@@ -562,33 +548,37 @@ export default function StudyInstructionsHub({
         </div>
       </div>
 
-      {/* ── 2. RECENT DOCUMENTS & NOTEBOOKS GRID ── */}
-      <div className="space-y-4">
+      {/* ── 2. RECENT UPLOADED STUDY FILES ── */}
+      <div className="space-y-6">
         
         {/* Section Header with Category Tabs and Compact Search */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-slate-800 pb-3">
-          <div className="flex items-center gap-2 text-slate-900 dark:text-white">
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-4">
+          <div className="flex items-center gap-3 text-slate-900 dark:text-white">
+            <div className="w-9 h-9 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold shrink-0">
               <LayoutGrid className="w-4 h-4" />
             </div>
-            <div>
-              <h2 className="text-base sm:text-lg font-black">مستنداتي ودفاتري الأخيرة</h2>
-              <p className="text-[11px] text-slate-400 font-bold">
-                {filteredDocuments.length} مستند محفوظ في خزينتك المحلية
+            <div className="space-y-1">
+              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-normal">
+                آخر الملفات المرفوعة للمذاكرة
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                {filteredDocuments.length === 0
+                  ? "لم يتم رفع أي ملف بعد — يمكنك الرفع مباشرة من الزر بالأعلى"
+                  : `${filteredDocuments.length} ملف تم رفعه للمذاكرة وتدوين الملاحظات`}
               </p>
             </div>
           </div>
 
           {/* Controls: Search & Category Filter */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
             {/* Search Input for Documents */}
             <div className="relative flex items-center">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="بحث في المستندات..."
-                className="w-full sm:w-44 py-1.5 pr-8 pl-7 rounded-xl bg-slate-100 dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 border border-slate-200/80 dark:border-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition"
+                placeholder="بحث في ملفاتك المرفوعة..."
+                className="w-full sm:w-48 py-2 pr-8 pl-7 rounded-xl bg-slate-100 dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 border border-slate-200/80 dark:border-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition"
               />
               <Search className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 pointer-events-none" />
               {searchQuery && (
@@ -603,11 +593,11 @@ export default function StudyInstructionsHub({
             </div>
 
             {/* Category Filter Pills */}
-            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-x-auto max-w-full">
+            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200/80 dark:border-slate-800 overflow-x-auto max-w-full">
               <button
                 type="button"
                 onClick={() => setActiveFilter("all")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 ${
                   activeFilter === "all"
                     ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -617,63 +607,32 @@ export default function StudyInstructionsHub({
               </button>
               <button
                 type="button"
-                onClick={() => setActiveFilter("notebooks")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
-                  activeFilter === "notebooks"
-                    ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                }`}
-              >
-                الدفاتر والملاحظات
-              </button>
-              <button
-                type="button"
                 onClick={() => setActiveFilter("pdf")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 ${
                   activeFilter === "pdf"
                     ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                مستندات PDF
+                ملفات PDF
               </button>
               <button
                 type="button"
                 onClick={() => setActiveFilter("pptx")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 ${
                   activeFilter === "pptx"
                     ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                بوربوينت
+                عروض بوربوينت
               </button>
             </div>
           </div>
         </div>
 
-        {/* Documents Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-5">
-          
-          {/* Card 1: "+ إنشاء مستند جديد" (Always First!) */}
-          <div
-            onClick={() => onCreateBlankNotebook && onCreateBlankNotebook("ruled")}
-            className="group relative rounded-3xl border-2 border-dashed border-indigo-200 dark:border-indigo-900/60 bg-white/50 dark:bg-slate-900/30 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 hover:border-indigo-500 transition-all p-4 flex flex-col items-center justify-center text-center gap-3 cursor-pointer min-h-[250px] shadow-xs hover:shadow-md"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-110 transition shadow-inner">
-              <Plus className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="font-black text-xs sm:text-sm text-slate-800 dark:text-slate-200 block group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
-                دفتر جديد
-              </span>
-              <span className="text-[10px] text-slate-400 font-bold block mt-0.5">
-                A4 مسطر للمذاكرة
-              </span>
-            </div>
-          </div>
-
-          {/* Cards 2..N: Actual Saved Vault Documents */}
+        {/* Documents Grid (Strictly Uploaded Documents) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5">
           {filteredDocuments.map((doc) => {
             return (
               <div
@@ -708,12 +667,12 @@ export default function StudyInstructionsHub({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (confirm("هل تريد حذف هذا المستند من خزينتك؟")) {
+                          if (confirm("هل تريد حذف هذا الملف؟")) {
                             onDeleteVaultDoc(doc.id);
                           }
                         }}
                         className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
-                        title="حذف المستند"
+                        title="حذف الملف"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -726,171 +685,30 @@ export default function StudyInstructionsHub({
 
           {/* Empty State Card if no documents exist */}
           {filteredDocuments.length === 0 && (
-            <div className="col-span-2 sm:col-span-3 md:col-span-4 p-8 rounded-3xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800 text-center flex flex-col items-center justify-center gap-3">
-              <FolderOpen className="w-10 h-10 text-slate-400" />
+            <div className="col-span-full py-12 px-6 rounded-3xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800 text-center flex flex-col items-center justify-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                <Upload className="w-6 h-6" />
+              </div>
               <h3 className="font-black text-sm text-slate-800 dark:text-slate-200">
-                لا توجد مستندات تطابق بحثك
+                لا توجد ملفات مرفوعة حالياً
               </h3>
-              <p className="text-xs text-slate-400 max-w-sm">
-                يمكنك إنشاء دفتر جديد فارغ فوراً، أو رفع أي ملف PDF أو بوربوينت من جهازك للبدء بالمذاكرة.
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
+                ارفع كتابك أو ملخصك الدراسي (PDF أو بوربوينت) للبدء في تصفحه وتدوين الملاحظات عليه.
               </p>
               <button
                 type="button"
-                onClick={() => onCreateBlankNotebook && onCreateBlankNotebook("ruled")}
-                className="py-2 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 mt-1"
+                onClick={() => handleTriggerUpload()}
+                className="py-2.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition cursor-pointer flex items-center gap-2 mt-1 shadow-md shadow-indigo-600/20"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>إنشاء دفتر مسطر الآن</span>
+                <Upload className="w-3.5 h-3.5" />
+                <span>رفع ملف الآن</span>
               </button>
             </div>
           )}
-
         </div>
       </div>
 
-      {/* ── 3. TACTILE DRAG & DROP + COLORFUL STICKY SCRATCHPAD ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
-        
-        {/* Cell 1: Tactile Dropzone */}
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setIsDragOver(true);
-          }}
-          onDragLeave={() => setIsDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setIsDragOver(false);
-            const droppedFiles = Array.from(e.dataTransfer?.files || []);
-            if (droppedFiles.length > 0) {
-              if (onDropFiles) {
-                onDropFiles(droppedFiles);
-              } else if (fileInputRef.current) {
-                const dt = new DataTransfer();
-                droppedFiles.forEach((f) => dt.items.add(f));
-                fileInputRef.current.files = dt.files;
-                const changeEvent = new Event("change", { bubbles: true });
-                fileInputRef.current.dispatchEvent(changeEvent);
-              }
-            }
-          }}
-          className={`lg:col-span-2 relative overflow-hidden rounded-[2rem] p-6 sm:p-7 border-2 border-dashed transition-all flex flex-col items-center justify-center text-center gap-3.5 group cursor-pointer ${
-            isDragOver 
-              ? "bg-indigo-50/90 dark:bg-indigo-950/40 border-indigo-500 scale-[0.99]" 
-              : "bg-white dark:bg-[#0c111d] border-indigo-200/90 dark:border-indigo-900/50 hover:border-indigo-400 dark:hover:border-indigo-700 shadow-xs"
-          }`}
-          onClick={() => handleTriggerUpload()}
-        >
-
-          <div className="w-13 h-13 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-110 transition shadow-inner">
-            <Upload className="w-6 h-6" />
-          </div>
-
-          <div className="space-y-1">
-            <h3 className="text-base font-black text-slate-900 dark:text-white">
-              اسحب وأفلت مادتك الدراسية هنا، أو انقر للتصفح 📂
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md leading-relaxed">
-              يدعم ملفات الكتب <span className="font-bold text-indigo-600 dark:text-indigo-400">PDF</span>، عروض <span className="font-bold text-amber-600 dark:text-amber-400">PowerPoint (.pptx)</span>، والصور <span className="font-bold text-emerald-600 dark:text-emerald-400">(PNG, JPG, WebP)</span>.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>معالجة فورية داخل المتصفح (0 بايت من مساحة التخزين)</span>
-          </div>
-        </div>
-
-        {/* Cell 2: Colorful Sticky Scratchpad */}
-        <div className="relative overflow-hidden rounded-[2rem] bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-5 sm:p-6 flex flex-col justify-between shadow-xs">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
-              <div className="flex items-center gap-2">
-                <StickyNote className="w-4 h-4 text-amber-500" />
-                <h3 className="font-black text-sm text-slate-900 dark:text-white">ستيكرات وملاحظات سريعة</h3>
-              </div>
-              {scratchpadSavedMsg && (
-                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 animate-pulse">
-                  تم الحفظ ✓
-                </span>
-              )}
-            </div>
-
-            {/* Color Selector Pills */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-slate-400 font-bold ml-1">لون الستيكر:</span>
-              {[
-                { id: "yellow", bg: "bg-amber-300", ring: "ring-amber-400" },
-                { id: "cyan", bg: "bg-sky-300", ring: "ring-sky-400" },
-                { id: "pink", bg: "bg-pink-300", ring: "ring-pink-400" },
-                { id: "green", bg: "bg-emerald-300", ring: "ring-emerald-400" },
-                { id: "purple", bg: "bg-purple-300", ring: "ring-purple-400" },
-              ].map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => setStickyColor(c.id)}
-                  className={`w-5 h-5 rounded-full ${c.bg} transition transform ${
-                    stickyColor === c.id ? `scale-125 ring-2 ring-offset-1 ${c.ring}` : "opacity-75 hover:opacity-100"
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Quick Sticky Note Input */}
-            <form onSubmit={handleAddScratchpadNote} className="space-y-2">
-              <textarea
-                value={scratchpadInput}
-                onChange={(e) => setScratchpadInput(e.target.value)}
-                placeholder="اكتب خاطرة، قانوناً سريعاً، أو تذكيراً مهماً..."
-                className={`w-full p-2.5 rounded-2xl text-xs text-slate-900 placeholder:text-slate-500 focus:outline-none resize-none h-18 font-sans transition border ${
-                  stickyColor === "yellow" ? "bg-amber-50/90 border-amber-200" :
-                  stickyColor === "cyan" ? "bg-sky-50/90 border-sky-200" :
-                  stickyColor === "pink" ? "bg-pink-50/90 border-pink-200" :
-                  stickyColor === "green" ? "bg-emerald-50/90 border-emerald-200" :
-                  "bg-purple-50/90 border-purple-200"
-                }`}
-              />
-              <button
-                type="submit"
-                disabled={!scratchpadInput.trim()}
-                className="w-full py-2 px-3 rounded-xl bg-indigo-600 disabled:opacity-40 hover:bg-indigo-500 text-white font-black text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>إضافة للملاحظات</span>
-              </button>
-            </form>
-
-            {/* Recent Notes Preview */}
-            {notes.length > 0 && (
-              <div className="pt-1 space-y-1">
-                <span className="text-[11px] font-bold text-slate-500 block">آخر الملاحظات:</span>
-                <div className="space-y-1 max-h-24 overflow-y-auto pr-0.5 scrollbar-thin">
-                  {notes.slice(-2).reverse().map((n) => (
-                    <div key={n.id} className="p-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 text-xs flex items-center justify-between border border-slate-100 dark:border-slate-800">
-                      <span className="truncate text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                        {n.content}
-                      </span>
-                      {onDeleteNote && (
-                        <button
-                          type="button"
-                          onClick={() => onDeleteNote(n.id)}
-                          className="text-slate-400 hover:text-rose-500 p-0.5"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-      </div>
-
-      {/* ── 4. أدوات المذاكرة المدمجة في المحرر (عرض بسيط وموجز) ── */}
+      {/* ── 3. أدوات المذاكرة المدمجة في المحرر (عرض أفقي متجاوب للجوالات) ── */}
       <div className="pt-2 border-t border-slate-200/80 dark:border-slate-800 space-y-3">
         
         {/* Section Title */}
@@ -910,11 +728,11 @@ export default function StudyInstructionsHub({
           </div>
         </div>
 
-        {/* 6 Minimal Clean Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
+        {/* 6 Clean Cards - Horizontal scroll on mobile */}
+        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 overflow-x-auto sm:overflow-visible pb-3 sm:pb-0 snap-x snap-mandatory scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0">
           
           {/* Tool 1: Active Recall */}
-          <div className="p-3 rounded-2xl bg-white dark:bg-[#0c111d] border border-slate-200/80 dark:border-slate-800 flex items-center gap-3">
+          <div className="shrink-0 w-[260px] sm:w-auto snap-center p-3 rounded-2xl bg-white dark:bg-[#0c111d] border border-slate-200/80 dark:border-slate-800 flex items-center gap-3 shadow-xs">
             <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
               <EyeOff className="w-4 h-4" />
             </div>
@@ -929,7 +747,7 @@ export default function StudyInstructionsHub({
           </div>
 
           {/* Tool 2: Priority Pins */}
-          <div className="p-3 rounded-2xl bg-white dark:bg-[#0c111d] border border-slate-200/80 dark:border-slate-800 flex items-center gap-3">
+          <div className="shrink-0 w-[260px] sm:w-auto snap-center p-3 rounded-2xl bg-white dark:bg-[#0c111d] border border-slate-200/80 dark:border-slate-800 flex items-center gap-3 shadow-xs">
             <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
               <Flame className="w-4 h-4" />
             </div>
@@ -944,7 +762,7 @@ export default function StudyInstructionsHub({
           </div>
 
           {/* Tool 3: Pomodoro */}
-          <div className="p-3 rounded-2xl bg-white dark:bg-[#0c111d] border border-slate-200/80 dark:border-slate-800 flex items-center gap-3">
+          <div className="shrink-0 w-[260px] sm:w-auto snap-center p-3 rounded-2xl bg-white dark:bg-[#0c111d] border border-slate-200/80 dark:border-slate-800 flex items-center gap-3 shadow-xs">
             <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
               <Timer className="w-4 h-4" />
             </div>
@@ -959,7 +777,7 @@ export default function StudyInstructionsHub({
           </div>
 
           {/* Tool 4: Voice Notes */}
-          <div className="p-3 rounded-2xl bg-white dark:bg-[#0c111d] border border-slate-200/80 dark:border-slate-800 flex items-center gap-3">
+          <div className="shrink-0 w-[260px] sm:w-auto snap-center p-3 rounded-2xl bg-white dark:bg-[#0c111d] border border-slate-200/80 dark:border-slate-800 flex items-center gap-3 shadow-xs">
             <div className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
               <Mic className="w-4 h-4" />
             </div>
@@ -974,7 +792,7 @@ export default function StudyInstructionsHub({
           </div>
 
           {/* Tool 5: AI Assistant */}
-          <div className="p-3 rounded-2xl bg-white dark:bg-[#0c111d] border border-slate-200/80 dark:border-slate-800 flex items-center gap-3">
+          <div className="shrink-0 w-[260px] sm:w-auto snap-center p-3 rounded-2xl bg-white dark:bg-[#0c111d] border border-slate-200/80 dark:border-slate-800 flex items-center gap-3 shadow-xs">
             <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
               <Sparkles className="w-4 h-4" />
             </div>
@@ -989,8 +807,8 @@ export default function StudyInstructionsHub({
           </div>
 
           {/* Tool 6: Printable A4 */}
-          <div className="p-3 rounded-2xl bg-white dark:bg-[#0c111d] border border-slate-200/80 dark:border-slate-800 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
+          <div className="shrink-0 w-[260px] sm:w-auto snap-center p-3 rounded-2xl bg-white dark:bg-[#0c111d] border border-slate-200/80 dark:border-slate-800 flex items-center gap-3 shadow-xs">
+            <div className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
               <Printer className="w-4 h-4" />
             </div>
             <div className="space-y-0.5 min-w-0">
