@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Lock, PenTool, Download, Sparkles } from "lucide-react";
+import { BookOpen, Lock, Download, Sparkles } from "lucide-react";
 
 interface DashboardPdfViewerProps {
   pdfContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -74,20 +74,6 @@ export default function DashboardPdfViewer({
           </button>
         ) : (
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                router.push(
-                  `/study?pdf_url=${encodeURIComponent(`${apiUrl}${downloadUrl}`)}&title=${encodeURIComponent(
-                    lectureTitle || "دفتر التلخيص الذكي"
-                  )}`
-                )
-              }
-              className="bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 px-3 py-1.5 rounded-xl font-bold transition-all flex items-center shadow-2xs cursor-pointer text-xs"
-            >
-              <PenTool className="w-3.5 h-3.5 ml-1.5 text-indigo-500" />
-              تدوين ملاحظات ومخططات ✍️
-            </button>
             <a
               href={fullDownloadUrl}
               download={suggestedFilename}

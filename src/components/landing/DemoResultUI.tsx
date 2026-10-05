@@ -174,16 +174,9 @@ export default function DemoResultUI({ actionText, onAction }: DemoResultUIProps
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 w-full sm:w-auto flex-wrap">
-              <button 
-                onClick={() => router.push("/#pricing")}
-                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 dark:text-indigo-300 dark:border-indigo-500/30 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>تدوين ملاحظات ومخططات</span>
-              </button>
-
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
               <a
-                href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/summarize/download/0968d265.pdf?title=${encodeURIComponent("إدارة المشاريع")}&mode=annotated`}
+                href="/demo/sample-notebook.pdf"
                 download="إدارة المشاريع - مخططة فويسات - لمّاح.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -197,7 +190,7 @@ export default function DemoResultUI({ actionText, onAction }: DemoResultUIProps
           
           <div className="relative rounded-xl sm:rounded-[1.5rem] p-1 bg-gradient-to-b from-slate-100 to-slate-200 dark:from-slate-800/80 dark:to-slate-950/80 border border-slate-200 dark:border-slate-800/60 shadow-inner">
             <iframe
-              src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/summarize/download/0968d265.pdf#toolbar=0`}
+              src="/demo/sample-notebook.pdf#toolbar=0"
               className="w-full h-[380px] sm:h-[520px] lg:h-[660px] rounded-lg sm:rounded-[1.25rem] bg-white dark:bg-slate-900 transition-all border border-slate-200 dark:border-slate-950/50"
               title="Smart Annotated Notebook"
             />
