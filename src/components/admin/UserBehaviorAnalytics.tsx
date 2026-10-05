@@ -168,32 +168,17 @@ export default function UserBehaviorAnalytics({ sessionToken }: UserBehaviorAnal
             <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
               رادار الزوار والنشاط المباشر 📡
             </h2>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] border border-emerald-200/60 dark:border-emerald-800/60">
-              مباشر
-            </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             متابعة فورية للطلاب المتصلين، الزيارات اليومية، والتوزيع الجغرافي ونوع الأجهزة بكل وضوح وبدون تعقيد.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            onClick={() => setAutoRefresh(!autoRefresh)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border cursor-pointer ${
-              autoRefresh 
-                ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700"
-            }`}
-          >
-            <span className={`w-2 h-2 rounded-full ${autoRefresh ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
-            <span>{autoRefresh ? "تحديث تلقائي (شغال)" : "تحديث متوقف"}</span>
-          </button>
-
+        <div className="flex items-center gap-2">
           <button
             onClick={() => fetchOverview(true)}
             disabled={isRefreshing}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer"
+            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer"
             title="تحديث البيانات الآن"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
@@ -292,7 +277,6 @@ export default function UserBehaviorAnalytics({ sessionToken }: UserBehaviorAnal
                 <span className="text-[11px] text-slate-400 block">توزيع طلاب فلسطين والدول العربية</span>
               </div>
             </div>
-            <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">مباشر 📍</span>
           </div>
 
           <div className="space-y-2.5 pt-2">

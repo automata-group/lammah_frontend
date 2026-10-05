@@ -363,21 +363,10 @@ export default function AdminPage() {
               </span>
             </div>
           </Link>
-
-          <span className="bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1">
-            <Crown className="w-3 h-3 text-amber-500" />
-            مسؤول المنصة
-          </span>
         </div>
 
         {/* Status, Theme Switcher & Actions */}
         <div className="flex items-center gap-3">
-          
-          {/* Live Status Pill */}
-          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>السيرفر متصل</span>
-          </div>
 
           {/* Theme Toggle Button */}
           <button
