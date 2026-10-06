@@ -12,15 +12,23 @@ const alexandria = Alexandria({
   weight: ["300", "400", "500", "600", "700", "800", "900"],
   variable: '--font-alexandria',
   display: 'swap',
+  preload: true,
+  adjustFontFallback: true,
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://lammah.site"),
   title: "منصة لمّاح | Lammah",
   description: "لمّاح - منصتك الأكاديمية لتفريغ المحاضرات، وتوليد الدفاتر الجمالية، وبنوك الأسئلة المتوقعة",
+  creator: "Automata",
+  publisher: "Automata Group",
+  authors: [
+    { name: "Automata", url: "https://lammah.site" }
+  ],
   openGraph: {
     title: "منصة لمّاح | Lammah",
-    description: "لمّاح - منصتك الأكاديمية لتفريغ المحاضرات، وتوليد الدفاتر الجمالية، وبنوك الأسئلة المتوقعة",
+    description: "لمّاح - منصتك الأكاديمية لتفريغ المحاضرات، وتوليد الدفاتر الجمالية، وبنوك الأسئلة المتوقعة - إحدى ابتكارات Automata",
+    siteName: "منصة لمّاح | Automata",
     images: [{ url: "/lammah-logo.png" }],
   },
 };
@@ -31,9 +39,45 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;600;700;800;900&family=Almarai:wght@300;400;700;800&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Aref+Ruqaa:wght@400;700&family=Baloo+Bhaijaan+2:wght@400;600;700;800&family=Cairo:wght@300;400;600;700;900&family=Caveat:wght@400;600;700&family=Changa:wght@400;600;700;800&family=El+Messiri:wght@400;600;700&family=Katibeh&family=Lalezar&family=Lateef:wght@400;600;700&family=Marhey:wght@400;600;700&family=Noto+Kufi+Arabic:wght@400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;600;700&family=Reem+Kufi:wght@400;600;700&family=Tajawal:wght@300;400;500;700;900&display=swap"
-          rel="stylesheet"
+        {/* Structured Data (Schema.org) documenting Automata ownership to Google & search engines */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              "name": "منصة لمّاح",
+              "alternateName": "Lammah",
+              "url": "https://lammah.site",
+              "applicationCategory": "EducationalApplication",
+              "operatingSystem": "All",
+              "creator": {
+                "@type": "Organization",
+                "name": "Automata",
+                "alternateName": "Automata Group",
+                "url": "https://lammah.site"
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "Automata",
+                "alternateName": "Automata Group",
+                "url": "https://lammah.site"
+              }
+            }),
+          }}
+        />
+        {/* Secondary canvas fonts loaded asynchronously on idle to guarantee 0ms LCP blockage */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.addEventListener('DOMContentLoaded', function() {
+                var l = document.createElement('link');
+                l.rel = 'stylesheet';
+                l.href = 'https://fonts.googleapis.com/css2?family=Almarai:wght@400;700&family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=Baloo+Bhaijaan+2:wght@400;700&family=Cairo:wght@400;700&family=Caveat:wght@400;700&family=Changa:wght@400;700&family=El+Messiri:wght@400;700&family=Katibeh&family=Lalezar&family=Lateef:wght@400;700&family=Marhey:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;600&family=Reem+Kufi:wght@400;700&family=Tajawal:wght@400;700&display=swap';
+                document.head.appendChild(l);
+              });
+            `,
+          }}
         />
         <script
           dangerouslySetInnerHTML={{

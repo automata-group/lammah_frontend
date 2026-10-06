@@ -32,7 +32,6 @@ import Header from "@/components/landing/Header";
 import HeroSection from "@/components/landing/HeroSection";
 import HeroSimulation from "@/components/landing/HeroSimulation";
 import FeaturesSection from "@/components/landing/FeaturesSection";
-import SplashScreen from "@/components/landing/SplashScreen";
 
 export default function Home() {
   const { user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, isLocalDev } = useAuth();
@@ -98,9 +97,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 selection:bg-indigo-500/30 overflow-x-hidden relative transition-colors duration-300" dir="rtl">
-      
-      {/* Cinematic Intro Splash Screen */}
-      <SplashScreen />
 
       {/* Decorative Grids and Light Beams */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">

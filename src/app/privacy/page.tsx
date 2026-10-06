@@ -217,7 +217,7 @@ export default function PrivacyPage() {
             <section id="gdpr" className="scroll-mt-24">
               <h2 className="text-3xl font-black text-white mb-6">6. الامتثال الدولي (GDPR)</h2>
               <p>
-                رغم كوننا مؤسسة تعمل في فلسطين، إلا أننا نصمم أنظمتنا لتكون متوافقة بشكل جوهري مع <strong className="text-white">اللائحة العامة لحماية البيانات (GDPR)</strong> الأوروبية، لضمان تطبيق أفضل الممارسات العالمية في حماية خصوصية الأفراد.
+                رغم كوننا مؤسسة تعمل في فلسطين تحت مظلة <strong className="text-white">شركة Automata (Automata Group)</strong>، إلا أننا نصمم أنظمتنا لتكون متوافقة بشكل جوهري مع <strong className="text-white">اللائحة العامة لحماية البيانات (GDPR)</strong> الأوروبية، لضمان تطبيق أفضل الممارسات العالمية في حماية خصوصية الأفراد.
               </p>
             </section>
 

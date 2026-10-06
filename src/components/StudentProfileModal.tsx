@@ -612,7 +612,7 @@ export default function StudentProfileModal({
                 className="p-5 bg-indigo-50 dark:bg-indigo-950/40 border-2 border-indigo-400 dark:border-indigo-600 rounded-2xl text-center space-y-1.5 my-4"
               >
                 <div className="text-indigo-900 dark:text-indigo-200 font-black text-sm">
-                  {justWonBonus ? "تم حفظ ملفك الأكاديمي وتفعيل الرصيد المجاني بنجاح" : "تم حفظ ملفك الأكاديمي بنجاح"}
+                  تم حفظ ملفك الأكاديمي بنجاح 🎓
                 </div>
               </motion.div>
             )}
@@ -873,7 +873,7 @@ export default function StudentProfileModal({
                   ) : (
                     <>
                       <Check className="w-4 h-4" />
-                      <span>{!bonusAwarded ? "حفظ وتأكيد الملف" : "حفظ التعديلات"}</span>
+                      <span>حفظ الملف الأكاديمي</span>
                     </>
                   )}
                 </button>

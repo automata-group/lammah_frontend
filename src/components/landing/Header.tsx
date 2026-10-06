@@ -92,6 +92,8 @@ export default function Header({ user }: { user?: any }) {
             <img
               src="/lammah-logo.png"
               alt="Logo"
+              width={32}
+              height={32}
               className="w-8 h-8 object-contain group-hover:scale-105 transition-transform"
             />
             <div className="flex items-center gap-1.5">

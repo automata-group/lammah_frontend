@@ -54,11 +54,7 @@ export default function HeroSection() {
       </div>
 
       {/* ── Top Catchphrase Pill / Accent ─────────────────────────── */}
-      {/* ── Top Catchphrase Pill / Accent ─────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+      <div
         className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-purple-500/10 sm:from-transparent sm:via-transparent sm:to-transparent border border-amber-500/20 dark:border-amber-400/30 sm:border-transparent sm:dark:border-transparent px-4 sm:px-0 py-1.5 sm:py-0 rounded-full mb-2 sm:mb-4 shadow-xs sm:shadow-none backdrop-blur-md sm:backdrop-blur-none"
       >
         <span className="text-xs sm:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-4 tracking-tight">
@@ -66,13 +62,10 @@ export default function HeroSection() {
           <span>ل<span className="text-amber-500">مّ</span>احاً</span>
           <span className="sm:hidden text-xs">⚡</span>
         </span>
-      </motion.div>
+      </div>
 
       {/* ── 1. Punchy Main Headline ───────────────────────────────── */}
-      <motion.h1
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
+      <h1
         className="relative z-10 text-[2.75rem] leading-[1.3] xs:text-[3rem] xs:leading-[1.3] sm:text-6xl sm:leading-[1.3] lg:text-7xl lg:leading-[1.25] font-black tracking-tight text-slate-900 dark:text-white max-w-4xl mx-auto"
       >
         <span className="block mb-2 sm:mb-3">
@@ -106,12 +99,12 @@ export default function HeroSection() {
                   <span className="w-1.5 h-1.5 xs:w-2 xs:h-2 sm:w-2 sm:h-2 bg-slate-900 dark:bg-white rounded-xs sm:rounded-sm rotate-45"></span>
                   <span className="w-1.5 h-1.5 xs:w-2 xs:h-2 sm:w-2 sm:h-2 bg-slate-900 dark:bg-white rounded-xs sm:rounded-sm rotate-45"></span>
                 </span>
-                {/* Waveform acting as the base of Taa */}
+                {/* Waveform acting as the base of Taa - Uses GPU scaleY with origin-bottom to prevent layout shifts */}
                 <span className="inline-flex items-end gap-[3px] xs:gap-1 sm:gap-1 h-8 xs:h-9 sm:h-11 lg:h-14 translate-y-0.5 sm:translate-y-1">
-                  <motion.span animate={{ height: ["30%", "80%", "40%", "100%", "30%"] }} transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }} className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 bg-indigo-500 rounded-full" />
-                  <motion.span animate={{ height: ["50%", "100%", "30%", "80%", "50%"] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }} className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 bg-purple-500 rounded-full" />
-                  <motion.span animate={{ height: ["80%", "40%", "100%", "50%", "80%"] }} transition={{ repeat: Infinity, duration: 1.0, ease: "easeInOut" }} className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 bg-pink-500 rounded-full" />
-                  <motion.span animate={{ height: ["40%", "90%", "20%", "70%", "40%"] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }} className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 bg-amber-500 rounded-full" />
+                  <motion.span animate={{ scaleY: [0.3, 0.8, 0.4, 1.0, 0.3] }} transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }} className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 h-full origin-bottom bg-indigo-500 rounded-full" />
+                  <motion.span animate={{ scaleY: [0.5, 1.0, 0.3, 0.8, 0.5] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }} className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 h-full origin-bottom bg-purple-500 rounded-full" />
+                  <motion.span animate={{ scaleY: [0.8, 0.4, 1.0, 0.5, 0.8] }} transition={{ repeat: Infinity, duration: 1.0, ease: "easeInOut" }} className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 h-full origin-bottom bg-pink-500 rounded-full" />
+                  <motion.span animate={{ scaleY: [0.4, 0.9, 0.2, 0.7, 0.4] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }} className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 h-full origin-bottom bg-amber-500 rounded-full" />
                 </span>
               </span>
               <span>ـسجيلات</span>
@@ -123,23 +116,17 @@ export default function HeroSection() {
         <span className="block mt-2 sm:mt-0 pt-4 pb-3 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-300 dark:to-pink-400">
           إلى أعلى العلامات
         </span>
-      </motion.h1>
+      </h1>
 
-      {/* ── 2. Subtitle ───────────────────────────────────────────── */}
-      <motion.p
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
+      {/* ── 2. Subtitle (Immediate Paint for 0ms LCP Delay) ─────── */}
+      <p
         className="mt-7 sm:mt-6 text-xs sm:text-base lg:text-lg text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed sm:leading-relaxed font-medium px-2 sm:px-0"
       >
         وداعاً لإضاعة الساعات في تفريغ المحاضرات يدوياً. حوّل تسجيلاتك وملفات الـ PDF فوراً إلى ملخصات فائقة الدقة، أسئلة امتحانات متوقعة، وشات ذكي يجيبك عن كل مسألة.
-      </motion.p>
+      </p>
 
       {/* ── 3. Action Buttons ─────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
+      <div
         className="mt-8 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 max-w-[310px] sm:max-w-none mx-auto w-full"
       >
         <a
@@ -161,7 +148,7 @@ export default function HeroSection() {
           <Play className="w-3.5 h-3.5 fill-indigo-600 dark:fill-indigo-400 text-indigo-600 dark:text-indigo-400 translate-x-0.5" />
           <span>جرب لماح مجانا</span>
         </a>
-      </motion.div>
+      </div>
     </section>
   );
 }
