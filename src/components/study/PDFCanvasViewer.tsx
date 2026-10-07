@@ -1628,13 +1628,22 @@ export default function PDFCanvasViewer({
         const pdfjsLib = await import("pdfjs-dist");
         pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
-        const loadingTask = pdfjsLib.getDocument({
-          data: new Uint8Array(pdfRawBytesRef.current.slice(0)),
-          cMapUrl: "https://unpkg.com/pdfjs-dist@3.11.174/cmaps/",
-          cMapPacked: true,
-        });
+        let pdfDoc;
+        try {
+          const loadingTask = pdfjsLib.getDocument({
+            data: new Uint8Array(pdfRawBytesRef.current.slice(0)),
+            cMapUrl: "https://unpkg.com/pdfjs-dist@3.11.174/cmaps/",
+            cMapPacked: true,
+          });
+          pdfDoc = await loadingTask.promise;
+        } catch (firstErr) {
+          console.warn("Retrying pdfjs-dist without external cmaps:", firstErr);
+          const fallbackTask = pdfjsLib.getDocument({
+            data: new Uint8Array(pdfRawBytesRef.current.slice(0)),
+          });
+          pdfDoc = await fallbackTask.promise;
+        }
 
-        const pdfDoc = await loadingTask.promise;
         if (isCancelled) return;
 
         const total = pdfDoc.numPages;
@@ -1647,7 +1656,7 @@ export default function PDFCanvasViewer({
         if (!canvas) return;
 
         // Container responsive width (exact viewport width on phone)
-        const containerW = viewportRef.current?.clientWidth || (typeof window !== "undefined" ? Math.min(window.innerWidth - 16, 1024) : 800);
+        const containerW = viewportRef.current?.clientWidth || (typeof window !== "undefined" ? Math.max(280, window.innerWidth - 32) : 800);
         const unscaledViewport = page.getViewport({ scale: 1 });
         
         // Exact responsive scale to fit mobile screen without clipping
@@ -1681,6 +1690,10 @@ export default function PDFCanvasViewer({
         }
       } catch (err) {
         console.warn("pdfjs-dist render fallback:", err);
+      } finally {
+        if (!isCancelled) {
+          setIsIframeLoading(false);
+        }
       }
     }
 
@@ -4839,6 +4852,7 @@ export default function PDFCanvasViewer({
           style={{
             aspectRatio: pageDimensions ? `${pageDimensions.width} / ${pageDimensions.height}` : undefined,
             maxHeight: "82vh",
+            minHeight: "360px",
             width: pageDimensions && pageDimensions.ratio < 1
               ? `min(100%, calc(82vh * ${pageDimensions.ratio}))`
               : "100%",
@@ -4888,7 +4902,7 @@ export default function PDFCanvasViewer({
 
           {/* Pristine Beautiful White Loading Curtain */}
           <AnimatePresence>
-            {(isIframeLoading || !activeDocumentUrl) && (
+            {(isIframeLoading && !isPdfCanvasReady && !pdfRawBytesRef.current && !activeDocumentUrl) && (
               <motion.div 
                 key="white_loader_curtain"
                 initial={{ opacity: 1 }}
@@ -4933,7 +4947,7 @@ export default function PDFCanvasViewer({
           {/* Native Vector High-Res Render Canvas (100% fitted to mobile, zero clipping) */}
           <canvas
             ref={pdfCanvasRef}
-            className={`w-full h-full object-contain block bg-white ${isPdfCanvasReady ? "opacity-100" : "opacity-0"}`}
+            className="w-full h-full object-contain block bg-white opacity-100"
           />
 
           {!isPdfCanvasReady && activeDocumentUrl && (
@@ -4941,7 +4955,7 @@ export default function PDFCanvasViewer({
               key={`doc_frame_${currentPage}_${singlePageUrl ? "slice" : "master"}`}
               src={activeDocumentUrl}
               onLoad={handleIframeLoad}
-              className={`w-full h-full border-none bg-white absolute inset-0 ${isDraggingAnyNote ? "pointer-events-none select-none" : ""}`}
+              className={`w-full h-full border-none bg-white absolute inset-0 hidden md:block ${isDraggingAnyNote ? "pointer-events-none select-none" : ""}`}
               title={`${documentTitle} - Page ${currentPage}`}
             />
           )}

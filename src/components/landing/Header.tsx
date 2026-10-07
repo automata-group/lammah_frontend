@@ -399,7 +399,7 @@ export default function Header({ user }: { user?: any }) {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block w-full py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-center text-xs shadow-md"
               >
-                ابدأ دراستك الآن مجاناً 🚀
+                ابدأ دراستك الآن مجاناً
               </Link>
             </div>
           </motion.div>

@@ -112,18 +112,12 @@ export default function CheckoutPage({ params }: { params: Promise<{ planId: str
     }
   };
   
-  const handleWhatsApp = async () => {
+    const handleWhatsApp = async () => {
     if (!orderDetails) return;
     if (!fullName.trim()) {
       alert("الرجاء إدخال اسمك لتسهيل المطابقة.");
       return;
     }
-    if (is100Plan && (!usernameStatus.available || isCheckingUsername)) {
-      alert("الرجاء اختيار اسم مستخدم (يوزر نيم) فريد ومتاح للبائع.");
-      return;
-    }
-
-    const cleanUser = username.trim().replace(/^@+/, "").toLowerCase();
 
     try {
       if (session) {
@@ -134,8 +128,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ planId: str
             "Authorization": `Bearer ${session.access_token}`
           },
           body: JSON.stringify({
-            full_name: fullName.trim(),
-            username: is100Plan ? cleanUser : ""
+            full_name: fullName.trim()
           })
         });
       }
@@ -146,11 +139,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ planId: str
     } catch(e) {}
     
     const phone = "972598298930"; // Formatted internationally with +972 prefix
-    let message = `مرحباً، أود تأكيد الدفع الإلكتروني لباقة (${orderDetails.plan_name}).\nالاسم الثلاثي: ${fullName}`;
-    if (is100Plan && cleanUser) {
-      message += `\nيوزر نيم البائع: @${cleanUser}`;
-    }
-    message += `\nرقم الطلب الخاص بي هو: ${orderDetails.order_id}\nمرفق إشعار التحويل الإلكتروني.`;
+    const message = `مرحباً، أود تأكيد الدفع الإلكتروني لباقة (${orderDetails.plan_name}).\nالاسم الثلاثي: ${fullName}\nرقم الطلب الخاص بي هو: ${orderDetails.order_id}\nمرفق إشعار التحويل الإلكتروني.`;
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
   };
@@ -192,116 +181,23 @@ export default function CheckoutPage({ params }: { params: Promise<{ planId: str
                <p className="text-lg sm:text-xl font-black font-mono text-indigo-600 dark:text-indigo-400">{orderDetails.order_id}</p>
              </div>
 
-             {/* Seller Profile Setup for 100 NIS Plan */}
-             {is100Plan ? (
-               <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-500/30 rounded-2xl p-4 text-right space-y-3.5">
-                 <div className="flex items-center gap-2">
-                   <Crown className="w-4 h-4 text-amber-500 shrink-0" />
-                   <span className="text-xs font-black text-amber-900 dark:text-amber-300">
-                     إعداد حساب البائع المعتمد (خاص بباقة النخبة 100 ₪)
-                   </span>
-                 </div>
-                 <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                   بصفتك مشتركاً في باقة النخبة، ستحصل على رخصة بائع لنشر دفاترك بالمتجر. يرجى كتابة اسمك واختيار يوزر نيم فريد لا يتكرر لتمييز هويتك.
-                 </p>
+             <div className="text-right space-y-1.5">
+                <label className="block text-xs font-black text-slate-700 dark:text-slate-300">اسمك الثلاثي (أحرف فقط لمطابقة الحوالة):</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="الرجاء إدخال اسمك الثلاثي (مثال: أحمد خليل)" 
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value.replace(/[^a-zA-Z\u0600-\u06FF\s]/g, ""))}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl py-3 px-4 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs outline-none transition-all"
+                />
+              </div>
 
-                 <div className="space-y-1.5">
-                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                     اسم البائع (الاسم المعروض):
-                   </label>
-                   <input 
-                     type="text" 
-                     required
-                     placeholder="الاسم الثلاثي أو المستعار (مثال: أحمد خليل)" 
-                     value={fullName}
-                     onChange={(e) => setFullName(e.target.value.replace(/[^a-zA-Z\u0600-\u06FF\s]/g, ""))}
-                     className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-amber-500 rounded-xl py-2.5 px-3 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs font-bold outline-none transition-all shadow-2xs"
-                   />
-                 </div>
-
-                 <div className="space-y-1.5">
-                   <div className="flex items-center justify-between">
-                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                       اسم المستخدم الفريد (يوزر نيم البائع):
-                     </label>
-                     <span className="text-[10px] text-slate-400 font-mono">
-                       أحرف إنجليزية، أرقام و (_)
-                     </span>
-                   </div>
-                   
-                   <div className="relative">
-                     <span className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400 font-mono font-bold text-xs">
-                       @
-                     </span>
-                     <input 
-                       type="text" 
-                       dir="ltr"
-                       required
-                       placeholder="username" 
-                       value={username}
-                       onChange={(e) => {
-                         const val = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "");
-                         setUsername(val);
-                       }}
-                       className={`w-full bg-white dark:bg-slate-900 border ${
-                         usernameStatus.available === true
-                           ? "border-emerald-500 focus:border-emerald-500"
-                           : usernameStatus.available === false
-                             ? "border-rose-500 focus:border-rose-500"
-                             : "border-slate-200 dark:border-slate-800 focus:border-amber-500"
-                       } rounded-xl py-2.5 pr-8 pl-3 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs font-mono font-bold outline-none transition-all shadow-2xs`}
-                     />
-                     {isCheckingUsername && (
-                       <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                         <Loader2 className="w-3.5 h-3.5 text-indigo-500 animate-spin" />
-                       </span>
-                     )}
-                   </div>
-
-                   {/* Live validation feedback */}
-                   {usernameStatus.message && (
-                     <div className={`flex items-center gap-1.5 text-[11px] font-bold mt-1 ${
-                       usernameStatus.available === true ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500"
-                     }`}>
-                       {usernameStatus.available === true ? (
-                         <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                       ) : (
-                         <XCircle className="w-3.5 h-3.5 shrink-0" />
-                       )}
-                       <span>{usernameStatus.message}</span>
-                     </div>
-                   )}
-                 </div>
-               </div>
-             ) : (
-               <div className="text-right space-y-1.5">
-                 <label className="block text-xs font-black text-slate-700 dark:text-slate-300">اسمك الثلاثي (أحرف فقط لمطابقة الحوالة):</label>
-                 <input 
-                   type="text" 
-                   required
-                   placeholder="الرجاء إدخال اسمك الثلاثي (نص فقط)" 
-                   value={fullName}
-                   onChange={(e) => setFullName(e.target.value.replace(/[^a-zA-Z\u0600-\u06FF\s]/g, ""))}
-                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl py-3 px-4 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs outline-none transition-all"
-                 />
-               </div>
-             )}
-             
-             <button 
+              <button 
                onClick={handleWhatsApp} 
-               disabled={
-                 !fullName.trim() || 
-                 fullName.trim().length < 3 || 
-                 (is100Plan && (!usernameStatus.available || isCheckingUsername))
-               }
+               disabled={!fullName.trim() || fullName.trim().length < 3}
                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm cursor-pointer"
-               title={
-                 !fullName.trim() 
-                   ? "الرجاء كتابة اسمك أولاً" 
-                   : (is100Plan && !usernameStatus.available) 
-                     ? "الرجاء اختيار يوزر نيم متاح أولاً" 
-                     : ""
-               }
+               title={!fullName.trim() ? "الرجاء كتابة اسمك أولاً" : ""}
              >
                <MessageCircle className="w-4 h-4" />
                إرسال إشعار الدفع الإلكتروني عبر واتساب

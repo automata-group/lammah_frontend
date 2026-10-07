@@ -203,7 +203,7 @@ function StudyPageContent() {
     // 1. If user uploaded image(s): Convert in-memory (RAM) with 0 disk storage footprint!
     if (imageFiles.length > 0) {
       try {
-        showToast("⚡ جاري تجهيز الصور بالذاكرة المؤقتة (RAM)...", "success");
+        showToast("جاري تجهيز الصور...", "success");
         const { convertImagesToPdfBlob } = await import("@/lib/imageToPdf");
         const { blob, pageCount, title } = await convertImagesToPdfBlob(imageFiles);
 
@@ -216,9 +216,7 @@ function StudyPageContent() {
         setTotalPages(pageCount);
         setShowInstructions(false);
 
-        showToast(
-          `⚡ تم فتح ${imageFiles.length} صورة بنجاح بالذاكرة المؤقتة (RAM) — 0 بايت من مساحة جهازك!`
-        );
+        showToast(`تم فتح ${imageFiles.length} صورة بنجاح في مساحة المذاكرة`);
       } catch (err: any) {
         console.error("Image conversion error:", err);
         showToast("تعذر معالجة الصور المختارة. يرجى التأكد من صيغة الصور.", "error");
@@ -268,7 +266,7 @@ function StudyPageContent() {
         setCurrentPage(1);
         setShowInstructions(false);
 
-        showToast("✅ تم تحويل شرائح العرض التقديمي بنجاح وحفظها في خزينة جهازك المحلية!");
+        showToast("تم تحويل وتجهيز شرائح العرض التقديمي بنجاح");
       } catch (err: any) {
         console.error("PPTX conversion error:", err);
         showToast(err.message || "حدث خطأ أثناء معالجة ملف البوربوينت", "error");
@@ -289,7 +287,7 @@ function StudyPageContent() {
         setCurrentPage(1);
         setShowInstructions(false);
 
-        showToast("✅ تم فتح الملف وحفظه بأمان في خزينة جهازك المحلية!");
+        showToast("تم فتح المستند بنجاح وبدء مساحة المذاكرة");
       } catch (err) {
         console.error("Error saving PDF to vault:", err);
         setPdfSource(firstFile);
@@ -337,7 +335,7 @@ function StudyPageContent() {
 
       if (imageUrl) {
         try {
-          showToast("⚡ جاري جلب الصورة من بنترست بالذاكرة المؤقتة (RAM)...", "success");
+          showToast("جاري جلب الصورة وتجهيزها...", "success");
           const imageFile = await fetchImageFileFromUrl(imageUrl, "صورة_بنترست.jpg");
           const { blob, pageCount } = await convertImagesToPdfBlob([imageFile]);
 
@@ -349,7 +347,7 @@ function StudyPageContent() {
           setTotalPages(pageCount);
           setShowInstructions(false);
 
-          showToast("⚡ تم فتح صورة بنترست فورياً بالذاكرة (RAM) — 0 بايت من مساحة جهازك!");
+          showToast("تم جلب وفتح الصورة بنجاح");
         } catch (err: any) {
           console.error("Pinterest image drop error:", err);
           showToast("تعذر جلب صورة بنترست مباشرة. يمكنك نسخ الصورة ولصقها (Ctrl+V).", "error");
@@ -361,7 +359,7 @@ function StudyPageContent() {
       try {
         const text = dataTransfer.getData("text/plain")?.trim();
         if (text && (text.startsWith("http://") || text.startsWith("https://"))) {
-          showToast("⚡ جاري فحص الرابط الملقى وجلب الصورة بالذاكرة...", "success");
+          showToast("جاري جلب الصورة وتجهيزها...", "success");
           const imageFile = await fetchImageFileFromUrl(text, "صورة_مجلوبة.jpg");
           const { blob, pageCount } = await convertImagesToPdfBlob([imageFile]);
 
@@ -373,7 +371,7 @@ function StudyPageContent() {
           setTotalPages(pageCount);
           setShowInstructions(false);
 
-          showToast("⚡ تم فتح الصورة فورياً بالذاكرة (RAM) — 0 بايت من مساحة جهازك!");
+          showToast("تم فتح الصورة بنجاح في مساحة المذاكرة");
         }
       } catch (fallbackErr) {
         console.warn("Fallback link drop error:", fallbackErr);
@@ -430,7 +428,7 @@ function StudyPageContent() {
       if (imageItems.length > 0) {
         e.preventDefault();
         try {
-          showToast("⚡ جاري تجهيز الصورة بالذاكرة المؤقتة (RAM)...", "success");
+          showToast("جاري تجهيز الصورة...", "success");
           const { convertImagesToPdfBlob } = await import("@/lib/imageToPdf");
           const files: File[] = [];
           for (const item of imageItems) {
@@ -448,7 +446,7 @@ function StudyPageContent() {
             setTotalPages(pageCount);
             setShowInstructions(false);
 
-            showToast("⚡ تم فتح الصورة فورياً بالذاكرة (RAM) — 0 بايت من مساحة جهازك!");
+            showToast("تم فتح الصورة بنجاح في مساحة المذاكرة");
           }
         } catch (err) {
           console.error("Paste error:", err);
@@ -465,7 +463,7 @@ function StudyPageContent() {
       ) {
         e.preventDefault();
         try {
-          showToast("⚡ جاري جلب صورة الرابط بالذاكرة المؤقتة (RAM)...", "success");
+          showToast("جاري جلب صورة الرابط...", "success");
           const { fetchImageFileFromUrl, convertImagesToPdfBlob } = await import("@/lib/imageToPdf");
           const imageFile = await fetchImageFileFromUrl(pastedText, "صورة_ملصوقة.jpg");
           const { blob, pageCount } = await convertImagesToPdfBlob([imageFile]);
@@ -478,7 +476,7 @@ function StudyPageContent() {
           setTotalPages(pageCount);
           setShowInstructions(false);
 
-          showToast("⚡ تم فتح الصورة فورياً بالذاكرة (RAM) — 0 بايت من مساحة جهازك!");
+          showToast("تم فتح الصورة بنجاح في مساحة المذاكرة");
         } catch (pasteErr) {
           console.error("Pasted URL error:", pasteErr);
           showToast("تعذر جلب الصورة من الرابط المنسوخ.", "error");
@@ -506,7 +504,7 @@ function StudyPageContent() {
     try {
       const doc = await getDocumentFromVault(id);
       if (!doc || !doc.blob) {
-        showToast("تعذر العثور على الملف في الذاكرة المحلية", "error");
+        showToast("تعذر العثور على الملف المطلوب", "error");
         return;
       }
 
@@ -529,7 +527,7 @@ function StudyPageContent() {
     try {
       await deleteDocumentFromVault(id);
       const updated = await refreshVault();
-      showToast("تم حذف المستند من خزينتك المحلية");
+      showToast("تم حذف المستند بنجاح");
 
       // If active doc was deleted, switch to next or instructions
       if (id === documentId) {
@@ -559,7 +557,7 @@ function StudyPageContent() {
       setDocumentId("welcome_guide");
       setCurrentPage(1);
       setShowInstructions(true);
-      showToast("تم تفريغ الخزينة المحلية بنجاح");
+      showToast("تم حذف جميع المستندات المحفوظة بنجاح");
     } catch (err) {
       console.error("Error clearing vault:", err);
     }
@@ -582,7 +580,7 @@ function StudyPageContent() {
       setCurrentPage(1);
       setTotalPages(pageCount);
       setShowInstructions(false);
-      showToast("✅ تم فتح دفتر الملاحظات بالمحرر بنجاح!");
+      showToast("تم فتح دفتر الملاحظات بنجاح");
     } catch (err) {
       console.error("Failed to create blank notebook:", err);
       showToast("تعذر إنشاء دفتر الملاحظات", "error");
@@ -840,11 +838,11 @@ function StudyPageContent() {
               أفلت الصورة في أي مكان للبدء بالمذاكرة فورياً 📌
             </h3>
             <p className="text-xs sm:text-sm text-indigo-200 max-w-md leading-relaxed mb-3">
-              مباشرة من بنترست أو أي موقع إلى مساحة المذاكرة — بالذاكرة المؤقتة (RAM) وبدون تنزيل أي شيء على جهازك!
+              مباشرة من بنترست أو ملفاتك إلى مساحة المذاكرة لبدء التخطيط والتلخيص فوراً!
             </p>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
               <ShieldCheck className="w-4 h-4" />
-              <span>0 بايت من مساحة جهازك • خصوصية تامة</span>
+              <span>معالجة سريعة وآمنة ومحمية بالكامل</span>
             </div>
           </motion.div>
         )}
