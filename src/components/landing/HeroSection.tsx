@@ -16,7 +16,7 @@ import {
 export default function HeroSection() {
 
   return (
-    <section className="relative z-10 pt-14 sm:pt-24 lg:pt-28 pb-14 sm:pb-28 px-4 sm:px-6 max-w-5xl mx-auto text-center" dir="rtl">
+    <section className="relative z-10 pt-28 xs:pt-32 sm:pt-28 lg:pt-32 pb-14 sm:pb-28 px-4 sm:px-6 max-w-5xl mx-auto text-center" dir="rtl">
       
       {/* ── Floating Decorative Ornaments ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 max-w-7xl mx-auto hidden md:block">
@@ -55,7 +55,7 @@ export default function HeroSection() {
 
       {/* ── Top Catchphrase / Accent ─────────────────────────── */}
       <div className="mb-2 sm:mb-4">
-        <span className="text-3xl xs:text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white inline-flex items-center justify-center gap-2 sm:gap-4 tracking-tight">
+        <span className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white inline-flex items-center justify-center gap-2 sm:gap-4 tracking-tight">
           <span>كُن</span>
           <span>ل<span className="text-amber-500">مّ</span>احاً</span>
         </span>
@@ -63,7 +63,7 @@ export default function HeroSection() {
 
       {/* ── 1. Punchy Main Headline ───────────────────────────────── */}
       <h1
-        className="relative z-10 text-[2.75rem] leading-[1.3] xs:text-[3rem] xs:leading-[1.3] sm:text-6xl sm:leading-[1.3] lg:text-7xl lg:leading-[1.25] font-black tracking-tight text-slate-900 dark:text-white max-w-4xl mx-auto"
+        className="relative z-10 text-3xl xs:text-4xl sm:text-5xl lg:text-6xl leading-[1.3] font-black tracking-tight text-slate-900 dark:text-white max-w-4xl mx-auto"
       >
         <span className="block mb-2 sm:mb-3">
           <span className="inline-flex items-center justify-center gap-1.5 sm:gap-2">

@@ -43,7 +43,6 @@ export default function Home() {
 
   // FAQ States
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [showAllFaqs, setShowAllFaqs] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -97,7 +96,7 @@ export default function Home() {
     }
   ];
 
-  const visibleFaqs = showAllFaqs ? faqs : faqs.slice(0, 3);
+  const topFaqs = faqs.slice(0, 3);
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 selection:bg-indigo-500/30 overflow-x-hidden relative transition-colors duration-300" dir="rtl">
@@ -150,7 +149,7 @@ export default function Home() {
           </div>
 
           <div className="space-y-4 relative z-20">
-            {visibleFaqs.map((faq, i) => {
+            {topFaqs.map((faq, i) => {
               const isOpen = openFaq === i;
               return (
                 <div
@@ -194,25 +193,14 @@ export default function Home() {
             })}
           </div>
 
-          {/* Action Area: Expand inline or view full dedicated page */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 relative z-20">
-            <button
-              type="button"
-              onClick={() => {
-                setShowAllFaqs(!showAllFaqs);
-                setOpenFaq(null);
-              }}
-              className="w-full sm:w-auto px-8 py-3.5 rounded-full font-black text-sm text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 shadow-lg shadow-indigo-600/25 dark:shadow-[0_0_30px_rgba(99,102,241,0.35)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group cursor-pointer"
-            >
-              <span>{showAllFaqs ? "عرض أهم 3 أسئلة فقط ↑" : "عرض جميع الأسئلة الشائعة (10 أسئلة) ←"}</span>
-            </button>
-
+          {/* Action Area: Dedicated FAQ page */}
+          <div className="mt-10 flex items-center justify-center relative z-20">
             <Link
               href="/faq"
-              className="w-full sm:w-auto px-6 py-3.5 rounded-full font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-white/10 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 shadow-xs group"
+              className="w-full sm:w-auto px-8 py-4 rounded-full font-black text-sm text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 shadow-lg shadow-indigo-600/25 dark:shadow-[0_0_30px_rgba(99,102,241,0.35)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2.5 group cursor-pointer"
             >
-              <span>صفحة الأسئلة الشائعة الكاملة</span>
-              <ArrowLeft className="w-4 h-4 text-indigo-500 group-hover:-translate-x-1 transition-transform" />
+              <span>دليل الأسئلة الشائعة وإجاباتها الكاملة</span>
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1.5 transition-transform" />
             </Link>
           </div>
         </div>

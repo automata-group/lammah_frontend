@@ -334,7 +334,7 @@ export default function HeroSimulation({
     <section className="relative w-full py-24 z-20 flex flex-col items-center">
       {/* ── Section Headers ── */}
       <div className="mb-12 relative z-10 flex flex-col items-center">
-        <h2 className="text-2xl sm:text-4xl font-black text-slate-800 dark:text-white mb-3 sm:mb-4 px-4 text-center">
+        <h2 className="text-lg xs:text-xl sm:text-3xl md:text-4xl font-black text-slate-800 dark:text-white mb-3 sm:mb-4 px-6 text-center max-w-sm sm:max-w-none mx-auto leading-snug">
           جرب المنصة الآن <span className="text-indigo-600 dark:text-indigo-400">بدون تسجيل</span>
         </h2>
         

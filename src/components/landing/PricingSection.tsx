@@ -53,9 +53,12 @@ export default function PricingSection() {
       <div className="max-w-6xl mx-auto relative z-10">
         
         {/* Header */}
-        <div className="text-center mb-12 sm:mb-14">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 pb-3 pt-1 text-slate-900 dark:text-white tracking-tight leading-[1.38] sm:leading-[1.25] overflow-visible">
-            استثمر في راحتك و<span className="text-indigo-600 dark:text-indigo-400">تفوقك الدراسي</span>
+        <div className="text-center mb-12 sm:mb-14 overflow-visible">
+          <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-black mb-4 pb-6 pt-2 text-slate-900 dark:text-white tracking-tight leading-[1.8] sm:leading-[1.5] overflow-visible">
+            <span className="block sm:inline">استثمر في راحتك</span>{" "}
+            <span className="block sm:inline mt-2.5 sm:mt-0 text-indigo-600 dark:text-indigo-400">
+              وتفوقك الدراسي
+            </span>
           </h2>
           <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base max-w-2xl mx-auto font-medium leading-relaxed">
             من التلخيص الأكاديمي السريع قبل الامتحانات إلى توليد أفخم الدفاتر الملونة القابلة للطباعة وبيعها بالمتجر للأرباح!
