@@ -65,7 +65,13 @@ function StudyPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme, toggleTheme } = useTheme();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/auth?redirect=/study");
+    }
+  }, [user, authLoading, router]);
 
   const [quota, setQuota] = useState<number | null>(() => {
     if (typeof window !== "undefined") {
@@ -625,6 +631,17 @@ function StudyPageContent() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-[#030712] flex flex-col items-center justify-center p-6 text-center select-none" dir="rtl">
+        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-4" />
+        <p className="text-sm font-black text-slate-800 dark:text-slate-200">
+          جاري التحقق من تسجيل الدخول...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white relative transition-colors duration-300" dir="rtl">

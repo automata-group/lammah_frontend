@@ -52,10 +52,29 @@ function SummarizeContent() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [queuePosition, setQueuePosition] = useState(0);
   const [progressStep, setProgressStep] = useState("");
-  const [quota, setQuota] = useState<number | null>(null);
+  const [quota, setQuota] = useState<number | null>(() => {
+    if (typeof window !== "undefined") {
+      const cachedQuota = localStorage.getItem("cached_user_quota");
+      if (cachedQuota !== null && !isNaN(Number(cachedQuota))) {
+        return Number(cachedQuota);
+      }
+    }
+    return null;
+  });
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [initialEstimate, setInitialEstimate] = useState<number>(38);
-  const [planName, setPlanName] = useState<string>("");
+  const [planName, setPlanName] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("cached_user_plan") || "";
+    }
+    return "";
+  });
+  const [isQuotaChecking, setIsQuotaChecking] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("cached_user_quota") === null;
+    }
+    return true;
+  });
   const [deviceAbuse, setDeviceAbuse] = useState<boolean>(false);
   const [deviceAbuseMessage, setDeviceAbuseMessage] = useState<string | null>(null);
 
@@ -66,19 +85,6 @@ function SummarizeContent() {
   const [pdfTempId, setPdfTempId] = useState<string | null>(null);
   const [isAudioUploading, setIsAudioUploading] = useState(false);
   const [isPdfUploading, setIsPdfUploading] = useState(false);
-
-  useEffect(() => {
-    try {
-      const cachedQuota = localStorage.getItem("cached_user_quota");
-      if (cachedQuota !== null && !isNaN(Number(cachedQuota))) {
-        setQuota(Number(cachedQuota));
-      }
-      const cachedPlan = localStorage.getItem("cached_user_plan");
-      if (cachedPlan) {
-        setPlanName(cachedPlan);
-      }
-    } catch {}
-  }, []);
 
   const hasPaidPlan = Boolean(
     planName &&
@@ -290,14 +296,19 @@ function SummarizeContent() {
         setPlanName(data.plan_name);
         setDeviceAbuse(!!data.device_abuse);
         setDeviceAbuseMessage(data.device_abuse_message || null);
+        setIsQuotaChecking(false);
         if (typeof window !== "undefined") {
           try {
             localStorage.setItem("cached_user_quota", String(data.quota_remaining ?? 0));
             localStorage.setItem("cached_user_plan", data.plan_name || "");
           } catch {}
         }
+      } else {
+        setIsQuotaChecking(false);
       }
-    } catch {}
+    } catch {
+      setIsQuotaChecking(false);
+    }
   }, [session, router, signOut]);
 
   useEffect(() => {
@@ -583,7 +594,18 @@ function SummarizeContent() {
 
         {/* Main Processing or Upload Section */}
         <AnimatePresence mode="wait">
-          {quota !== null && quota <= 0 ? (
+          {isQuotaChecking && quota === null ? (
+            <motion.div
+              key="quota-checking"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="w-full max-w-3xl flex flex-col items-center justify-center p-12 bg-white/70 dark:bg-slate-900/60 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-xs text-center"
+            >
+              <Loader2 className="w-7 h-7 text-indigo-600 animate-spin mb-3" />
+              <p className="text-xs font-bold text-slate-600 dark:text-slate-300">جاري التحقق من الرصيد والاشتراك...</p>
+            </motion.div>
+          ) : quota !== null && quota <= 0 ? (
             <motion.div
               key="simulation"
               initial={{ opacity: 0, y: 15 }}
