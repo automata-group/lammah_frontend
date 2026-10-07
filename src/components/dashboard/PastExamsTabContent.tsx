@@ -74,9 +74,9 @@ export default function PastExamsTabContent({
             افتح بنك أسئلة السنوات السابقة المربوطة بالشرائح!
           </h3>
           <p className="text-sm sm:text-lg text-slate-600 dark:text-slate-300 max-w-lg mb-6 sm:mb-8 leading-relaxed font-medium">
-            ميزة <strong>أسئلة السنوات السابقة وربطها التفاعلي بالسلايدات وفخاخ الاختبارات</strong> حصرية لاشتراكات الباقات المتقدمة و الـ VIP. <br />
+            ميزة <strong>أسئلة السنوات السابقة وربطها التفاعلي بالسلايدات وفخاخ الاختبارات</strong> متاحة لجميع مشتركي باقات لمّاح المدفوعة. <br />
             <span className="text-slate-500 dark:text-slate-400 text-sm mt-2 block">
-              رقي باقتك الآن لتضمن التفوق واجتياز الامتحانات بأعلى الدرجات!
+              اشترك الآن لتضمن التفوق واجتياز الامتحانات بأعلى الدرجات!
             </span>
           </p>
           <button

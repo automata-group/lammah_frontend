@@ -198,8 +198,7 @@ function DashboardContent() {
       !planName.toLowerCase().includes("free")
   );
   const hasQuota = quota !== null ? quota > 0 : false;
-  const isBasicPlan =
-    (!hasPaidPlan || planName.includes("طالب") || planName.includes("أساسي") || planName === "مجاني") && !isDemoLecture;
+  const isBasicPlan = !hasPaidPlan && !isDemoLecture;
   const isFreeTrial = !hasPaidPlan && !hasQuota && quota !== null && quota <= 0;
 
   const subscriptionLimit = isDemoLecture

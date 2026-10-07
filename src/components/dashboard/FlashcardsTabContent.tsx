@@ -80,9 +80,9 @@ export default function FlashcardsTabContent({
             طوّر حفظك بالبطاقات التفاعلية!
           </h3>
           <p className="text-sm sm:text-lg text-slate-600 dark:text-slate-300 max-w-lg mb-6 sm:mb-8 leading-relaxed font-medium">
-            ميزة <strong>البطاقات التفاعلية (Flashcards)</strong> بنظام الاسترجاع المتباعد حصرية لاشتراكات الباقات المتقدمة و الـ VIP. <br />
+            ميزة <strong>البطاقات التفاعلية (Flashcards)</strong> بنظام الاسترجاع المتباعد متاحة لجميع مشتركي باقات لمّاح المدفوعة. <br />
             <span className="text-slate-500 dark:text-slate-400 text-sm mt-2 block">
-              رقي باقتك الآن لتضاعف سرعة حفظك واستيعابك للمصطلحات!
+              اشترك الآن لتضاعف سرعة حفظك واستيعابك للمصطلحات!
             </span>
           </p>
           <button
