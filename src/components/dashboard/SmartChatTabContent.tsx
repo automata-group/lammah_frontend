@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, BrainCircuit, Loader2, Send, Lock, Crown } from "lucide-react";
+import { MessageCircle, BrainCircuit, Loader2, Send, Lock, Crown, ArrowDown } from "lucide-react";
 import { ChatMessage } from "@/types/dashboard";
 import ChatMessageItem from "@/components/dashboard/ChatMessageItem";
 
@@ -30,11 +30,67 @@ export default function SmartChatTabContent({
   isDemoLecture,
 }: SmartChatTabContentProps) {
   const router = useRouter();
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const latestUserMsgRef = useRef<HTMLDivElement>(null);
+  const prevMessagesCountRef = useRef(chatMessages.length);
+  const isInitialMountRef = useRef(true);
+  const [isUserScrolledUp, setIsUserScrolledUp] = useState(false);
 
+  // Scroll only inside the internal messages container (never touches window.scrollY)
+  const scrollToBottom = useCallback((smooth = true) => {
+    if (!messagesContainerRef.current) return;
+    messagesContainerRef.current.scrollTo({
+      top: messagesContainerRef.current.scrollHeight,
+      behavior: smooth ? "smooth" : "auto",
+    });
+    setIsUserScrolledUp(false);
+  }, []);
+
+  // Monitor internal scroll position to detect if student is reading earlier text
+  const handleScroll = useCallback(() => {
+    if (!messagesContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    setIsUserScrolledUp(distanceFromBottom > 100);
+  }, []);
+
+  // Initial mount: scroll to bottom of existing conversation without page animation
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages, isChatLoading]);
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      if (chatMessages.length > 0 && messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      }
+    }
+  }, [chatMessages]);
+
+  // Handle new messages:
+  useEffect(() => {
+    const prevCount = prevMessagesCountRef.current;
+    prevMessagesCountRef.current = chatMessages.length;
+
+    if (chatMessages.length > prevCount) {
+      const lastMsg = chatMessages[chatMessages.length - 1];
+      if (lastMsg?.role === "user") {
+        // When user asks a question, scroll smoothly inside the chat container
+        // to position the question at the top so the student can read the upcoming answer directly!
+        requestAnimationFrame(() => {
+          if (latestUserMsgRef.current && messagesContainerRef.current) {
+            const container = messagesContainerRef.current;
+            const element = latestUserMsgRef.current;
+            const targetTop = element.offsetTop;
+            container.scrollTo({
+              top: Math.max(0, targetTop - 16),
+              behavior: "smooth",
+            });
+            setIsUserScrolledUp(false);
+          }
+        });
+      }
+      // When assistant message starts (role === "assistant"), we do NOT force-scroll down!
+      // This keeps the start/top of Lammah's reply directly in front of the student.
+    }
+  }, [chatMessages]);
 
   const isLimitReached = isFreeTrial && !isDemoLecture && chatCount >= subscriptionLimit;
 
@@ -78,7 +134,11 @@ export default function SmartChatTabContent({
           </p>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 custom-scrollbar bg-transparent">
+        <div
+          ref={messagesContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 custom-scrollbar bg-transparent relative"
+        >
           {chatMessages.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 space-y-4 opacity-70">
               <BrainCircuit className="w-12 h-12 sm:w-16 sm:h-16 text-slate-400 dark:text-slate-600" />
@@ -87,9 +147,22 @@ export default function SmartChatTabContent({
               </p>
             </div>
           )}
-          {chatMessages.map((msg, idx) => (
-            <ChatMessageItem key={idx} msg={msg} />
-          ))}
+          {chatMessages.map((msg, idx) => {
+            const isLatestUserMessage =
+              msg.role === "user" &&
+              (idx === chatMessages.length - 1 ||
+                (idx === chatMessages.length - 2 && chatMessages[chatMessages.length - 1]?.role === "assistant"));
+
+            return (
+              <div
+                key={idx}
+                ref={isLatestUserMessage ? latestUserMsgRef : undefined}
+                className="w-full"
+              >
+                <ChatMessageItem msg={msg} />
+              </div>
+            );
+          })}
           {isChatLoading && (
             <div className="flex justify-start w-full">
               <div className="max-w-[75%] p-3.5 sm:p-5 rounded-2xl sm:rounded-[1.5rem] bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-400 rounded-tr-xs flex items-center gap-2 shadow-inner">
@@ -98,8 +171,19 @@ export default function SmartChatTabContent({
               </div>
             </div>
           )}
-          <div ref={chatEndRef} />
         </div>
+
+        {/* Floating Scroll to Bottom Button */}
+        {isUserScrolledUp && (
+          <button
+            type="button"
+            onClick={() => scrollToBottom(true)}
+            className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-blue-600/95 hover:bg-blue-600 text-white text-xs sm:text-sm font-bold py-2 px-4 rounded-full shadow-lg border border-blue-400/30 flex items-center gap-2 transition-all transform hover:scale-105 z-20 cursor-pointer backdrop-blur-md"
+          >
+            <ArrowDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>النزول للأسفل</span>
+          </button>
+        )}
 
         <div className="p-3.5 sm:p-6 bg-slate-50 dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-800">
           {/* Chat Usage Indicator */}
