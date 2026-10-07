@@ -69,7 +69,7 @@ export default function Footer() {
                 متجر الدفاتر الجامعية
               </Link>
               <Link href="/study" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                تدوين الملاحظات اليدوي
+                دوّن ملاحظاتك
               </Link>
               <Link href="/faq" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                 الأسئلة الشائعة

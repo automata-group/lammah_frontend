@@ -64,11 +64,10 @@ export default function Header({ user }: { user?: any }) {
 
   const navItems = [
     { label: "المميزات", href: "/#features", isTutorsTab: false, badge: "" },
-    { label: "تدوين الملاحظات اليدوي", href: "/study", isTutorsTab: false, badge: "" },
+    { label: "دوّن ملاحظاتك", href: "/study", isTutorsTab: false, badge: "" },
     { label: "الأسعار", href: "/#pricing", isTutorsTab: false, badge: "" },
     { label: "المتجر", href: "/marketplace", isTutorsTab: false, badge: "" },
     { label: "الأسئلة الشائعة", href: "/faq", isTutorsTab: false, badge: "" },
-    { label: "المعلمين", href: "/tutors", isTutorsTab: true, badge: "قريباً" },
   ];
 
   return (

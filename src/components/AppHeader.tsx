@@ -113,7 +113,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
     },
     {
       id: "study",
-      label: "تدوين الملاحظات اليدوي",
+      label: "دوّن ملاحظاتك",
       icon: PenTool,
       path: "/study",
       show: true,
@@ -130,7 +130,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
       label: "حصصي",
       icon: Video,
       path: "/sessions",
-      show: !isTutor,
+      show: false,
       badge: "قريباً",
     },
     {
