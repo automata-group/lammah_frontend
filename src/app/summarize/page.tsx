@@ -63,6 +63,7 @@ function SummarizeContent() {
   });
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [initialEstimate, setInitialEstimate] = useState<number>(38);
+  const [serverProgressPercent, setServerProgressPercent] = useState<number | null>(null);
   const [planName, setPlanName] = useState<string>(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("cached_user_plan") || "";
@@ -164,7 +165,7 @@ function SummarizeContent() {
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev === null) return null;
-        if (prev <= 1) return 1;
+        if (prev <= 0) return 0;
         return prev - 1;
       });
     }, 1000);
@@ -382,8 +383,20 @@ function SummarizeContent() {
     setIsStreaming(false);
     setQueuePosition(0);
     setProgressStep("جاري بدء المعالجة...");
+    setServerProgressPercent(null);
     const isBatch = (uploadMode === "file" && multiAudioFiles.length > 1) || (uploadMode === "url" && lectureUrls.filter(u => u.trim()).length > 1);
-    const estimatedSecs = hasPdfOnly ? 38 : (isBatch ? 140 : 90);
+    
+    // حساب تقدير زمني دقيق وصادق بناءً على المدخلات الفعلية
+    let estimatedSecs = 45;
+    if (hasPdfOnly) {
+      estimatedSecs = pdfFile ? Math.max(25, Math.min(55, Math.round(pdfFile.size / (1024 * 300)) * 4 + 25)) : 35;
+    } else if (isBatch) {
+      const audioCount = uploadMode === "file" ? multiAudioFiles.length : lectureUrls.filter(u => u.trim()).length;
+      estimatedSecs = Math.max(75, audioCount * 24 + (pdfFile || pdfTempId ? 35 : 20));
+    } else {
+      estimatedSecs = (pdfFile || pdfTempId) ? 65 : 45;
+    }
+
     setTimeLeft(estimatedSecs);
     setInitialEstimate(estimatedSecs);
 
@@ -487,8 +500,11 @@ function SummarizeContent() {
                 case "processing":
                 case "progress":
                   setQueuePosition(0);
-                  setProgressStep(`${p.message}`);
-                  if (p.time_estimate) {
+                  if (p.message) setProgressStep(`${p.message}`);
+                  if (typeof p.progress_percent === "number") {
+                    setServerProgressPercent(p.progress_percent);
+                  }
+                  if (typeof p.time_estimate === "number") {
                     setTimeLeft(p.time_estimate);
                     setInitialEstimate(prev => Math.max(prev, p.time_estimate));
                   }
@@ -539,23 +555,30 @@ function SummarizeContent() {
     ];
   }, [isDocumentOnly]);
 
-  const activeStepIdx = useMemo(() => {
-    if (timeLeft !== null && initialEstimate > 0) {
-      const elapsedRatio = Math.max(0, 1 - (timeLeft / initialEstimate));
-      if (elapsedRatio >= 0.80) return 3;
-      if (elapsedRatio >= 0.50) return 2;
-      if (elapsedRatio >= 0.20) return 1;
-      return 0;
-    }
-    return 0;
-  }, [timeLeft, initialEstimate]);
-
   const progressPercent = useMemo(() => {
-    if (timeLeft === null || initialEstimate <= 0) return 15;
+    // 1. الأولوية للنسبة المئوية الحقيقية القادمة من السيرفر
+    if (serverProgressPercent !== null && typeof serverProgressPercent === "number") {
+      return Math.min(100, Math.max(5, Math.round(serverProgressPercent)));
+    }
+    // 2. الحساب التدريجي في حال انتظار التحديث
+    if (timeLeft === null || initialEstimate <= 0) return 10;
     const elapsed = Math.max(0, initialEstimate - timeLeft);
     const ratio = elapsed / initialEstimate;
-    return Math.min(97, Math.max(10, Math.round(ratio * 97)));
-  }, [timeLeft, initialEstimate]);
+    return Math.min(95, Math.max(10, Math.round(ratio * 95)));
+  }, [serverProgressPercent, timeLeft, initialEstimate]);
+
+  const activeStepIdx = useMemo(() => {
+    if (progressStep) {
+      if (progressStep.includes("5/5") || progressStep.includes("رسم") || progressStep.includes("تلوين")) return 3;
+      if (progressStep.includes("4/5") || progressStep.includes("استنتاج") || progressStep.includes("يطابق") || progressStep.includes("يفكّر")) return 2;
+      if (progressStep.includes("2/5") || progressStep.includes("3/5") || progressStep.includes("قراءة") || progressStep.includes("الشرائح")) return 1;
+      if (progressStep.includes("1/5") || progressStep.includes("تفريغ") || progressStep.includes("يستمع")) return 0;
+    }
+    if (progressPercent >= 85) return 3;
+    if (progressPercent >= 60) return 2;
+    if (progressPercent >= 25) return 1;
+    return 0;
+  }, [progressStep, progressPercent]);
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col relative transition-colors duration-300 selection:bg-indigo-500/20" dir="rtl">
@@ -640,8 +663,14 @@ function SummarizeContent() {
 
                   <div className="flex items-center gap-2.5 bg-indigo-50/80 dark:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/40 px-3.5 py-1.5 rounded-xl">
                     <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin" style={{ animationDuration: '6s' }} />
-                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">
-                      الوقت المتبقي: {timeLeft !== null && timeLeft <= 2 ? "لحظات..." : (timeLeft !== null ? `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}` : "جاري الحساب...")}
+                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 tabular-nums">
+                      الوقت المتبقي: {
+                        timeLeft === null
+                          ? "جاري الحساب..."
+                          : timeLeft > 0
+                          ? `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`
+                          : "ثوانٍ معدودة..."
+                      }
                     </span>
                   </div>
                 </div>

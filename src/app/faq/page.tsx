@@ -18,6 +18,7 @@ import {
   X
 } from "lucide-react";
 import Header from "@/components/landing/Header";
+import Footer from "@/components/Footer";
 import { useAuth } from "@/context/AuthContext";
 
 interface FAQItem {
@@ -296,6 +297,7 @@ export default function FAQPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </main>
   );
 }

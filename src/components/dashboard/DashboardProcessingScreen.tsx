@@ -112,11 +112,11 @@ export default function DashboardProcessingScreen({
             <div className="flex items-baseline gap-1.5">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">الوقت المتبقي:</span>
               <span className="text-sm sm:text-base font-black text-indigo-600 dark:text-indigo-300 tabular-nums tracking-wider">
-                {timeLeft !== null && timeLeft <= 2
-                  ? "لحظات..."
-                  : timeLeft !== null
+                {timeLeft === null
+                  ? "جاري الحساب..."
+                  : timeLeft > 0
                   ? `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, "0")}`
-                  : "جاري الحساب..."}
+                  : "ثوانٍ معدودة..."}
               </span>
             </div>
           </div>

@@ -84,6 +84,7 @@ function DashboardContent() {
   const [progressStep, setProgressStep] = useState("");
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [initialEstimate, setInitialEstimate] = useState<number>(38);
+  const [serverProgressPercent, setServerProgressPercent] = useState<number | null>(null);
 
   // Quota & Plan States
   const [quota, setQuota] = useState<number | null>(null);
@@ -445,11 +446,16 @@ function DashboardContent() {
   }, [progressStep, isDocumentOnly, timeLeft, initialEstimate]);
 
   const progressPercent = useMemo(() => {
-    if (timeLeft === null || initialEstimate <= 0) return 15;
+    // 1. الأولوية للنسبة المئوية الحقيقية القادمة من السيرفر
+    if (serverProgressPercent !== null && typeof serverProgressPercent === "number") {
+      return Math.min(100, Math.max(5, Math.round(serverProgressPercent)));
+    }
+    // 2. الحساب التدريجي في حال انتظار التحديث
+    if (timeLeft === null || initialEstimate <= 0) return 10;
     const elapsed = Math.max(0, initialEstimate - timeLeft);
     const ratio = elapsed / initialEstimate;
-    return Math.min(97, Math.max(10, Math.round(ratio * 97)));
-  }, [timeLeft, initialEstimate]);
+    return Math.min(95, Math.max(10, Math.round(ratio * 95)));
+  }, [serverProgressPercent, timeLeft, initialEstimate]);
 
   // Progress Countdown Timer
   useEffect(() => {
@@ -458,7 +464,7 @@ function DashboardContent() {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev === null) return null;
-        if (prev <= 1) return 1;
+        if (prev <= 0) return 0;
         return prev - 1;
       });
     }, 1000);
@@ -798,10 +804,22 @@ function DashboardContent() {
     setIsStreaming(false);
     setQueuePosition(0);
     setProgressStep("جاري المعالجة...");
+    setServerProgressPercent(null);
     const isBatch =
       (uploadMode === "file" && multiAudioFiles.length > 1) ||
       (uploadMode === "url" && lectureUrls.filter((u) => u.trim()).length > 1);
-    const estimatedSecs = hasPdfOnly ? 38 : isBatch ? 140 : 90;
+    
+    // حساب تقدير زمني دقيق وصادق بناءً على المدخلات الفعلية
+    let estimatedSecs = 45;
+    if (hasPdfOnly) {
+      estimatedSecs = pdfFile ? Math.max(25, Math.min(55, Math.round(pdfFile.size / (1024 * 300)) * 4 + 25)) : 35;
+    } else if (isBatch) {
+      const audioCount = uploadMode === "file" ? multiAudioFiles.length : lectureUrls.filter((u) => u.trim()).length;
+      estimatedSecs = Math.max(75, audioCount * 24 + (pdfFile || pdfTempId ? 35 : 20));
+    } else {
+      estimatedSecs = (pdfFile || pdfTempId) ? 65 : 45;
+    }
+
     setTimeLeft(estimatedSecs);
     setInitialEstimate(estimatedSecs);
 
@@ -913,8 +931,11 @@ function DashboardContent() {
                 case "processing":
                 case "progress":
                   setQueuePosition(0);
-                  setProgressStep(`${p.message}`);
-                  if (p.time_estimate) {
+                  if (p.message) setProgressStep(`${p.message}`);
+                  if (typeof p.progress_percent === "number") {
+                    setServerProgressPercent(p.progress_percent);
+                  }
+                  if (typeof p.time_estimate === "number") {
                     setTimeLeft(p.time_estimate);
                     setInitialEstimate((prev) => Math.max(prev, p.time_estimate));
                   }
