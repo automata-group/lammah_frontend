@@ -113,7 +113,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
     },
     {
       id: "study",
-      label: "محرر الملاحظات",
+      label: "تدوين الملاحظات اليدوي",
       icon: PenTool,
       path: "/study",
       show: true,

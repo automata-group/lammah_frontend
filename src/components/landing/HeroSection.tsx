@@ -110,7 +110,7 @@ export default function HeroSection() {
         </span>
 
         {/* Line 3 on Mobile (Line 2 on Desktop) */}
-        <span className="block text-2xl xs:text-3xl sm:text-6xl lg:text-7xl whitespace-nowrap mt-2 sm:mt-0 pt-3 sm:pt-4 pb-2 sm:pb-3 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-300 dark:to-pink-400">
+        <span className="block text-xl xs:text-2xl sm:text-5xl lg:text-6xl whitespace-nowrap mt-1 sm:mt-0 pt-2 sm:pt-4 pb-2 sm:pb-3 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-300 dark:to-pink-400">
           إلى أعلى العلامات
         </span>
       </h1>
@@ -126,13 +126,13 @@ export default function HeroSection() {
       <div
         className="mt-8 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 max-w-[310px] sm:max-w-none mx-auto w-full"
       >
-        <a
-          href="/register"
-          className="w-full sm:w-auto px-8 py-3.5 rounded-full font-black text-sm text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 shadow-lg shadow-indigo-600/25 dark:shadow-[0_0_35px_rgba(99,102,241,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group"
+        <Link
+          href="/auth"
+          className="w-full sm:w-auto px-8 py-3.5 rounded-full font-black text-sm text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 shadow-lg shadow-indigo-600/25 dark:shadow-[0_0_35px_rgba(99,102,241,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group cursor-pointer"
         >
           <span>سجل في لماح</span>
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-        </a>
+        </Link>
 
         <a
           href="#interactive-demo"

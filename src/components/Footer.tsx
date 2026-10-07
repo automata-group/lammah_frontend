@@ -36,6 +36,7 @@ export default function Footer() {
           </a>
           <Link href="/plans" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">الباقات والأسعار</Link>
           <Link href="/marketplace" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">متجر الدفاتر</Link>
+          <Link href="/faq" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">الأسئلة الشائعة</Link>
           <Link href="/terms" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">الشروط والأحكام</Link>
           <Link href="/privacy" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">سياسة الخصوصية</Link>
         </div>

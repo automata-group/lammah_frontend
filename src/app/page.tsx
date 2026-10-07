@@ -15,6 +15,7 @@ import {
   User,
   ChevronDown,
   ArrowRight,
+  ArrowLeft,
   Star,
   Play,
   Check,
@@ -42,6 +43,7 @@ export default function Home() {
 
   // FAQ States
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [showAllFaqs, setShowAllFaqs] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -54,8 +56,16 @@ export default function Home() {
 
   const faqs = [
     {
-      q: "كيف يقوم لمّاح بتلخيص وتفريغ المحاضرات الطويلة؟",
+      q: "كيف يضمن لمّاح دقة تفريغ الصوت وربطه بشرائح السلايدات؟",
       a: "يدمج لمّاح بين تسجيل صوت المحاضر وشرائح السلايدات (PDF أو PPTX). يتعرف على كلام الدكتور بدقة ويربط كل شرح وتفصيلة جانبية برقم الشريحة المقابلة لها، لينتج ملخصاً أكاديمياً شاملاً ومترابطاً لا يفوّت أي معلومة هامة."
+    },
+    {
+      q: "ماذا يحدث لدقائقي ورصيدي إذا كان الملف طويلاً أو حدث انقطاع أثناء المعالجة؟",
+      a: "رصيدك في أمان تام؛ يطبق لمّاح نظام «الاسترجاع التلقائي العادل». لا يتم خصم أي دقيقة من باقتك إلا بعد اكتمال المعالجة وتوليد الملخص بنجاح 100%. وفي حال واجهت أي مشكلة تقنية أو انقطاع، يُعاد الرصيد لمحفظتك فوراً وتلقائياً دون الحاجة لطلب الدعم."
+    },
+    {
+      q: "ما هي وسائل وطرق الدفع والشحن المتاحة للاشتراك؟",
+      a: "الدفع متاح وميسر لجميع الطلاب حصرياً عبر تطبيق ريفلكت (Reflect)، حسابات البنك العربي، وحسابات بنك فلسطين. بعد إتمام التحويل، يتم تفعيل باقتك ورصيدك فوراً لتبدأ دراستك دون أي تأخير."
     },
     {
       q: "هل يدعم لمّاح اللهجات العامية والمصطلحات الإنجليزية المتداخلة؟",
@@ -74,14 +84,6 @@ export default function Home() {
       a: "يمتلك لمّاح فلاتر صوتية متطورة لتنقية الصوت وعزل الضوضاء وصوت المراوح وتشويش القاعة، والتركيز على صوت الدكتور مع مطابقة الكلمات المسموعة بنصوص السلايدات لضمان أعلى درجات الدقة حتى في التسجيلات البعيدة."
     },
     {
-      q: "ماذا يحدث لدقائقي ورصيدي إذا حدث خطأ أو انقطع الاتصال أثناء المعالجة؟",
-      a: "رصيدك في أمان تام؛ يطبق لمّاح نظام «الاسترجاع التلقائي العادل». لا يتم خصم أي دقيقة من باقتك إلا بعد اكتمال المعالجة بنجاح 100%. وفي حال واجهت أي مشكلة تقنية، يُعاد الرصيد لمحفظتك فوراً دون الحاجة لطلب الدعم."
-    },
-    {
-      q: "ما هي وسائل وطرق الدفع المتاحة للاشتراك؟",
-      a: "الدفع متاح وميسر لجميع الطلاب حصرياً عبر تطبيق ريفلكت (Reflect)، حسابات البنك العربي، وحسابات بنك فلسطين. بعد إتمام التحويل، يتم تفعيل باقتك فوراً لتبدأ دراستك دون أي تأخير."
-    },
-    {
       q: "كيف يعمل متجر الدفاتر؟ وكيف يمكنني استرداد قيمة اشتراكي وتحقيق أرباح؟",
       a: "عند اشتراكك في باقة النخبة (100 ₪)، ستحصل على رخصة بائع معتمد. بمجرد توليد دفترك الملون عبر لمّاح، انشرها في المتجر بضغطة زر وحدد السعر الذي يناسبك. كل عملية شراء من زملائك تنزل أرباحها في محفظتك ويمكنك سحبها مباشرة."
     },
@@ -94,6 +96,8 @@ export default function Home() {
       a: "بالطبع! يوفر لمّاح قسماً تفاعلياً وتجربة مجانية فورية على الموقع بدون الحاجة لبطاقة دفع أو اشتراك، لتشاهد بنفسك سرعة ودقة التحويل وجودة المخرجات قبل الانضمام."
     }
   ];
+
+  const visibleFaqs = showAllFaqs ? faqs : faqs.slice(0, 3);
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 selection:bg-indigo-500/30 overflow-x-hidden relative transition-colors duration-300" dir="rtl">
@@ -128,7 +132,7 @@ export default function Home() {
         </div>
 
         <div className="max-w-4xl mx-auto relative z-10">
-          <div className="text-center mb-20 relative">
+          <div className="text-center mb-16 relative">
             {/* Decorative icons floating near title */}
             <div className="absolute top-0 right-10 md:right-32 text-indigo-400/50 dark:text-indigo-500/40 animate-pulse">
               <Sparkles className="w-8 h-8" />
@@ -146,7 +150,7 @@ export default function Home() {
           </div>
 
           <div className="space-y-4 relative z-20">
-            {faqs.map((faq, i) => {
+            {visibleFaqs.map((faq, i) => {
               const isOpen = openFaq === i;
               return (
                 <div
@@ -188,6 +192,28 @@ export default function Home() {
                 </div>
               );
             })}
+          </div>
+
+          {/* Action Area: Expand inline or view full dedicated page */}
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 relative z-20">
+            <button
+              type="button"
+              onClick={() => {
+                setShowAllFaqs(!showAllFaqs);
+                setOpenFaq(null);
+              }}
+              className="w-full sm:w-auto px-8 py-3.5 rounded-full font-black text-sm text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 shadow-lg shadow-indigo-600/25 dark:shadow-[0_0_30px_rgba(99,102,241,0.35)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group cursor-pointer"
+            >
+              <span>{showAllFaqs ? "عرض أهم 3 أسئلة فقط ↑" : "عرض جميع الأسئلة الشائعة (10 أسئلة) ←"}</span>
+            </button>
+
+            <Link
+              href="/faq"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-full font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-white/10 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 shadow-xs group"
+            >
+              <span>صفحة الأسئلة الشائعة الكاملة</span>
+              <ArrowLeft className="w-4 h-4 text-indigo-500 group-hover:-translate-x-1 transition-transform" />
+            </Link>
           </div>
         </div>
       </section>

@@ -338,8 +338,9 @@ export default function HeroSimulation({
           جرب المنصة الآن <span className="text-indigo-600 dark:text-indigo-400">بدون تسجيل</span>
         </h2>
         
-        <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base max-w-xl text-center">
-          ارفع ملفاً صوتياً أو ملف PDF لترى كيف يقوم لمّاح بتحليل وتلخيص المحتوى السحري أمام عينيك!
+        <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-base max-w-[290px] xs:max-w-[330px] sm:max-w-xl mx-auto text-center px-2 sm:px-6 leading-relaxed font-medium">
+          <span className="block sm:inline">ارفع ملفاً صوتياً أو ملف PDF لترى كيف يقوم لمّاح</span>{" "}
+          <span className="block sm:inline mt-0.5 sm:mt-0">بتحليل وتلخيص المحتوى السحري أمام عينيك!</span>
         </p>
       </div>
 

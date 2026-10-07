@@ -119,7 +119,7 @@ export default function FeaturesSection() {
                   
                   {/* Content */}
                   <div className="flex-1 text-right">
-                    <h3 className="text-xl sm:text-2xl font-black mb-2.5 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-white dark:to-slate-200 md:text-slate-900 md:dark:text-white md:group-hover:text-transparent md:group-hover:bg-clip-text md:group-hover:bg-gradient-to-r md:group-hover:from-indigo-600 md:group-hover:to-purple-600 transition-colors">
+                    <h3 className="text-xl sm:text-2xl font-black mb-2.5 pb-1 leading-normal tracking-tight text-slate-900 dark:text-white md:group-hover:text-transparent md:group-hover:bg-clip-text md:group-hover:bg-gradient-to-r md:group-hover:from-indigo-600 md:group-hover:to-purple-600 transition-all">
                       {feature.title}
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
