@@ -58,6 +58,10 @@ jobs:
             
             mkdir -p ~/lammah_frontend
             cd ~/lammah_frontend
+
+            # Stop any running frontend container to free up port 3001
+            docker compose down || true
+            docker ps -q --filter publish=3001 | xargs -r docker stop || true
             
             cat <<EOF > docker-compose.yml
             services:
@@ -88,4 +92,4 @@ jobs:
               sleep 15
             done
 
-            docker compose up -d
+            docker compose up -d --force-recreate
