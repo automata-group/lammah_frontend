@@ -66,8 +66,8 @@ export default function FeaturesSection() {
       iconColor: "text-amber-600 dark:text-amber-400"
     },
     {
-      title: "تنظيم أكاديمي وحفظ سحابي",
-      description: "احفظ كافة محاضراتك ودفاترك وملاحظاتك في سحابة خاصة منظمة حسب موادك وفصولك، للوصول إليها بسهولة من أي جهاز وفي أي وقت.",
+      title: "حفظ سحابي وأرشيف دائم",
+      description: "احفظ كافة تسجيلاتك، تلخيصاتك، ودفاترك المولدة تلقائياً في سحابتك الخاصة للوصول إليها وتنزيلها من أي جهاز وفي أي وقت بكل أمان دون فقدان أي ملف.",
       icon: Layers,
       color: "from-purple-500 to-violet-600",
       bgLight: "bg-purple-50",
