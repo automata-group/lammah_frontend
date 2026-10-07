@@ -137,6 +137,15 @@ function NotebookCreatorContent() {
   const [audioUploadProgress, setAudioUploadProgress] = useState<number>(0);
   const [pdfUploadProgress, setPdfUploadProgress] = useState<number>(0);
 
+  // Multi-Audio Upload Computations
+  const isMultiAudioUploading = multiAudioFiles.length > 0 && multiAudioFiles.some(f => f.isUploading || !f.tempId);
+  const isAnyAudioUploading = isAudioUploading || isMultiAudioUploading;
+  const completedAudioCount = multiAudioFiles.filter(f => !f.isUploading && Boolean(f.tempId)).length;
+  const totalAudioCount = multiAudioFiles.length;
+  const avgMultiProgress = totalAudioCount > 0
+    ? Math.round(multiAudioFiles.reduce((acc, f) => acc + (f.progress || 0), 0) / totalAudioCount)
+    : 0;
+
   // Processing states
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [progressStep, setProgressStep] = useState<string>("");
@@ -375,6 +384,25 @@ function NotebookCreatorContent() {
     const hasAudioFile = !!audioFile || multiAudioFiles.length > 0;
     const hasLectureUrl = (uploadMode === "url" && lectureUrl.trim().length > 0) || (uploadMode === "url" && lectureUrls.filter(u => u.trim()).length > 0);
     const hasPdfFile = !!pdfFile || !!pdfTempId;
+
+    if (uploadMode === "file") {
+      if (isAudioUploading) {
+        setError("⏳ يرجى الانتظار حتى يكتمل رفع الملف الصوتي إلى السيرفر.");
+        return;
+      }
+      if (isPdfUploading) {
+        setError("⏳ يرجى الانتظار حتى يكتمل رفع ملف السلايدات إلى السيرفر.");
+        return;
+      }
+      if (multiAudioFiles.length > 0) {
+        const incomplete = multiAudioFiles.filter(item => item.isUploading || !item.tempId);
+        if (incomplete.length > 0) {
+          const completed = multiAudioFiles.length - incomplete.length;
+          setError(`⏳ يرجى الانتظار، جاري رفع التسجيلات الصوتية للسيرفر (تم اكتمال ${completed} من أصل ${multiAudioFiles.length} ملفات).`);
+          return;
+        }
+      }
+    }
 
     if (!hasAudioFile && !hasPdfFile) {
       setError("يرجى إرفاق ملف صوتي أو ملف عرض (PDF/PPTX) أولاً.");
@@ -810,22 +838,26 @@ function NotebookCreatorContent() {
                       onChange={(e) => {
                         const files = e.target.files;
                         if (files && files.length > 0) {
+                          setError(null);
                           if (files.length === 1 && multiAudioFiles.length === 0) {
                             setAudioFile(files[0]);
                             setAudioUploadProgress(0);
                             setAudioTempId("");
                             uploadTempFile(files[0], true);
+                          } else {
+                            setAudioFile(null);
+                            setAudioTempId("");
+                            const newFiles = Array.from(files).map(file => ({
+                               id: Math.random().toString(36).substring(7),
+                               file,
+                               progress: 0,
+                               isUploading: true
+                            }));
+                            setMultiAudioFiles(prev => [...prev, ...newFiles]);
+                            newFiles.forEach(item => {
+                              uploadSingleMultiAudio(item.id, item.file);
+                            });
                           }
-                          const newFiles = Array.from(files).map(file => ({
-                             id: Math.random().toString(36).substring(7),
-                             file,
-                             progress: 0,
-                             isUploading: true
-                          }));
-                          setMultiAudioFiles(prev => [...prev, ...newFiles]);
-                          newFiles.forEach(item => {
-                            uploadSingleMultiAudio(item.id, item.file);
-                          });
                         }
                       }} 
                       className="absolute inset-0 opacity-0 cursor-pointer z-10" 
@@ -833,15 +865,35 @@ function NotebookCreatorContent() {
                     {audioFile || multiAudioFiles.length > 0 ? (
                       <div className="w-full z-20 relative flex items-center justify-between text-right gap-2">
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                            <CheckCircle className="w-4 h-4" />
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                            isAnyAudioUploading
+                              ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400"
+                              : "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"
+                          }`}>
+                            {isAnyAudioUploading ? (
+                              audioFile ? (
+                                <span className="text-[10px] font-bold">{audioUploadProgress}%</span>
+                              ) : (
+                                <span className="text-[10px] font-bold">{avgMultiProgress}%</span>
+                              )
+                            ) : (
+                              <CheckCircle className="w-4 h-4" />
+                            )}
                           </div>
                           <div className="min-w-0 text-right">
                             <p className="text-xs font-black text-slate-900 dark:text-slate-100 truncate max-w-[130px]">
                               {audioFile ? audioFile.name : `${multiAudioFiles.length} تسجيلات صوتية`}
                             </p>
-                            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">
-                              {isAudioUploading || multiAudioFiles.some(x => x.isUploading) ? "جاري الرفع..." : "جاهز للتحليل"}
+                            <p className="text-[10px] font-bold mt-0.5">
+                              {isAnyAudioUploading ? (
+                                audioFile ? (
+                                  <span className="text-indigo-600 dark:text-indigo-400">جاري الرفع... ({audioUploadProgress}%)</span>
+                                ) : (
+                                  <span className="text-indigo-600 dark:text-indigo-400">جاري الرفع... ({completedAudioCount} من {totalAudioCount} جاهزة)</span>
+                                )
+                              ) : (
+                                <span className="text-emerald-600 dark:text-emerald-400">جاهز للتحليل ✔️</span>
+                              )}
                             </p>
                           </div>
                         </div>
@@ -1019,13 +1071,25 @@ function NotebookCreatorContent() {
               <div className="pt-2">
                 <SmartGenerateButton
                   onClick={startNotebookProcessing}
-                  disabled={isAudioUploading || isPdfUploading}
+                  disabled={
+                    (!audioFile && multiAudioFiles.length === 0 && !pdfFile && !pdfTempId) ||
+                    isAnyAudioUploading ||
+                    isPdfUploading
+                  }
                   isProcessing={isProcessing}
                   progressStep={progressStep}
                   progressMessage={progressMessage}
                   quota={quota}
                   deviceAbuse={deviceAbuse}
-                  text="توليد دفتر ملخص للمحاضرة للامتحان ✨"
+                  text={
+                    isAnyAudioUploading
+                      ? (multiAudioFiles.length > 0
+                          ? `جاري رفع التسجيلات (${completedAudioCount}/${totalAudioCount})...`
+                          : `جاري رفع الملف الصوتي (${audioUploadProgress}%)...`)
+                      : isPdfUploading
+                      ? `جاري رفع السلايدات (${pdfUploadProgress}%)...`
+                      : "توليد دفتر ملخص للمحاضرة للامتحان ✨"
+                  }
                   variant="pill"
                   size="md"
                 />

@@ -64,16 +64,18 @@ export default function SmartGenerateButton({
   } else if (isProcessing) {
     bgClasses = "bg-gradient-to-r from-indigo-700 via-indigo-600 to-violet-700 text-white shadow-xl shadow-indigo-600/40 cursor-wait scale-[0.995]";
   } else if (disabled) {
-    // When disabled (e.g. before file upload), maintain the rich brand color with high contrast
-    bgClasses = "bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/25 hover:shadow-lg hover:shadow-indigo-600/35 cursor-pointer active:scale-[0.99]";
+    // When disabled (e.g. before file upload or during active upload)
+    bgClasses = "bg-gradient-to-r from-indigo-500/60 via-indigo-600/60 to-violet-600/60 text-white/80 shadow-none border border-indigo-400/20 opacity-80 cursor-not-allowed";
   }
+
+  const isActuallyDisabled = disabled || isProcessing || deviceAbuse;
 
   return (
     <div className={`relative ${fullWidth ? "w-full" : "w-auto inline-block"} ${className}`}>
       <button
         type="button"
-        onClick={onClick}
-        disabled={isProcessing || deviceAbuse}
+        onClick={isActuallyDisabled ? undefined : onClick}
+        disabled={isActuallyDisabled}
         aria-label={displayText}
         className={`relative ${fullWidth ? "w-full" : "w-auto min-w-[260px]"} ${sizeClasses} ${radiusClass} ${bgClasses} border border-indigo-400/40 dark:border-white/20 ring-1 ring-white/15 flex items-center justify-center font-black transition-all duration-200 select-none overflow-hidden group`}
       >

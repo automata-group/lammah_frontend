@@ -97,6 +97,15 @@ function SummarizeContent() {
   const hasQuota = quota !== null ? quota > 0 : false;
   const isFreeTrial = !hasPaidPlan && !hasQuota && (quota !== null && quota <= 0);
 
+  // Multi-Audio Upload Computations
+  const isMultiAudioUploading = multiAudioFiles.length > 0 && multiAudioFiles.some(f => f.isUploading || !f.tempId);
+  const isAnyAudioUploading = isAudioUploading || isMultiAudioUploading;
+  const completedAudioCount = multiAudioFiles.filter(f => !f.isUploading && Boolean(f.tempId)).length;
+  const totalAudioCount = multiAudioFiles.length;
+  const avgMultiProgress = totalAudioCount > 0
+    ? Math.round(multiAudioFiles.reduce((acc, f) => acc + (f.progress || 0), 0) / totalAudioCount)
+    : 0;
+
   // Dhikr Counter during processing
   const dhikrPhrases = [
     "أستغفر الله العظيم",
@@ -327,6 +336,28 @@ function SummarizeContent() {
       setError("🚫 رصيدك صفر دقيقة — لا يمكن رفع ومعالجة ملفات خاصة. يرجى شحن الرصيد للمتابعة.");
       return;
     }
+    setError(null);
+
+    // Validation: Enforce uploads to finish before processing
+    if (uploadMode === "file") {
+      if (isAudioUploading) {
+        setError("⏳ يرجى الانتظار حتى يكتمل رفع الملف الصوتي إلى السيرفر.");
+        return;
+      }
+      if (isPdfUploading) {
+        setError("⏳ يرجى الانتظار حتى يكتمل رفع ملف السلايدات إلى السيرفر.");
+        return;
+      }
+      if (multiAudioFiles.length > 0) {
+        const incomplete = multiAudioFiles.filter(item => item.isUploading || !item.tempId);
+        if (incomplete.length > 0) {
+          const completed = multiAudioFiles.length - incomplete.length;
+          setError(`⏳ يرجى الانتظار، جاري رفع التسجيلات الصوتية للسيرفر (تم اكتمال ${completed} من أصل ${multiAudioFiles.length} ملفات).`);
+          return;
+        }
+      }
+    }
+
     const hasAudioFile = !!audioFile || multiAudioFiles.length > 0;
     const hasLectureUrl = (uploadMode === "url" && lectureUrl.trim().length > 0) || (uploadMode === "url" && lectureUrls.filter(u => u.trim()).length > 0);
     const hasPdfOnly = !hasAudioFile && !hasLectureUrl && (!!pdfFile || !!pdfTempId);
@@ -413,6 +444,11 @@ function SummarizeContent() {
         formData.append("lecture_urls", urls.join(","));
       } else {
         const tempIds = multiAudioFiles.map(item => item.tempId).filter(Boolean);
+        if (tempIds.length === 0 && !hasPdfOnly) {
+          setError("🚫 لم يتم استلام أي تسجيلات صوتية صالحة من السيرفر. يرجى الانتظار حتى اكتمال الرفع والمحاولة مجدداً.");
+          setIsProcessing(false);
+          return;
+        }
         formData.append("audio_temp_ids", tempIds.join(","));
       }
     } else {
@@ -801,22 +837,26 @@ function SummarizeContent() {
                         onChange={(e) => {
                           const files = e.target.files;
                           if (files && files.length > 0) {
+                            setError(null);
                             if (files.length === 1 && multiAudioFiles.length === 0) {
                               setAudioFile(files[0]);
                               setAudioUploadProgress(0);
                               setAudioTempId(null);
                               uploadToTemp(files[0], 'audio');
+                            } else {
+                              setAudioFile(null);
+                              setAudioTempId(null);
+                              const newFiles = Array.from(files).map(file => ({
+                                id: Math.random().toString(36).substring(7),
+                                file,
+                                progress: 0,
+                                isUploading: true
+                              }));
+                              setMultiAudioFiles(prev => [...prev, ...newFiles]);
+                              newFiles.forEach(item => {
+                                uploadSingleMultiAudio(item.id, item.file);
+                              });
                             }
-                            const newFiles = Array.from(files).map(file => ({
-                              id: Math.random().toString(36).substring(7),
-                              file,
-                              progress: 0,
-                              isUploading: true
-                            }));
-                            setMultiAudioFiles(prev => [...prev, ...newFiles]);
-                            newFiles.forEach(item => {
-                              uploadSingleMultiAudio(item.id, item.file);
-                            });
                           }
                         }}
                         className="absolute inset-0 opacity-0 cursor-pointer z-10"
@@ -825,9 +865,17 @@ function SummarizeContent() {
                       {audioFile || multiAudioFiles.length > 0 ? (
                         <div className="w-full z-20 relative flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200/80 dark:border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
-                              {isAudioUploading ? (
-                                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">{audioUploadProgress}%</span>
+                            <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${
+                              isAnyAudioUploading
+                                ? "bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400"
+                                : "bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200/80 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                            }`}>
+                              {isAnyAudioUploading ? (
+                                audioFile ? (
+                                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">{audioUploadProgress}%</span>
+                                ) : (
+                                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">{avgMultiProgress}%</span>
+                                )
                               ) : (
                                 <CheckCircle className="w-5 h-5" />
                               )}
@@ -836,8 +884,18 @@ function SummarizeContent() {
                               <p className="font-bold text-slate-800 dark:text-slate-100 text-xs truncate" dir="ltr">
                                 {audioFile ? audioFile.name : `${multiAudioFiles.length} ملفات صوتية`}
                               </p>
-                              <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                                {isAudioUploading ? "جاري الرفع..." : "جاهز للمعالجة"}
+                              <p className="text-[11px] font-medium mt-0.5">
+                                {isAnyAudioUploading ? (
+                                  audioFile ? (
+                                    <span className="text-indigo-600 dark:text-indigo-400 font-bold">جاري الرفع... ({audioUploadProgress}%)</span>
+                                  ) : (
+                                    <span className="text-indigo-600 dark:text-indigo-400 font-bold">
+                                      جاري الرفع... ({completedAudioCount} من {totalAudioCount} جاهزة)
+                                    </span>
+                                  )
+                                ) : (
+                                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">جاهز للمعالجة ✔️</span>
+                                )}
                               </p>
                             </div>
                           </div>
@@ -960,14 +1018,21 @@ function SummarizeContent() {
                     onClick={() => handleProcess()}
                     disabled={
                       (!audioFile && multiAudioFiles.length === 0 && !pdfFile && !pdfTempId) ||
-                      isAudioUploading ||
-                      isPdfUploading ||
-                      multiAudioFiles.some(i => i.isUploading)
+                      isAnyAudioUploading ||
+                      isPdfUploading
                     }
                     isProcessing={isProcessing}
                     quota={isFreeTrial ? null : quota}
                     deviceAbuse={deviceAbuse}
-                    text="ابدأ التلخيص الذكي وتوليد الدفتر"
+                    text={
+                      isAnyAudioUploading
+                        ? (multiAudioFiles.length > 0
+                            ? `جاري رفع التسجيلات (${completedAudioCount}/${totalAudioCount})...`
+                            : `جاري رفع الملف الصوتي (${audioUploadProgress}%)...`)
+                        : isPdfUploading
+                        ? `جاري رفع السلايدات (${pdfUploadProgress}%)...`
+                        : "ابدأ التلخيص الذكي وتوليد الدفتر"
+                    }
                     loadingText="جاري التوليد والتلخيص..."
                     variant="pill"
                     size="md"
