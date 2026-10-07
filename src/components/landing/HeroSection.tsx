@@ -16,7 +16,7 @@ import {
 export default function HeroSection() {
 
   return (
-    <section className="relative z-10 pt-28 xs:pt-32 sm:pt-28 lg:pt-32 pb-14 sm:pb-28 px-4 sm:px-6 max-w-5xl mx-auto text-center" dir="rtl">
+    <section className="relative z-10 pt-32 xs:pt-36 sm:pt-32 lg:pt-36 pb-20 xs:pb-24 sm:pb-28 px-4 sm:px-6 max-w-5xl mx-auto text-center" dir="rtl">
       
       {/* ── Floating Decorative Ornaments ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 max-w-7xl mx-auto hidden md:block">
@@ -54,8 +54,8 @@ export default function HeroSection() {
       </div>
 
       {/* ── Top Catchphrase / Accent ─────────────────────────── */}
-      <div className="mb-2 sm:mb-4">
-        <span className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white inline-flex items-center justify-center gap-2 sm:gap-4 tracking-tight">
+      <div className="mb-3 sm:mb-5">
+        <span className="text-[2.1rem] xs:text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white inline-flex items-center justify-center gap-2.5 sm:gap-4 tracking-tight">
           <span>كُن</span>
           <span>ل<span className="text-amber-500">مّ</span>احاً</span>
         </span>
@@ -63,7 +63,7 @@ export default function HeroSection() {
 
       {/* ── 1. Punchy Main Headline ───────────────────────────────── */}
       <h1
-        className="relative z-10 text-3xl xs:text-4xl sm:text-5xl lg:text-6xl leading-[1.3] font-black tracking-tight text-slate-900 dark:text-white max-w-4xl mx-auto"
+        className="relative z-10 text-[2.1rem] xs:text-[2.45rem] sm:text-5xl lg:text-6xl leading-[1.35] font-black tracking-tight text-slate-900 dark:text-white max-w-4xl mx-auto"
       >
         <span className="block mb-2 sm:mb-3">
           <span className="inline-flex items-center justify-center gap-1.5 sm:gap-2">
@@ -97,7 +97,7 @@ export default function HeroSection() {
                   <span className="w-1.5 h-1.5 xs:w-2 xs:h-2 sm:w-2 sm:h-2 bg-slate-900 dark:bg-white rounded-xs sm:rounded-sm rotate-45"></span>
                 </span>
                 {/* Waveform acting as the base of Taa - Uses GPU scaleY with origin-bottom to prevent layout shifts */}
-                <span className="inline-flex items-end gap-[3px] xs:gap-1 sm:gap-1 h-8 xs:h-9 sm:h-11 lg:h-14 translate-y-0.5 sm:translate-y-1">
+                <span className="inline-flex items-end gap-[3px] xs:gap-1 sm:gap-1 h-9 xs:h-10 sm:h-11 lg:h-14 translate-y-0.5 sm:translate-y-1">
                   <motion.span animate={{ scaleY: [0.3, 0.8, 0.4, 1.0, 0.3] }} transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }} className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 h-full origin-bottom bg-indigo-500 rounded-full" />
                   <motion.span animate={{ scaleY: [0.5, 1.0, 0.3, 0.8, 0.5] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }} className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 h-full origin-bottom bg-purple-500 rounded-full" />
                   <motion.span animate={{ scaleY: [0.8, 0.4, 1.0, 0.5, 0.8] }} transition={{ repeat: Infinity, duration: 1.0, ease: "easeInOut" }} className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 h-full origin-bottom bg-pink-500 rounded-full" />
@@ -110,25 +110,25 @@ export default function HeroSection() {
         </span>
 
         {/* Line 3 on Mobile (Line 2 on Desktop) */}
-        <span className="block text-xl xs:text-2xl sm:text-5xl lg:text-6xl whitespace-nowrap mt-1 sm:mt-0 pt-2 sm:pt-4 pb-2 sm:pb-3 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-300 dark:to-pink-400">
+        <span className="block text-[1.4rem] xs:text-[1.75rem] sm:text-5xl lg:text-6xl whitespace-nowrap mt-1 sm:mt-0 pt-2 sm:pt-4 pb-2 sm:pb-3 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-300 dark:to-pink-400">
           إلى أعلى العلامات
         </span>
       </h1>
 
       {/* ── 2. Subtitle (Immediate Paint for 0ms LCP Delay) ─────── */}
       <p
-        className="mt-7 sm:mt-6 text-xs sm:text-base lg:text-lg text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed sm:leading-relaxed font-medium px-2 sm:px-0"
+        className="mt-7 sm:mt-8 text-sm xs:text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto leading-relaxed sm:leading-relaxed font-medium px-3 sm:px-0"
       >
         وداعاً لإضاعة الساعات في تفريغ المحاضرات يدوياً. حوّل تسجيلاتك وملفات الـ PDF فوراً إلى ملخصات فائقة الدقة، أسئلة امتحانات متوقعة، وشات ذكي يجيبك عن كل مسألة.
       </p>
 
       {/* ── 3. Action Buttons ─────────────────────────────────────── */}
       <div
-        className="mt-8 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 max-w-[310px] sm:max-w-none mx-auto w-full"
+        className="mt-9 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-[340px] sm:max-w-none mx-auto w-full"
       >
         <Link
           href="/auth"
-          className="w-full sm:w-auto px-8 py-3.5 rounded-full font-black text-sm text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 shadow-lg shadow-indigo-600/25 dark:shadow-[0_0_35px_rgba(99,102,241,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group cursor-pointer"
+          className="w-full sm:w-auto px-8 py-4 rounded-full font-black text-sm xs:text-base text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 shadow-lg shadow-indigo-600/25 dark:shadow-[0_0_35px_rgba(99,102,241,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group cursor-pointer"
         >
           <span>سجل في لماح</span>
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
@@ -140,7 +140,7 @@ export default function HeroSection() {
             e.preventDefault();
             document.getElementById('interactive-demo')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="w-full sm:w-auto px-6 py-3.5 rounded-full font-bold text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+          className="w-full sm:w-auto px-7 py-4 rounded-full font-bold text-sm xs:text-base text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
         >
           <Play className="w-3.5 h-3.5 fill-indigo-600 dark:fill-indigo-400 text-indigo-600 dark:text-indigo-400 translate-x-0.5" />
           <span>جرب لماح مجانا</span>

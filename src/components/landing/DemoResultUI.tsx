@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileText, Sparkles, BookOpen, MessageCircle, Crown, 
   ChevronLeft, ChevronRight, Download, Check, Book, BrainCircuit, Target, 
-  ArrowRight, RotateCcw, Copy, Send, ExternalLink, Layers, Eye, Zap
+  ArrowRight, RotateCcw, Copy, Send, ExternalLink, Layers, Eye, Zap,
+  ZoomIn, ZoomOut, Maximize2, Minimize2, Move, X
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -136,6 +137,11 @@ export default function DemoResultUI({ actionText, onAction }: DemoResultUIProps
   const [viewMode, setViewMode] = useState<"single" | "all">("single");
   const totalPreviewPages = 8;
 
+  // Zoom & Lightbox state
+  const [zoom, setZoom] = useState(1);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxZoom, setLightboxZoom] = useState(1);
+
   return (
     <div className="w-full max-w-full overflow-x-hidden mx-auto grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 pb-10 text-right" dir="rtl">
       
@@ -242,16 +248,87 @@ export default function DemoResultUI({ actionText, onAction }: DemoResultUIProps
           
           {/* Main Visual Display */}
           <div className="relative rounded-xl sm:rounded-2xl p-1.5 sm:p-3 bg-slate-100/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-inner w-full overflow-hidden">
+            {/* Top Interactive Zoom Toolbar */}
+            <div className="flex items-center justify-between gap-2 mb-2 px-1">
+              <div className="flex items-center gap-1 bg-white/95 dark:bg-slate-800/90 backdrop-blur-md p-1 rounded-xl border border-slate-200/80 dark:border-white/10 shadow-xs">
+                <button
+                  type="button"
+                  onClick={() => setZoom((z) => Math.min(2.5, Number((z + 0.25).toFixed(2))))}
+                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                  title="تكبير الصفحة (+)"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setZoom((z) => Math.max(1, Number((z - 0.25).toFixed(2))))}
+                  disabled={zoom <= 1}
+                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                  title="تصغير الصفحة (-)"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setZoom(1)}
+                  className="px-2 py-0.5 rounded-lg text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors cursor-pointer"
+                  title="إعادة ضبط الحجم 100%"
+                >
+                  {Math.round(zoom * 100)}%
+                </button>
+                <div className="w-[1px] h-3.5 bg-slate-200 dark:bg-slate-700 mx-0.5" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLightboxZoom(1.2);
+                    setIsLightboxOpen(true);
+                  }}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold transition-colors cursor-pointer"
+                  title="فتح المعاينة المكبرة بملء الشاشة"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                  <span className="hidden xs:inline">تكبير كامل</span>
+                </button>
+              </div>
+
+              {zoom > 1 ? (
+                <span className="text-[10px] sm:text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50/90 dark:bg-indigo-950/50 px-2.5 py-1 rounded-full border border-indigo-200/60 dark:border-indigo-500/30 animate-pulse">
+                  اسحب بإصبعك للتجول في الصفحة
+                </span>
+              ) : (
+                <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">
+                  انقر مرتين للتكبير الفوري
+                </span>
+              )}
+            </div>
+
             {viewMode === "single" ? (
               <div className="flex flex-col items-center justify-center">
-                {/* Single Page Image with GPU transition */}
-                <div className="relative w-full flex items-center justify-center py-1 sm:py-2 min-h-[380px] sm:min-h-[520px]">
-                  <img
-                    key={previewPage}
-                    src={`/demo/preview-page-${previewPage}.webp`}
-                    alt={`دفتر لماح الملون - صفحة ${previewPage}`}
-                    className="w-full max-w-xl h-auto max-h-[500px] sm:max-h-[640px] object-contain rounded-lg sm:rounded-xl shadow-lg border border-slate-200/70 dark:border-white/10 select-none animate-fadeIn"
-                  />
+                {/* Single Page Image with Interactive Pan & Zoom */}
+                <div 
+                  className={`relative w-full flex items-center justify-center py-1 sm:py-2 min-h-[380px] sm:min-h-[520px] ${
+                    zoom > 1 
+                      ? "overflow-auto touch-pan-x touch-pan-y max-h-[520px] sm:max-h-[640px] cursor-grab active:cursor-grabbing scrollbar-thin" 
+                      : "overflow-hidden"
+                  }`}
+                >
+                  <div
+                    style={{
+                      transform: `scale(${zoom})`,
+                      transformOrigin: "center top",
+                      transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
+                    }}
+                    className="w-full max-w-xl flex items-center justify-center shrink-0"
+                  >
+                    <img
+                      key={previewPage}
+                      src={`/demo/preview-page-${previewPage}.webp`}
+                      alt={`دفتر لماح الملون - صفحة ${previewPage}`}
+                      onDoubleClick={() => setZoom((z) => (z > 1 ? 1 : 1.5))}
+                      className="w-full h-auto max-h-[500px] sm:max-h-[640px] object-contain rounded-lg sm:rounded-xl shadow-lg border border-slate-200/70 dark:border-white/10 select-none animate-fadeIn cursor-pointer"
+                      title="انقر مرتين للتكبير / التصغير"
+                    />
+                  </div>
                 </div>
 
                 {/* Bottom Navigation Bar */}
@@ -724,6 +801,117 @@ export default function DemoResultUI({ actionText, onAction }: DemoResultUIProps
         </AnimatePresence>
       </div>
 
+      {/* High-Resolution Fullscreen Lightbox Modal */}
+      <AnimatePresence>
+        {isLightboxOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-slate-950/95 backdrop-blur-2xl flex flex-col justify-between p-3 sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Lightbox Top Bar */}
+            <div className="flex items-center justify-between w-full max-w-5xl mx-auto z-10 pb-2 border-b border-white/10">
+              <div className="flex items-center gap-2 text-white">
+                <BookOpen className="w-5 h-5 text-indigo-400" />
+                <span className="text-sm font-black">
+                  معاينة مكبرة فائقة الدقة • صفحة {previewPage} من {totalPreviewPages}
+                </span>
+              </div>
+
+              {/* Lightbox Zoom Buttons */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 bg-slate-800/90 px-2 py-1 rounded-xl border border-white/10 text-white text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setLightboxZoom((z) => Math.min(3, Number((z + 0.35).toFixed(2))))}
+                    className="p-1 hover:bg-white/10 rounded cursor-pointer"
+                    title="تكبير"
+                  >
+                    <ZoomIn className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLightboxZoom((z) => Math.max(1, Number((z - 0.35).toFixed(2))))}
+                    disabled={lightboxZoom <= 1}
+                    className="p-1 hover:bg-white/10 rounded disabled:opacity-30 cursor-pointer"
+                    title="تصغير"
+                  >
+                    <ZoomOut className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLightboxZoom(1)}
+                    className="px-2 py-0.5 text-indigo-400 font-mono font-bold cursor-pointer"
+                  >
+                    {Math.round(lightboxZoom * 100)}%
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLightboxOpen(false);
+                    setLightboxZoom(1);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-black flex items-center gap-1.5 border border-white/20 transition-all cursor-pointer shadow-lg active:scale-95"
+                  title="إغلاق المعاينة المكبرة"
+                >
+                  <span>إغلاق المكبر</span>
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Lightbox Main Image */}
+            <div className="flex-1 w-full max-w-5xl mx-auto flex items-center justify-center overflow-auto my-3 p-2 touch-pan-x touch-pan-y">
+              <div
+                style={{
+                  transform: `scale(${lightboxZoom})`,
+                  transformOrigin: "center center",
+                  transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
+                }}
+                className="max-w-full max-h-full flex items-center justify-center shrink-0"
+              >
+                <img
+                  src={`/demo/preview-page-${previewPage}.webp`}
+                  alt={`دفتر لماح - صفحة ${previewPage}`}
+                  className="max-h-[82vh] w-auto object-contain rounded-xl shadow-2xl select-none"
+                  onDoubleClick={() => setLightboxZoom((z) => (z > 1 ? 1 : 1.75))}
+                />
+              </div>
+            </div>
+
+            {/* Lightbox Bottom Navigation */}
+            <div className="flex items-center justify-between w-full max-w-md mx-auto pt-2 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setPreviewPage((p) => Math.max(1, p - 1))}
+                disabled={previewPage === 1}
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold flex items-center gap-1 cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+                <span>السابقة</span>
+              </button>
+
+              <span className="text-white text-xs font-bold">
+                صفحة {previewPage} / {totalPreviewPages}
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setPreviewPage((p) => Math.min(totalPreviewPages, p + 1))}
+                disabled={previewPage === totalPreviewPages}
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white disabled:opacity-30 disabled:cursor-not-allowed text-xs font-bold flex items-center gap-1 cursor-pointer"
+              >
+                <span>التالية</span>
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

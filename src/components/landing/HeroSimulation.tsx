@@ -256,29 +256,30 @@ export default function HeroSimulation({
         {showResultPopup && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-start justify-center bg-slate-100/80 dark:bg-slate-950/90 backdrop-blur-2xl px-2 sm:px-4 pt-20 sm:pt-28 pb-12 sm:pb-16 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain w-full max-w-full"
+            className="fixed inset-0 z-[100] flex items-start justify-center bg-slate-100/90 dark:bg-slate-950/95 backdrop-blur-2xl px-2 sm:px-4 pt-18 sm:pt-20 pb-12 sm:pb-16 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain w-full max-w-full"
           >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-transparent w-full max-w-full overflow-x-hidden relative text-right flex items-center justify-center"
-            >
-              <button 
-                onClick={() => setShowResultPopup(false)} 
-                className="fixed top-6 right-6 p-2.5 sm:p-3 bg-white/90 dark:bg-slate-800/80 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors z-[110] border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-xl backdrop-blur-md hidden sm:block cursor-pointer"
-                title="إغلاق"
-              >
-                <X className="w-5 h-5 sm:w-6 sm:h-6" />
-              </button>
+            {/* Top Fixed Safe Bar: Prevents accidental closing during pinch/zoom gestures */}
+            <div className="fixed top-0 inset-x-0 h-14 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 z-[110] flex items-center justify-between px-3 sm:px-8 shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-white">النتيجة التجريبية المباشرة • لمّاح</span>
+              </div>
               
-              {/* For mobile, add close button in a different spot */}
               <button 
+                type="button"
                 onClick={() => setShowResultPopup(false)} 
-                className="fixed top-4 left-4 p-2 bg-white/90 dark:bg-slate-800/80 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors z-[110] border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 shadow-xl backdrop-blur-md sm:hidden cursor-pointer"
-                title="إغلاق"
+                className="px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-black flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shadow-xs active:scale-95"
+                title="إغلاق النتيجة التجريبية"
               >
+                <span>إغلاق النتيجة</span>
                 <X className="w-4 h-4" />
               </button>
-              
+            </div>
+
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
+              className="bg-transparent w-full max-w-full overflow-x-hidden relative text-right flex items-center justify-center mt-2"
+            >
               <div className="w-full max-w-6xl mx-auto overflow-x-hidden">
                 <DemoResultUI 
                   actionText={isEmbedded ? "شحن رصيدك لتلخيص محاضراتك" : "أنشئ حسابك لحفظ النتيجة"}
