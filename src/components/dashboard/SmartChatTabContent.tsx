@@ -137,7 +137,8 @@ export default function SmartChatTabContent({
         <div
           ref={messagesContainerRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 custom-scrollbar bg-transparent relative"
+          className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 custom-scrollbar bg-transparent relative overscroll-contain"
+          style={{ overflowAnchor: "none" }}
         >
           {chatMessages.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 space-y-4 opacity-70">
@@ -215,7 +216,7 @@ export default function SmartChatTabContent({
               placeholder="مثال: كيف شرح الدكتور الفرق بين DOS و DDOS؟"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              disabled={isChatLoading || (subscriptionLimit > 0 && chatCount >= subscriptionLimit)}
+              disabled={subscriptionLimit > 0 && chatCount >= subscriptionLimit}
             />
             <button
               type="submit"
