@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileText, Sparkles, BookOpen, MessageCircle, Crown, 
   ChevronLeft, Download, Check, Book, BrainCircuit, Target, 
-  ArrowRight, RotateCcw, Copy, Send
+  ArrowRight, RotateCcw, Copy, Send, ExternalLink
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -132,25 +132,25 @@ export default function DemoResultUI({ actionText, onAction }: DemoResultUIProps
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({ 0: 1 });
 
   return (
-    <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 pb-10 text-right" dir="rtl">
+    <div className="w-full max-w-full overflow-x-hidden mx-auto grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 pb-10 text-right" dir="rtl">
       
       {/* Title & Actions Bar */}
-      <div className="lg:col-span-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 bg-white/90 dark:bg-slate-900/60 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm backdrop-blur-md">
-        <div className="flex items-center gap-2.5 sm:gap-3">
+      <div className="lg:col-span-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 bg-white/90 dark:bg-slate-900/60 px-3.5 py-2.5 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm backdrop-blur-md w-full">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <div className="w-8 h-8 sm:w-9 sm:h-9 bg-indigo-50 dark:bg-indigo-500/20 rounded-lg sm:rounded-xl flex items-center justify-center border border-indigo-200/80 dark:border-indigo-500/30 shrink-0">
             <Book className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-indigo-600 dark:text-indigo-400" />
           </div>
-          <div>
-            <h1 className="text-sm sm:text-base lg:text-lg font-black text-slate-900 dark:text-white leading-tight tracking-tight">
+          <div className="min-w-0">
+            <h1 className="text-sm sm:text-base lg:text-lg font-black text-slate-900 dark:text-white leading-tight tracking-tight truncate">
               تطور العملات: الذهب للبيتكوين
             </h1>
-            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">Blockchain: Introduction • المحاضرة المسجلة وسلايدات العرض</p>
+            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">Blockchain: Introduction • المحاضرة وسلايدات العرض</p>
           </div>
         </div>
         
         <button
           onClick={() => (onAction ? onAction() : router.push("/#pricing"))}
-          className="relative z-10 flex items-center gap-1.5 sm:gap-2 text-white font-black transition-all bg-indigo-600 hover:bg-indigo-500 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl shadow-sm hover:shadow-[0_0_15px_rgba(99,102,241,0.35)] w-full sm:w-auto justify-center text-xs sm:text-sm cursor-pointer"
+          className="relative z-10 flex items-center gap-1.5 sm:gap-2 text-white font-black transition-all bg-indigo-600 hover:bg-indigo-500 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl shadow-sm hover:shadow-[0_0_15px_rgba(99,102,241,0.35)] w-full sm:w-auto justify-center text-xs sm:text-sm cursor-pointer shrink-0"
         >
           <span>{actionText || "أنشئ حسابك لحفظ النتيجة"}</span>
           <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -158,39 +158,50 @@ export default function DemoResultUI({ actionText, onAction }: DemoResultUIProps
       </div>
 
       {/* Right Column: PDF Viewer + Transcript */}
-      <div className="lg:col-span-2 space-y-6 sm:space-y-8 relative">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[30rem] h-[30rem] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="lg:col-span-2 space-y-6 sm:space-y-8 relative w-full max-w-full overflow-hidden">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[24rem] h-[24rem] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
         
         {/* PDF Card */}
-        <div className="bg-white/90 dark:bg-slate-950/40 backdrop-blur-3xl border border-slate-200/80 dark:border-indigo-500/15 p-4 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.4)] relative overflow-hidden z-10 group">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 relative z-10">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl sm:rounded-[1.25rem] flex items-center justify-center border border-indigo-200/80 dark:border-indigo-500/20 shadow-inner shrink-0">
-                <BookOpen className="w-5 h-5 sm:w-7 sm:h-7 text-indigo-600 dark:text-indigo-400" />
+        <div className="bg-white/90 dark:bg-slate-950/40 backdrop-blur-3xl border border-slate-200/80 dark:border-indigo-500/15 p-2.5 sm:p-8 rounded-[1.25rem] sm:rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.4)] relative overflow-hidden z-10 group w-full">
+          <div className="flex justify-between items-center gap-2 mb-4 relative z-10 px-1 sm:px-0">
+            <div className="flex items-center gap-2.5 sm:gap-4">
+              <div className="w-9 h-9 sm:w-14 sm:h-14 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl sm:rounded-[1.25rem] flex items-center justify-center border border-indigo-200/80 dark:border-indigo-500/20 shadow-inner shrink-0">
+                <BookOpen className="w-4 h-4 sm:w-7 sm:h-7 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">ملف مخطط</h2>
+                <h2 className="text-base sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">دفتر التلخيص المخطط</h2>
+                <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium block">جاهز للدراسة والمراجعة</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href="/demo/sample-notebook.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/15 dark:hover:bg-indigo-500/25 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl font-bold transition-all flex items-center gap-1 text-xs cursor-pointer"
+                title="عرض الملف بملء الشاشة"
+              >
+                <span>ملء الشاشة</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
               <a
                 href="/demo/sample-notebook.pdf"
                 download="إدارة المشاريع - مخططة فويسات - لمّاح.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl font-black transition-all flex items-center shadow-[0_0_20px_rgba(99,102,241,0.3)] text-xs sm:text-sm cursor-pointer"
+                className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-3 py-1.5 sm:px-5 sm:py-2 rounded-lg sm:rounded-xl font-black transition-all flex items-center shadow-[0_0_15px_rgba(99,102,241,0.3)] text-xs cursor-pointer"
               >
-                <Download className="w-4 h-4 ml-1.5" />
-                تحميل الملف
+                <Download className="w-3.5 h-3.5 ml-1" />
+                تحميل
               </a>
             </div>
           </div>
           
-          <div className="relative rounded-xl sm:rounded-[1.5rem] p-1 bg-gradient-to-b from-slate-100 to-slate-200 dark:from-slate-800/80 dark:to-slate-950/80 border border-slate-200 dark:border-slate-800/60 shadow-inner">
+          <div className="relative rounded-lg sm:rounded-[1.5rem] p-0.5 sm:p-1 bg-gradient-to-b from-slate-100 to-slate-200 dark:from-slate-800/80 dark:to-slate-950/80 border border-slate-200 dark:border-slate-800/60 shadow-inner w-full overflow-hidden">
             <iframe
-              src="/demo/sample-notebook.pdf#toolbar=0"
-              className="w-full h-[380px] sm:h-[520px] lg:h-[660px] rounded-lg sm:rounded-[1.25rem] bg-white dark:bg-slate-900 transition-all border border-slate-200 dark:border-slate-950/50"
+              src="/demo/sample-notebook.pdf#toolbar=0&view=FitH&zoom=page-width"
+              className="w-full h-[400px] sm:h-[520px] lg:h-[660px] rounded-md sm:rounded-[1.25rem] bg-white dark:bg-slate-900 transition-all border border-slate-200 dark:border-slate-950/50"
               title="ملف مخطط"
             />
           </div>
@@ -437,18 +448,35 @@ export default function DemoResultUI({ actionText, onAction }: DemoResultUIProps
                 {/* Flip Card */}
                 <div 
                   onClick={() => setIsFlipped(!isFlipped)} 
-                  className="bg-purple-50/40 hover:bg-purple-50/70 dark:bg-slate-900/60 dark:hover:bg-slate-900/90 border border-purple-200 dark:border-purple-500/30 p-8 rounded-3xl min-h-[220px] flex flex-col items-center justify-center text-center cursor-pointer transition-all shadow-lg shadow-purple-500/5 group/card"
+                  className="bg-purple-50/40 hover:bg-purple-50/70 dark:bg-slate-900/60 dark:hover:bg-slate-900/90 border border-purple-200 dark:border-purple-500/30 p-6 sm:p-8 rounded-3xl min-h-[220px] flex flex-col items-center justify-center text-center cursor-pointer transition-colors shadow-lg shadow-purple-500/5 group/card select-none"
                 >
                   <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400/80 uppercase tracking-widest mb-3 flex items-center gap-1">
                     <RotateCcw className="w-3 h-3 group-hover/card:rotate-180 transition-transform duration-500" />
                     {isFlipped ? "المعنى والشرح" : "المصطلح (انقر للقلب)"}
                   </span>
 
-                  <p className={`font-black leading-relaxed transition-all ${
-                    isFlipped ? "text-slate-800 dark:text-slate-100 text-sm sm:text-base font-medium" : "text-slate-900 dark:text-white text-xl sm:text-2xl"
-                  }`}>
-                    {isFlipped ? FLASHCARDS[currentCardIndex].back : FLASHCARDS[currentCardIndex].front}
-                  </p>
+                  <div className="w-full min-h-[85px] flex items-center justify-center px-2">
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.div
+                        key={isFlipped ? "back" : "front"}
+                        initial={{ opacity: 0, y: 3 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -3 }}
+                        transition={{ duration: 0.12 }}
+                        className="w-full text-center"
+                      >
+                        {isFlipped ? (
+                          <p className="text-slate-800 dark:text-slate-100 text-sm sm:text-base font-semibold leading-relaxed">
+                            {FLASHCARDS[currentCardIndex].back}
+                          </p>
+                        ) : (
+                          <p className="text-slate-900 dark:text-white text-lg sm:text-xl font-black">
+                            {FLASHCARDS[currentCardIndex].front}
+                          </p>
+                        )}
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
                 </div>
               </div>
 

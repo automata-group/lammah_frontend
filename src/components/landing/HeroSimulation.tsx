@@ -256,11 +256,11 @@ export default function HeroSimulation({
         {showResultPopup && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-start justify-center bg-slate-100/80 dark:bg-slate-950/90 backdrop-blur-2xl px-2 sm:px-4 pt-24 sm:pt-28 pb-12 sm:pb-16 overflow-y-auto overscroll-contain"
+            className="fixed inset-0 z-[100] flex items-start justify-center bg-slate-100/80 dark:bg-slate-950/90 backdrop-blur-2xl px-2 sm:px-4 pt-20 sm:pt-28 pb-12 sm:pb-16 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain w-full max-w-full"
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-transparent w-full relative text-right flex items-center justify-center"
+              className="bg-transparent w-full max-w-full overflow-x-hidden relative text-right flex items-center justify-center"
             >
               <button 
                 onClick={() => setShowResultPopup(false)} 
@@ -279,7 +279,7 @@ export default function HeroSimulation({
                 <X className="w-4 h-4" />
               </button>
               
-              <div className="w-full max-w-6xl mx-auto">
+              <div className="w-full max-w-6xl mx-auto overflow-x-hidden">
                 <DemoResultUI 
                   actionText={isEmbedded ? "شحن رصيدك لتلخيص محاضراتك" : "أنشئ حسابك لحفظ النتيجة"}
                   onAction={isEmbedded ? (onRecharge || (() => router.push("/plans"))) : undefined}

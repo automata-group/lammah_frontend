@@ -1,5 +1,6 @@
 import Link from "next/link";
 import React from "react";
+import { Instagram } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -14,7 +15,17 @@ export default function Footer() {
             </span>
           </div>
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-xs font-bold text-slate-600 dark:text-slate-400">
+        <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-8 text-xs font-bold text-slate-600 dark:text-slate-400">
+          <a
+            href="https://instagram.com/lammah.site"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 transition-all hover:scale-105"
+            title="حساب إنستغرام الرسمي لمنصة لمّاح"
+          >
+            <Instagram className="w-4 h-4" />
+            <span dir="ltr">@lammah.site</span>
+          </a>
           <Link href="/plans" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">الباقات والأسعار</Link>
           <Link href="/marketplace" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">متجر الدفاتر</Link>
           <Link href="/terms" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">الشروط والأحكام</Link>
