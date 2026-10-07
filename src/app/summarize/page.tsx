@@ -477,6 +477,7 @@ function SummarizeContent() {
       setIsStreaming(true);
       setIsProcessing(false);
 
+      let hasReceivedDone = false;
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -492,6 +493,11 @@ function SummarizeContent() {
             try {
               const p = JSON.parse(line.slice(6));
               switch (p.type) {
+                case "error":
+                  setError(p.message || "حدث خطأ أثناء معالجة المحاضرة.");
+                  setIsProcessing(false);
+                  setIsStreaming(false);
+                  return;
                 case "queued":
                 case "queue_update":
                   setQueuePosition(p.position);
@@ -510,16 +516,26 @@ function SummarizeContent() {
                   }
                   break;
                 case "done":
-                  if (p.history_id) {
-                    // Lecture processing finished! Redirect to dashboard with history_id
+                  hasReceivedDone = true;
+                  setIsStreaming(false);
+                  setIsProcessing(false);
+                  if (p.history_id && typeof p.history_id === "string") {
                     router.push(`/dashboard?history_id=${p.history_id}`);
+                  } else {
+                    router.push(`/dashboard`);
                   }
-                  break;
+                  return;
               }
             } catch {}
           }
           boundary = streamBuffer.indexOf('\n\n');
         }
+      }
+
+      if (!hasReceivedDone) {
+        setIsStreaming(false);
+        setIsProcessing(false);
+        router.push(`/dashboard`);
       }
     } catch (err: any) {
       setError(err.message || "حدث خطأ أثناء معالجة المحاضرة.");
@@ -544,14 +560,14 @@ function SummarizeContent() {
         { id: "read", label: "قراءة السلايدات", icon: FileText },
         { id: "capsules", label: "استخراج الأفكار", icon: BrainCircuit },
         { id: "mindmap", label: "الخرائط والأسئلة", icon: Lightbulb },
-        { id: "design", label: "دفتر ملخص ملون", icon: Award }
+        { id: "design", label: "ملف مخطط ومظلل", icon: Award }
       ];
     }
     return [
       { id: "audio", label: "تفريغ الصوت", icon: FileAudio },
       { id: "align", label: "مطابقة الشرائح", icon: FileText },
       { id: "mindmap", label: "استنتاج الأفكار", icon: BrainCircuit },
-      { id: "design", label: "دفتر ملخص ذكي", icon: Award }
+      { id: "design", label: "ملف مخطط ومظلل", icon: Award }
     ];
   }, [isDocumentOnly]);
 
@@ -564,12 +580,12 @@ function SummarizeContent() {
     if (timeLeft === null || initialEstimate <= 0) return 10;
     const elapsed = Math.max(0, initialEstimate - timeLeft);
     const ratio = elapsed / initialEstimate;
-    return Math.min(95, Math.max(10, Math.round(ratio * 95)));
+    return Math.min(98, Math.max(10, Math.round(ratio * 98)));
   }, [serverProgressPercent, timeLeft, initialEstimate]);
 
   const activeStepIdx = useMemo(() => {
     if (progressStep) {
-      if (progressStep.includes("5/5") || progressStep.includes("رسم") || progressStep.includes("تلوين")) return 3;
+      if (progressStep.includes("5/5") || progressStep.includes("رسم") || progressStep.includes("تلوين") || progressStep.includes("المخطط") || progressStep.includes("مخطط")) return 3;
       if (progressStep.includes("4/5") || progressStep.includes("استنتاج") || progressStep.includes("يطابق") || progressStep.includes("يفكّر")) return 2;
       if (progressStep.includes("2/5") || progressStep.includes("3/5") || progressStep.includes("قراءة") || progressStep.includes("الشرائح")) return 1;
       if (progressStep.includes("1/5") || progressStep.includes("تفريغ") || progressStep.includes("يستمع")) return 0;
@@ -610,7 +626,7 @@ function SummarizeContent() {
             <p className="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5 leading-snug">
               {quota !== null && quota <= 0
                 ? "وضع المحاكاة التفاعلية النموذجية — تجربة مباشرة لمخرجات الذكاء الاصطناعي"
-                : "ارفع التسجيل الصوتي أو السلايدات لتجهيز ملزمتك وخطة دراستك والشات فوراً"}
+                : "ارفع التسجيل الصوتي أو السلايدات لتجهيز ملفك وخطة دراستك والشات فوراً"}
             </p>
           </div>
         </div>
