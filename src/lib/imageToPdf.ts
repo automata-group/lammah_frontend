@@ -1,10 +1,71 @@
 import { PDFDocument } from "pdf-lib";
 
 /**
+ * Reads EXIF Orientation (1-8) from JPEG file bytes to prevent upside-down/sideways mobile camera images.
+ * 1 = Normal (0°)
+ * 3 = 180° upside-down (typical for mobile camera photos taken of papers/books on a desk)
+ * 6 = 90° CW
+ * 8 = 270° CW
+ */
+export function getExifOrientation(buffer: ArrayBuffer): number {
+  try {
+    const view = new DataView(buffer);
+    if (view.byteLength < 4 || view.getUint16(0, false) !== 0xFFD8) {
+      return 1; // Not JPEG
+    }
+
+    let offset = 2;
+    const length = view.byteLength;
+
+    while (offset < length) {
+      if (view.getUint16(offset, false) === 0xFFE1) {
+        // APP1 Marker (EXIF)
+        const markerLength = view.getUint16(offset + 2, false);
+        const exifHeader = offset + 4;
+
+        if (
+          offset + 10 <= length &&
+          view.getUint32(exifHeader, false) === 0x45786966 && // "Exif"
+          view.getUint16(exifHeader + 4, false) === 0x0000
+        ) {
+          const tiffOffset = exifHeader + 6;
+          const littleEndian = view.getUint16(tiffOffset, false) === 0x4949;
+
+          const ifd0Offset = tiffOffset + view.getUint32(tiffOffset + 4, littleEndian);
+          if (ifd0Offset + 2 > length) return 1;
+
+          const entries = view.getUint16(ifd0Offset, littleEndian);
+          for (let i = 0; i < entries; i++) {
+            const entryOffset = ifd0Offset + 2 + i * 12;
+            if (entryOffset + 12 > length) break;
+            const tag = view.getUint16(entryOffset, littleEndian);
+            if (tag === 0x0112) { // Orientation tag
+              const val = view.getUint16(entryOffset + 8, littleEndian);
+              return val >= 1 && val <= 8 ? val : 1;
+            }
+          }
+        }
+        offset += 2 + markerLength;
+      } else if ((view.getUint16(offset, false) & 0xFF00) === 0xFF00) {
+        const marker = view.getUint16(offset, false);
+        if (marker === 0xFFDA || marker === 0xFFD9) break; // SOS or EOI
+        offset += 2 + view.getUint16(offset + 2, false);
+      } else {
+        break;
+      }
+    }
+  } catch (e) {
+    console.warn("Could not parse EXIF orientation:", e);
+  }
+  return 1;
+}
+
+/**
  * Converts one or multiple image Files (PNG, JPG, JPEG, WebP, BMP, etc.)
  * into an optimized in-memory PDF Document (Blob).
  * 
  * - Operates 100% in client-side RAM (0 bytes written to disk/device storage).
+ * - Corrects mobile camera EXIF orientation automatically (prevents flipped/upside-down pages).
  * - Scales down excessively huge camera images (e.g. >1920px) to prevent memory bloating
  *   while preserving crystal-clear text readability for slides and notes.
  * - Exports crisp, high-clarity JPEG pages (~250-400KB per page in RAM).
@@ -17,38 +78,36 @@ export async function convertImagesToPdfBlob(files: File[]): Promise<{ blob: Blo
   const pdfDoc = await PDFDocument.create();
 
   for (const file of files) {
-    let imgBitmap: ImageBitmap | HTMLImageElement;
-    let originalW = 1000;
-    let originalH = 1000;
-
+    // 1. Detect EXIF orientation from raw bytes
+    let exifOrientation = 1;
     try {
-      imgBitmap = await createImageBitmap(file);
-      originalW = imgBitmap.width;
-      originalH = imgBitmap.height;
-    } catch {
-      // Fallback for browsers or formats where createImageBitmap fails
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      const htmlImg = new Image();
-      await new Promise((resolve, reject) => {
-        htmlImg.onload = resolve;
-        htmlImg.onerror = reject;
-        htmlImg.src = dataUrl;
-      });
-      imgBitmap = htmlImg;
-      originalW = htmlImg.width || 1000;
-      originalH = htmlImg.height || 1000;
+      const buffer = await file.arrayBuffer();
+      exifOrientation = getExifOrientation(buffer);
+    } catch (e) {
+      console.warn("EXIF read error:", e);
     }
 
+    // 2. Load image into HTMLImageElement
+    const objectUrl = URL.createObjectURL(file);
+    let htmlImg: HTMLImageElement;
+    try {
+      htmlImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = objectUrl;
+      });
+    } finally {
+      // Keep URL until drawn or clean up after
+    }
+
+    const naturalW = htmlImg.naturalWidth || htmlImg.width || 1000;
+    const naturalH = htmlImg.naturalHeight || htmlImg.height || 1000;
+
     // High quality scaling constraint (max 1920px):
-    // Preserves razor-sharp text while reducing 8MB raw mobile photos to ~300KB in RAM
     const maxDim = 1920;
-    let targetW = originalW;
-    let targetH = originalH;
+    let targetW = naturalW;
+    let targetH = naturalH;
 
     if (targetW > maxDim || targetH > maxDim) {
       if (targetW > targetH) {
@@ -60,10 +119,15 @@ export async function convertImagesToPdfBlob(files: File[]): Promise<{ blob: Blo
       }
     }
 
-    // Render onto offscreen canvas
+    // Swap canvas dimensions if orientation requires 90° or 270° rotation
+    const isSwapped = exifOrientation === 5 || exifOrientation === 6 || exifOrientation === 7 || exifOrientation === 8;
+    const canvasW = isSwapped ? targetH : targetW;
+    const canvasH = isSwapped ? targetW : targetH;
+
+    // Render onto offscreen canvas with EXIF orientation correction
     const canvas = document.createElement("canvas");
-    canvas.width = targetW;
-    canvas.height = targetH;
+    canvas.width = canvasW;
+    canvas.height = canvasH;
     const ctx = canvas.getContext("2d");
 
     if (ctx) {
@@ -72,10 +136,49 @@ export async function convertImagesToPdfBlob(files: File[]): Promise<{ blob: Blo
 
       // Pure white background for transparent PNG/WebP images
       ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, targetW, targetH);
+      ctx.fillRect(0, 0, canvasW, canvasH);
 
-      ctx.drawImage(imgBitmap, 0, 0, targetW, targetH);
+      ctx.save();
+      // Apply exact EXIF matrix transformation to guarantee upright presentation
+      switch (exifOrientation) {
+        case 2: // Horizontal flip
+          ctx.translate(canvasW, 0);
+          ctx.scale(-1, 1);
+          break;
+        case 3: // 180° rotation (crucial for mobile camera shots of papers on a desk!)
+          ctx.translate(canvasW, canvasH);
+          ctx.rotate(Math.PI);
+          break;
+        case 4: // Vertical flip
+          ctx.translate(0, canvasH);
+          ctx.scale(1, -1);
+          break;
+        case 5: // Vertical flip + 90° CW
+          ctx.rotate(0.5 * Math.PI);
+          ctx.scale(1, -1);
+          break;
+        case 6: // 90° CW rotation
+          ctx.translate(canvasW, 0);
+          ctx.rotate(0.5 * Math.PI);
+          break;
+        case 7: // Horizontal flip + 90° CW
+          ctx.rotate(0.5 * Math.PI);
+          ctx.translate(canvasW, -canvasH);
+          ctx.scale(-1, 1);
+          break;
+        case 8: // 270° CW rotation (90° CCW)
+          ctx.translate(0, canvasH);
+          ctx.rotate(-0.5 * Math.PI);
+          break;
+        default:
+          break;
+      }
+
+      ctx.drawImage(htmlImg, 0, 0, targetW, targetH);
+      ctx.restore();
     }
+
+    URL.revokeObjectURL(objectUrl);
 
     // Export as high-clarity JPEG (0.90 quality)
     const jpegDataUrl = canvas.toDataURL("image/jpeg", 0.90);
@@ -87,12 +190,12 @@ export async function convertImagesToPdfBlob(files: File[]): Promise<{ blob: Blo
     }
 
     const embeddedImg = await pdfDoc.embedJpg(bytes);
-    const page = pdfDoc.addPage([targetW, targetH]);
+    const page = pdfDoc.addPage([canvasW, canvasH]);
     page.drawImage(embeddedImg, {
       x: 0,
       y: 0,
-      width: targetW,
-      height: targetH,
+      width: canvasW,
+      height: canvasH,
     });
   }
 

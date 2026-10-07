@@ -26,6 +26,7 @@ import {
   Play,
   Pause,
   RotateCcw,
+  RotateCw,
   FileDown,
   CheckCircle2,
   BookOpen,
@@ -58,7 +59,7 @@ import {
   FilePlus2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 
 interface PDFCanvasViewerProps {
   pdfSource: string | File | Blob | null;
@@ -683,6 +684,20 @@ export default function PDFCanvasViewer({
   const [singlePageUrl, setSinglePageUrl] = useState<string | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false);
   const [exportSuccessToast, setExportSuccessToast] = useState<boolean>(false);
+
+  // Page Rotations State (0, 90, 180, 270 degrees per page to fix upside-down or sideways scans)
+  const [pageRotations, setPageRotations] = useState<Record<number, number>>({});
+
+  const handleRotatePage = useCallback(() => {
+    setPageRotations((prev) => {
+      const cur = prev[currentPage] || 0;
+      const next = (cur + 90) % 360;
+      return {
+        ...prev,
+        [currentPage]: next,
+      };
+    });
+  }, [currentPage]);
 
   // Pomodoro Study Timer State (Unique Student Feature)
   const [pomodoroSeconds, setPomodoroSeconds] = useState<number>(25 * 60);
@@ -1672,12 +1687,14 @@ export default function PDFCanvasViewer({
 
         // Container responsive width (exact viewport width on phone)
         const containerW = viewportRef.current?.clientWidth || (typeof window !== "undefined" ? Math.max(280, window.innerWidth - 32) : 800);
-        const unscaledViewport = page.getViewport({ scale: 1, rotation: page.rotate || 0 });
+        const userRot = pageRotations[currentPage] || 0;
+        const effectiveRotation = ((page.rotate || 0) + userRot) % 360;
+        const unscaledViewport = page.getViewport({ scale: 1, rotation: effectiveRotation });
         
         // Exact responsive scale to fit mobile screen without clipping
         const cssScale = Math.max(0.1, containerW / unscaledViewport.width);
         const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
-        const renderViewport = page.getViewport({ scale: cssScale * dpr, rotation: page.rotate || 0 });
+        const renderViewport = page.getViewport({ scale: cssScale * dpr, rotation: effectiveRotation });
 
         canvas.width = Math.round(renderViewport.width);
         canvas.height = Math.round(renderViewport.height);
@@ -1741,7 +1758,7 @@ export default function PDFCanvasViewer({
       }
       window.removeEventListener("resize", handleResize);
     };
-  }, [currentPage, masterPdfDoc]);
+  }, [currentPage, masterPdfDoc, pageRotations]);
 
   // Load saved annotations for current page from local storage
   useEffect(() => {
@@ -2507,6 +2524,20 @@ export default function PDFCanvasViewer({
         }
       }
 
+      // Apply any user-defined page rotations to the exported PDF
+      for (let p = 1; p <= total; p++) {
+        const userRot = pageRotations[p] || 0;
+        if (userRot !== 0) {
+          try {
+            const exportPage = exportDoc.getPage(p - 1);
+            const currentAngle = exportPage.getRotation().angle;
+            exportPage.setRotation(degrees((currentAngle + userRot) % 360));
+          } catch (rotErr) {
+            console.warn(`Could not set rotation on page ${p}:`, rotErr);
+          }
+        }
+      }
+
       const modifiedPdfBytes = await exportDoc.save();
       const blob = new Blob([modifiedPdfBytes as Uint8Array<ArrayBuffer>], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
@@ -2875,6 +2906,16 @@ export default function PDFCanvasViewer({
                 )}
               </button>
 
+              {/* Rotate Page Button (Mobile) */}
+              <button
+                type="button"
+                onClick={handleRotatePage}
+                className="p-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition cursor-pointer flex items-center justify-center shrink-0"
+                title="تدوير الصفحة الحالية 90 درجة (↻)"
+              >
+                <RotateCw className="w-3.5 h-3.5" />
+              </button>
+
               {/* Mobile More Study Tools Menu (•••) */}
               <div className="relative">
                 <button
@@ -2907,6 +2948,18 @@ export default function PDFCanvasViewer({
                         <span>أدوات إضافية</span>
                         <span className="text-[10px] text-slate-400 font-normal">ص {currentPage}</span>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleRotatePage();
+                          setIsMobileMoreToolsOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold transition text-right cursor-pointer"
+                      >
+                        <RotateCw className="w-4 h-4" />
+                        <span>تدوير الصفحة 90° (↻)</span>
+                      </button>
 
                       <button
                         type="button"
@@ -3432,6 +3485,17 @@ export default function PDFCanvasViewer({
 
           {/* 4. Document Actions & Export */}
           <div className="flex items-center gap-1 shrink-0">
+            {/* Rotate Page Button (Desktop) */}
+            <button
+              type="button"
+              onClick={handleRotatePage}
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer flex items-center gap-1.5"
+              title="تدوير الصفحة الحالية 90 درجة (↻)"
+            >
+              <RotateCw className="w-4 h-4" />
+              <span className="text-xs font-bold hidden xl:inline">تدوير</span>
+            </button>
+
             {pageStrokes.length > 0 && (
               <button
                 type="button"
