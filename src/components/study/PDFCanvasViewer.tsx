@@ -669,6 +669,7 @@ export default function PDFCanvasViewer({
   const overlayCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const pdfCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const pdfRawBytesRef = useRef<ArrayBuffer | null>(null);
+  const currentRenderTaskRef = useRef<any>(null);
   const pageBlobCacheRef = useRef<Map<number, string>>(new Map());
 
   const [masterPdfDoc, setMasterPdfDoc] = useState<PDFDocument | null>(null);
@@ -1624,6 +1625,16 @@ export default function PDFCanvasViewer({
     async function renderPageToCanvas() {
       if (!pdfRawBytesRef.current || !pdfCanvasRef.current) return;
 
+      // Cancel any ongoing render task before starting a new one
+      if (currentRenderTaskRef.current) {
+        try {
+          currentRenderTaskRef.current.cancel();
+        } catch (e) {
+          // ignore
+        }
+        currentRenderTaskRef.current = null;
+      }
+
       try {
         const pdfjsLib = await import("pdfjs-dist");
         pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
@@ -1632,14 +1643,18 @@ export default function PDFCanvasViewer({
         try {
           const loadingTask = pdfjsLib.getDocument({
             data: new Uint8Array(pdfRawBytesRef.current.slice(0)),
-            cMapUrl: "https://unpkg.com/pdfjs-dist@3.11.174/cmaps/",
+            cMapUrl: "/cmaps/",
             cMapPacked: true,
+            standardFontDataUrl: "/standard_fonts/",
           });
           pdfDoc = await loadingTask.promise;
         } catch (firstErr) {
-          console.warn("Retrying pdfjs-dist without external cmaps:", firstErr);
+          console.warn("Retrying pdfjs-dist with fallback font data:", firstErr);
           const fallbackTask = pdfjsLib.getDocument({
             data: new Uint8Array(pdfRawBytesRef.current.slice(0)),
+            cMapUrl: "https://unpkg.com/pdfjs-dist@3.11.174/cmaps/",
+            cMapPacked: true,
+            standardFontDataUrl: "https://unpkg.com/pdfjs-dist@3.11.174/standard_fonts/",
           });
           pdfDoc = await fallbackTask.promise;
         }
@@ -1657,12 +1672,12 @@ export default function PDFCanvasViewer({
 
         // Container responsive width (exact viewport width on phone)
         const containerW = viewportRef.current?.clientWidth || (typeof window !== "undefined" ? Math.max(280, window.innerWidth - 32) : 800);
-        const unscaledViewport = page.getViewport({ scale: 1 });
+        const unscaledViewport = page.getViewport({ scale: 1, rotation: page.rotate || 0 });
         
         // Exact responsive scale to fit mobile screen without clipping
         const cssScale = Math.max(0.1, containerW / unscaledViewport.width);
         const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
-        const renderViewport = page.getViewport({ scale: cssScale * dpr });
+        const renderViewport = page.getViewport({ scale: cssScale * dpr, rotation: page.rotate || 0 });
 
         canvas.width = Math.round(renderViewport.width);
         canvas.height = Math.round(renderViewport.height);
@@ -1672,12 +1687,21 @@ export default function PDFCanvasViewer({
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
+        // CRITICAL: Reset transformation matrix and enforce LTR context direction
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        if ("direction" in ctx) {
+          ctx.direction = "ltr";
+        }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        await page.render({
+        const renderTask = page.render({
           canvasContext: ctx,
           viewport: renderViewport,
-        }).promise;
+        });
+        currentRenderTaskRef.current = renderTask;
+
+        await renderTask.promise;
+        currentRenderTaskRef.current = null;
 
         if (!isCancelled) {
           setIsPdfCanvasReady(true);
@@ -1688,7 +1712,10 @@ export default function PDFCanvasViewer({
             ratio: unscaledViewport.width / unscaledViewport.height,
           });
         }
-      } catch (err) {
+      } catch (err: any) {
+        if (err?.name === "RenderingCancelledException") {
+          return;
+        }
         console.warn("pdfjs-dist render fallback:", err);
       } finally {
         if (!isCancelled) {
@@ -1706,6 +1733,12 @@ export default function PDFCanvasViewer({
 
     return () => {
       isCancelled = true;
+      if (currentRenderTaskRef.current) {
+        try {
+          currentRenderTaskRef.current.cancel();
+        } catch (e) {}
+        currentRenderTaskRef.current = null;
+      }
       window.removeEventListener("resize", handleResize);
     };
   }, [currentPage, masterPdfDoc]);
@@ -4946,7 +4979,10 @@ export default function PDFCanvasViewer({
 
           {/* Native Vector High-Res Render Canvas (100% fitted to mobile, zero clipping) */}
           <canvas
+            key={`pdf_page_canvas_${currentPage}`}
             ref={pdfCanvasRef}
+            dir="ltr"
+            style={{ direction: "ltr" }}
             className="w-full h-full object-contain block bg-white opacity-100"
           />
 
