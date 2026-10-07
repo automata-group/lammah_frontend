@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Sparkles, Sun, Moon, ArrowLeft, Menu, X, GraduationCap, ChevronDown, Users, LayoutDashboard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/context/ThemeContext";
-import NotificationBell from "@/components/NotificationBell";
 
 export default function Header({ user }: { user?: any }) {
   const router = useRouter();
@@ -250,8 +249,6 @@ export default function Header({ user }: { user?: any }) {
             <path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5L12 0Z" />
           </svg>
 
-          {/* Notification Bell */}
-          <NotificationBell />
 
           {/* Light / Dark Toggle Button */}
           <button
@@ -310,7 +307,6 @@ export default function Header({ user }: { user?: any }) {
 
         {/* ── 4. Mobile Menu Toggle (STRICTLY HIDDEN ON DESKTOP) ── */}
         <div className="hidden max-md:flex md:hidden mobile-only relative z-10 items-center gap-1.5">
-          <NotificationBell />
 
           <button
             onClick={toggleTheme}

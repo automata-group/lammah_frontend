@@ -54,8 +54,7 @@ export default function PricingSection() {
         
         {/* Header */}
         <div className="text-center mb-12 sm:mb-14">
-          <div className="inline-flex items-center gap-2 bg-white/[0.03] border border-white/[0.08] px-4 py-1.5 rounded-full mb-4 backdrop-blur-md">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <div className="inline-flex items-center bg-white/[0.03] border border-white/[0.08] px-4 py-1.5 rounded-full mb-4 backdrop-blur-md">
             <span className="text-xs font-black text-amber-400 uppercase tracking-widest">باقات واشتراكات لمّاح</span>
           </div>
           
@@ -73,7 +72,7 @@ export default function PricingSection() {
             <p className="text-slate-500 font-bold text-sm animate-pulse">جاري تحميل الباقات...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6 items-stretch max-w-6xl mx-auto">
+          <div className="flex md:grid md:grid-cols-3 gap-5 lg:gap-6 items-stretch max-w-6xl mx-auto overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-6 pt-2 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0">
             {activePlans.map((plan: any) => {
               const isGoldPlan = plan.price_ils === 100 || plan.name.includes("الذهبية");
               const isMidPlan = plan.price_ils === 60 || plan.name.includes("الميدتيرم");
@@ -95,7 +94,7 @@ export default function PricingSection() {
               return (
                 <div 
                   key={plan.id}
-                  className={`relative bg-white/80 dark:bg-[#070b16]/85 backdrop-blur-2xl rounded-[1.75rem] p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 group shadow-lg ${
+                  className={`relative shrink-0 w-[290px] sm:w-[320px] md:w-auto snap-center bg-white/80 dark:bg-[#070b16]/85 backdrop-blur-2xl rounded-[1.75rem] p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 group shadow-lg ${
                     isGoldPlan 
                       ? "border-2 border-amber-400 dark:border-amber-500 shadow-amber-900/10 dark:shadow-[0_10px_35px_rgba(245,158,11,0.2)] bg-gradient-to-b from-amber-50/60 to-transparent dark:from-amber-950/20 dark:to-transparent md:-translate-y-2" 
                       : isMidPlan

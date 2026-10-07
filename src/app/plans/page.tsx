@@ -97,8 +97,7 @@ export default function PlansPage() {
         
         {/* Clean Hero Title */}
         <div className="text-center max-w-2xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 text-indigo-600 dark:text-indigo-400 text-xs font-black shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+          <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 text-indigo-600 dark:text-indigo-400 text-xs font-black shadow-xs">
             اشتراكات شهرية وباقات مرنة
           </div>
 
@@ -125,7 +124,7 @@ export default function PlansPage() {
             <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-3">جاري تحميل الباقات...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch max-w-5xl mx-auto">
+          <div className="flex md:grid md:grid-cols-3 gap-6 sm:gap-8 items-stretch max-w-5xl mx-auto overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-6 pt-2 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0">
             {activePlans.map((plan: any, idx: number) => {
               const isGoldPlan = plan.price_ils === 100 || plan.name.includes("الذهبية") || plan.name.toLowerCase().includes("elite");
               const isMidPlan = plan.price_ils === 60 || plan.name.includes("الميدتيرم") || plan.name.toLowerCase().includes("premium");
@@ -153,7 +152,7 @@ export default function PlansPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.08, duration: 0.35 }}
-                  className={`relative rounded-3xl p-7 sm:p-8 flex flex-col justify-between transition-all duration-300 bg-white dark:bg-[#0b0f19] ${
+                  className={`relative shrink-0 w-[290px] sm:w-[320px] md:w-auto snap-center rounded-3xl p-7 sm:p-8 flex flex-col justify-between transition-all duration-300 bg-white dark:bg-[#0b0f19] ${
                     isActive
                       ? "border-2 border-emerald-500 ring-4 ring-emerald-500/10 shadow-lg shadow-emerald-500/10"
                       : isMidPlan

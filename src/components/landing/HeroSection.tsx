@@ -53,14 +53,11 @@ export default function HeroSection() {
         </motion.div>
       </div>
 
-      {/* ── Top Catchphrase Pill / Accent ─────────────────────────── */}
-      <div
-        className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-purple-500/10 sm:from-transparent sm:via-transparent sm:to-transparent border border-amber-500/20 dark:border-amber-400/30 sm:border-transparent sm:dark:border-transparent px-4 sm:px-0 py-1.5 sm:py-0 rounded-full mb-2 sm:mb-4 shadow-xs sm:shadow-none backdrop-blur-md sm:backdrop-blur-none"
-      >
-        <span className="text-xs sm:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-4 tracking-tight">
+      {/* ── Top Catchphrase / Accent ─────────────────────────── */}
+      <div className="mb-2 sm:mb-4">
+        <span className="text-3xl xs:text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white inline-flex items-center justify-center gap-2 sm:gap-4 tracking-tight">
           <span>كُن</span>
           <span>ل<span className="text-amber-500">مّ</span>احاً</span>
-          <span className="sm:hidden text-xs">⚡</span>
         </span>
       </div>
 

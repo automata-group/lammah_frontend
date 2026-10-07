@@ -66,9 +66,9 @@ export default function FeaturesSection() {
       iconColor: "text-amber-600 dark:text-amber-400"
     },
     {
-      title: "حصص خصوصية وتدريس تفاعلي",
-      description: "احجز جلسات فردية مباشرة لمراجعة المواد المعقدة وحل الأسئلة، أو انضم كمعلم معتمد عبر المنصة لتدريس الطلاب وتحقيق أرباح.",
-      icon: GraduationCap,
+      title: "تنظيم أكاديمي وحفظ سحابي",
+      description: "احفظ كافة محاضراتك ودفاترك وملاحظاتك في سحابة خاصة منظمة حسب موادك وفصولك، للوصول إليها بسهولة من أي جهاز وفي أي وقت.",
+      icon: Layers,
       color: "from-purple-500 to-violet-600",
       bgLight: "bg-purple-50",
       bgDark: "dark:bg-purple-500/10",
@@ -88,8 +88,7 @@ export default function FeaturesSection() {
         
         {/* Section Header */}
         <div className="text-center mb-16 sm:mb-20 flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-5 py-2 rounded-full mb-6 shadow-sm">
-            <Sparkles className="w-4 h-4 text-purple-500 dark:text-purple-400" />
+          <div className="inline-flex items-center bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-5 py-2 rounded-full mb-6 shadow-sm">
             <span className="text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">منظومة أكاديمية متكاملة</span>
           </div>
           
@@ -98,7 +97,7 @@ export default function FeaturesSection() {
           </h2>
           
           <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl text-center leading-relaxed font-medium">
-            كل ما تحتاجه لتفوقك الدراسي في مكان واحد؛ من تفريغ المحاضرات وتوليد الدفاتر الجمالية إلى الامتحانات، المتجر، والدروس الخصوصية.
+            كل ما تحتاجه لتفوقك الدراسي في مكان واحد؛ من تفريغ المحاضرات وتوليد الدفاتر الجمالية إلى الامتحانات وسوق الدفاتر.
           </p>
         </div>
 

@@ -11,7 +11,6 @@ import {
   GraduationCap, Video, PenTool, ChevronDown, Menu, X,
   Sparkles, CheckCircle2, Shield
 } from "lucide-react";
-import NotificationBell from "@/components/NotificationBell";
 import StudentProfileModal from "@/components/StudentProfileModal";
 
 interface AppHeaderProps {
@@ -229,8 +228,6 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
               </div>
             )}
 
-            {/* Notification Bell */}
-            <NotificationBell />
 
             {/* Theme Toggle Button */}
             <button 

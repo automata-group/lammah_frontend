@@ -75,31 +75,30 @@ export default function DashboardHeroBanner({
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
-                      تخصيص جامعتك
+                      بيانات جامعتك وتخصصك
                     </h3>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                      لتخصيص الذكاء الاصطناعي
+                      لتجهيز دفاتر ومراجعات لموادك
                     </p>
                   </div>
                 </div>
 
-                <span className="px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 text-[11px] font-bold border border-indigo-200/80 dark:border-indigo-500/30 flex items-center gap-1 shrink-0">
-                  <Sparkles className="w-3 h-3 text-indigo-500" />
-                  <span>تخصيص فوري</span>
+                <span className="px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 text-[11px] font-bold border border-indigo-200/80 dark:border-indigo-500/30 shrink-0">
+                  <span>خطوة مهمة</span>
                 </span>
               </div>
 
               <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed line-clamp-2">
-                حدّد جامعتك وتخصصك لمطابقة دفاترك وتخصيص تجربة الذكاء الاصطناعي بدقة
+                اختر جامعتك وتخصصك عشان نجهّز لك دفاتر وملخصات واختبارات تناسب موادك بالضبط
               </p>
             </div>
 
             <div className="mt-4 pt-3.5 border-t border-indigo-100/90 dark:border-indigo-500/20 flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300">
               <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300">
-                إعداد الملف الأكاديمي
+                ملفك الدراسي
               </span>
               <span className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm shadow-indigo-600/25 flex items-center gap-1.5 transition-all group-hover:scale-105">
-                <span>إعداد الحساب</span>
+                <span>حدد تخصصك</span>
                 <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
               </span>
             </div>

@@ -137,8 +137,7 @@ export default function Home() {
               <MessageSquare className="w-6 h-6" />
             </div>
 
-            <div className="inline-flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/20 px-4 py-2 rounded-full mb-6 backdrop-blur-md shadow-sm">
-              <HelpCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <div className="inline-flex items-center bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/20 px-4 py-2 rounded-full mb-6 backdrop-blur-md shadow-sm">
               <span className="text-xs font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-widest">الأسئلة الشائعة</span>
             </div>
             
