@@ -571,7 +571,7 @@ function NotebookCreatorContent() {
             </button>
             
             <button 
-              onClick={() => router.push("/plans")}
+              onClick={() => router.push("/#pricing")}
               className="w-full bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold py-2.5 px-6 rounded-xl transition border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
             >
               <span>استعراض الباقات والأسعار</span>

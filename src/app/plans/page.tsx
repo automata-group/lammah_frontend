@@ -24,8 +24,8 @@ export default function PlansPage() {
   const [userQuota, setUserQuota] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) router.replace("/login");
-  }, [user, loading]);
+    if (!loading && !user) router.replace("/#pricing");
+  }, [user, loading, router]);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/plans`)

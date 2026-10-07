@@ -3,8 +3,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileText, Sparkles, BookOpen, MessageCircle, Crown, 
-  ChevronLeft, Download, Check, Book, BrainCircuit, Target, 
-  ArrowRight, RotateCcw, Copy, Send, ExternalLink
+  ChevronLeft, ChevronRight, Download, Check, Book, BrainCircuit, Target, 
+  ArrowRight, RotateCcw, Copy, Send, ExternalLink, Layers, Eye, Zap
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -131,6 +131,11 @@ export default function DemoResultUI({ actionText, onAction }: DemoResultUIProps
   // Quiz state
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({ 0: 1 });
 
+  // Notebook preview viewer state (Instant WebP rendering for 0ms lag)
+  const [previewPage, setPreviewPage] = useState(1);
+  const [viewMode, setViewMode] = useState<"single" | "all">("single");
+  const totalPreviewPages = 8;
+
   return (
     <div className="w-full max-w-full overflow-x-hidden mx-auto grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 pb-10 text-right" dir="rtl">
       
@@ -161,49 +166,170 @@ export default function DemoResultUI({ actionText, onAction }: DemoResultUIProps
       <div className="lg:col-span-2 space-y-6 sm:space-y-8 relative w-full max-w-full overflow-hidden">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[24rem] h-[24rem] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
         
-        {/* PDF Card */}
-        <div className="bg-white/90 dark:bg-slate-950/40 backdrop-blur-3xl border border-slate-200/80 dark:border-indigo-500/15 p-2.5 sm:p-8 rounded-[1.25rem] sm:rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.4)] relative overflow-hidden z-10 group w-full">
-          <div className="flex justify-between items-center gap-2 mb-4 relative z-10 px-1 sm:px-0">
+        {/* Notebook Preview Card (Ultra-Fast Instant WebP Viewer) */}
+        <div className="bg-white/90 dark:bg-slate-950/40 backdrop-blur-3xl border border-slate-200/80 dark:border-indigo-500/15 p-3 sm:p-7 rounded-[1.25rem] sm:rounded-[2.5rem] shadow-[0_15px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.4)] relative overflow-hidden z-10 group w-full">
+          {/* Header & Controls */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 relative z-10 px-1 sm:px-0">
             <div className="flex items-center gap-2.5 sm:gap-4">
-              <div className="w-9 h-9 sm:w-14 sm:h-14 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl sm:rounded-[1.25rem] flex items-center justify-center border border-indigo-200/80 dark:border-indigo-500/20 shadow-inner shrink-0">
-                <BookOpen className="w-4 h-4 sm:w-7 sm:h-7 text-indigo-600 dark:text-indigo-400" />
+              <div className="w-9 h-9 sm:w-13 sm:h-13 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl sm:rounded-2xl flex items-center justify-center border border-indigo-200/80 dark:border-indigo-500/20 shadow-inner shrink-0">
+                <BookOpen className="w-4 h-4 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
-                <h2 className="text-base sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">دفتر التلخيص المخطط</h2>
-                <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium block">جاهز للدراسة والمراجعة</span>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white leading-tight">دفتر التلخيص الملون</h2>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-black border border-emerald-200 dark:border-emerald-500/20">
+                    <Zap className="w-2.5 h-2.5" />
+                    <span>فوري 0ms</span>
+                  </span>
+                </div>
+                <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium block mt-0.5">
+                  معاينة مباشرة عالية الدقة • صفحة {previewPage} من {totalPreviewPages} (الدَفتر الكامل 79 صفحة)
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <a
-                href="/demo/sample-notebook.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/15 dark:hover:bg-indigo-500/25 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl font-bold transition-all flex items-center gap-1 text-xs cursor-pointer"
-                title="عرض الملف بملء الشاشة"
-              >
-                <span>ملء الشاشة</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-              <a
-                href="/demo/sample-notebook.pdf"
-                download="إدارة المشاريع - مخططة فويسات - لمّاح.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-3 py-1.5 sm:px-5 sm:py-2 rounded-lg sm:rounded-xl font-black transition-all flex items-center shadow-[0_0_15px_rgba(99,102,241,0.3)] text-xs cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5 ml-1" />
-                تحميل
-              </a>
+            {/* View Mode & Download Actions */}
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200/70 dark:border-white/10 text-[11px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("single")}
+                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                    viewMode === "single"
+                      ? "bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-xs font-black"
+                      : "text-slate-500 hover:text-slate-900 dark:text-slate-400"
+                  }`}
+                >
+                  صفحة بصفحة
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("all")}
+                  className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                    viewMode === "all"
+                      ? "bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-xs font-black"
+                      : "text-slate-500 hover:text-slate-900 dark:text-slate-400"
+                  }`}
+                >
+                  تصفح كامل
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <a
+                  href="/demo/sample-notebook.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/15 dark:hover:bg-indigo-500/25 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 px-2.5 py-1.5 rounded-xl font-bold transition-all flex items-center gap-1 text-xs cursor-pointer"
+                  title="عرض الملف الأصلي بملء الشاشة"
+                >
+                  <span>الأصلي ↗</span>
+                </a>
+                <a
+                  href="/demo/sample-notebook.pdf"
+                  download="تطور العملات - الذهب للبيتكوين - دفتر لماح.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-3 py-1.5 rounded-xl font-black transition-all flex items-center gap-1 shadow-md shadow-indigo-500/20 text-xs cursor-pointer"
+                  title="تحميل الدفتر الكامل 79 صفحة"
+                >
+                  <Download className="w-3.5 h-3.5 ml-0.5" />
+                  <span>تحميل PDF</span>
+                </a>
+              </div>
             </div>
           </div>
           
-          <div className="relative rounded-lg sm:rounded-[1.5rem] p-0.5 sm:p-1 bg-gradient-to-b from-slate-100 to-slate-200 dark:from-slate-800/80 dark:to-slate-950/80 border border-slate-200 dark:border-slate-800/60 shadow-inner w-full overflow-hidden">
-            <iframe
-              src="/demo/sample-notebook.pdf#toolbar=0&view=FitH&zoom=page-width"
-              className="w-full h-[400px] sm:h-[520px] lg:h-[660px] rounded-md sm:rounded-[1.25rem] bg-white dark:bg-slate-900 transition-all border border-slate-200 dark:border-slate-950/50"
-              title="ملف مخطط"
-            />
+          {/* Main Visual Display */}
+          <div className="relative rounded-xl sm:rounded-2xl p-1.5 sm:p-3 bg-slate-100/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-inner w-full overflow-hidden">
+            {viewMode === "single" ? (
+              <div className="flex flex-col items-center justify-center">
+                {/* Single Page Image with GPU transition */}
+                <div className="relative w-full flex items-center justify-center py-1 sm:py-2 min-h-[380px] sm:min-h-[520px]">
+                  <img
+                    key={previewPage}
+                    src={`/demo/preview-page-${previewPage}.webp`}
+                    alt={`دفتر لماح الملون - صفحة ${previewPage}`}
+                    className="w-full max-w-xl h-auto max-h-[500px] sm:max-h-[640px] object-contain rounded-lg sm:rounded-xl shadow-lg border border-slate-200/70 dark:border-white/10 select-none animate-fadeIn"
+                  />
+                </div>
+
+                {/* Bottom Navigation Bar */}
+                <div className="mt-3 w-full flex flex-col sm:flex-row items-center justify-between gap-3 px-2 pt-2 border-t border-slate-200/60 dark:border-white/5">
+                  {/* Prev/Next Buttons */}
+                  <div className="flex items-center justify-between w-full sm:w-auto gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewPage((p) => Math.max(1, p - 1))}
+                      disabled={previewPage === 1}
+                      className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-35 disabled:cursor-not-allowed text-xs font-bold border border-slate-200/80 dark:border-white/10 flex items-center gap-1 shadow-xs cursor-pointer transition-all active:scale-95"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                      <span>الصفحة السابقة</span>
+                    </button>
+
+                    <div className="flex items-center gap-1.5 text-xs font-black text-slate-700 dark:text-slate-300 bg-white/95 dark:bg-slate-800 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-white/10 shadow-xs">
+                      <span className="text-indigo-600 dark:text-indigo-400 font-black">صفحة {previewPage}</span>
+                      <span className="text-slate-400 font-normal">/</span>
+                      <span>{totalPreviewPages}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setPreviewPage((p) => Math.min(totalPreviewPages, p + 1))}
+                      disabled={previewPage === totalPreviewPages}
+                      className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-35 disabled:cursor-not-allowed text-xs font-bold border border-slate-200/80 dark:border-white/10 flex items-center gap-1 shadow-xs cursor-pointer transition-all active:scale-95"
+                    >
+                      <span>الصفحة التالية</span>
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Page Dot Indicator */}
+                  <div className="flex items-center gap-1.5 hidden sm:flex">
+                    {Array.from({ length: totalPreviewPages }, (_, i) => i + 1).map((pg) => (
+                      <button
+                        key={pg}
+                        type="button"
+                        onClick={() => setPreviewPage(pg)}
+                        className={`h-2 rounded-full transition-all cursor-pointer ${
+                          previewPage === pg
+                            ? "w-6 bg-indigo-600 dark:bg-indigo-400"
+                            : "w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400"
+                        }`}
+                        title={`الانتقال إلى صفحة ${pg}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* All Pages Continuous Scroll */
+              <div className="w-full max-h-[500px] sm:max-h-[640px] overflow-y-auto space-y-4 p-2 sm:p-3 scrollbar-thin">
+                {Array.from({ length: totalPreviewPages }, (_, i) => i + 1).map((pg) => (
+                  <div key={pg} className="relative flex flex-col items-center">
+                    <div className="text-[10px] font-bold text-slate-400 mb-1">
+                      صفحة {pg} من {totalPreviewPages}
+                    </div>
+                    <img
+                      src={`/demo/preview-page-${pg}.webp`}
+                      alt={`دفتر لماح - صفحة ${pg}`}
+                      loading="lazy"
+                      className="w-full max-w-xl h-auto object-contain rounded-lg sm:rounded-xl shadow-md border border-slate-200/70 dark:border-white/10 select-none"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Performance Notice */}
+          <div className="mt-3 flex items-center justify-between text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium px-1">
+            <span className="flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+              <span>معاينة فورية فائقة السرعة بفضل تقنية الضغط الذكي WebP</span>
+            </span>
+            <span>جاهز للطباعة الورقية عالية الدقة</span>
           </div>
         </div>
         

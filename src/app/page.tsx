@@ -134,15 +134,15 @@ export default function Home() {
         <div className="max-w-4xl mx-auto relative z-10">
           <div className="text-center mb-16 relative">
             {/* Decorative icons floating near title */}
-            <div className="absolute top-0 right-10 md:right-32 text-indigo-400/50 dark:text-indigo-500/40 animate-pulse">
+            <div className="absolute -top-7 sm:-top-9 right-8 md:right-28 text-indigo-400/50 dark:text-indigo-500/40 animate-pulse pointer-events-none">
               <Sparkles className="w-8 h-8" />
             </div>
-            <div className="absolute -bottom-10 left-10 md:left-32 text-purple-400/50 dark:text-purple-500/40 animate-pulse" style={{ animationDelay: '1s' }}>
+            <div className="absolute -bottom-10 left-10 md:left-32 text-purple-400/50 dark:text-purple-500/40 animate-pulse pointer-events-none" style={{ animationDelay: '1s' }}>
               <MessageSquare className="w-6 h-6" />
             </div>
 
-            <h2 className="text-4xl md:text-5xl font-black mb-6 pb-3 pt-1 bg-clip-text text-transparent bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-900 dark:from-white dark:via-indigo-200 dark:to-purple-200 tracking-tight leading-normal">
-              كل ما تود معرفته عن لمّاح
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-6 pb-4 pt-1 text-slate-900 dark:text-white tracking-tight leading-[1.3] overflow-visible">
+              كل ما تود معرفته عن <span className="text-indigo-600 dark:text-indigo-400">لمّاح</span>
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto font-medium leading-relaxed">
               إجابات واضحة ومباشرة عن كل ما يدور في ذهنك حول دقة التفريغ، حماية رصيدك، طرق الدفع، وتوليد الدفاتر الجمالية.

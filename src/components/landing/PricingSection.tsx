@@ -54,8 +54,8 @@ export default function PricingSection() {
         
         {/* Header */}
         <div className="text-center mb-12 sm:mb-14">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-3 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-700 to-slate-500 dark:from-white dark:via-slate-100 dark:to-slate-400 tracking-tight leading-tight">
-            استثمر في راحتك وتفوقك الدراسي
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 pb-3 pt-1 text-slate-900 dark:text-white tracking-tight leading-[1.38] sm:leading-[1.25] overflow-visible">
+            استثمر في راحتك و<span className="text-indigo-600 dark:text-indigo-400">تفوقك الدراسي</span>
           </h2>
           <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base max-w-2xl mx-auto font-medium leading-relaxed">
             من التلخيص الأكاديمي السريع قبل الامتحانات إلى توليد أفخم الدفاتر الملونة القابلة للطباعة وبيعها بالمتجر للأرباح!
