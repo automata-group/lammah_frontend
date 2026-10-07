@@ -117,7 +117,7 @@ export default function HeroSection() {
 
       {/* ── 2. Subtitle (Immediate Paint for 0ms LCP Delay) ─────── */}
       <p
-        className="mt-7 sm:mt-8 text-sm xs:text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto leading-relaxed sm:leading-relaxed font-medium px-3 sm:px-0"
+        className="mt-7 sm:mt-8 text-base xs:text-[17px] sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto leading-relaxed sm:leading-relaxed font-medium px-3 sm:px-0"
       >
         وداعاً لإضاعة الساعات في تفريغ المحاضرات يدوياً. حوّل تسجيلاتك وملفات الـ PDF فوراً إلى ملخصات فائقة الدقة، أسئلة امتحانات متوقعة، وشات ذكي يجيبك عن كل مسألة.
       </p>
@@ -128,7 +128,7 @@ export default function HeroSection() {
       >
         <Link
           href="/auth"
-          className="w-full sm:w-auto px-8 py-4 rounded-full font-black text-sm xs:text-base text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 shadow-lg shadow-indigo-600/25 dark:shadow-[0_0_35px_rgba(99,102,241,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group cursor-pointer"
+          className="w-full sm:w-auto px-8 py-4 rounded-full font-black text-[15px] xs:text-base text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 shadow-lg shadow-indigo-600/25 dark:shadow-[0_0_35px_rgba(99,102,241,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group cursor-pointer"
         >
           <span>سجل في لماح</span>
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
@@ -140,7 +140,7 @@ export default function HeroSection() {
             e.preventDefault();
             document.getElementById('interactive-demo')?.scrollIntoView({ behavior: 'smooth' });
           }}
-          className="w-full sm:w-auto px-7 py-4 rounded-full font-bold text-sm xs:text-base text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+          className="w-full sm:w-auto px-7 py-4 rounded-full font-bold text-[15px] xs:text-base text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
         >
           <Play className="w-3.5 h-3.5 fill-indigo-600 dark:fill-indigo-400 text-indigo-600 dark:text-indigo-400 translate-x-0.5" />
           <span>جرب لماح مجانا</span>
