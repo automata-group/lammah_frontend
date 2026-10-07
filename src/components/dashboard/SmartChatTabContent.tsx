@@ -16,6 +16,7 @@ interface SmartChatTabContentProps {
   subscriptionLimit: number;
   isFreeTrial: boolean;
   isDemoLecture: boolean;
+  isDocumentOnly?: boolean;
 }
 
 export default function SmartChatTabContent({
@@ -28,6 +29,7 @@ export default function SmartChatTabContent({
   subscriptionLimit,
   isFreeTrial,
   isDemoLecture,
+  isDocumentOnly = false,
 }: SmartChatTabContentProps) {
   const router = useRouter();
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -130,7 +132,9 @@ export default function SmartChatTabContent({
             <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 ml-2 text-blue-600 dark:text-blue-500" /> تحدث مع المحاضرة
           </h3>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 pr-0 sm:pr-8 mt-1 font-medium relative z-10">
-            يستند الرد لمعالجة سؤالك باحترافية، مع توضيح ما ذكره الدكتور في المحاضرة ومطابقته مع السلايدات.
+            {isDocumentOnly
+              ? "يستند الرد لمعالجة سؤالك بدقة واحترافية وفق ما ورد في السلايدات والشرائح."
+              : "يستند الرد لمعالجة سؤالك باحترافية، مع توضيح ما ذكره الدكتور في المحاضرة ومطابقته مع السلايدات."}
           </p>
         </div>
 
@@ -144,7 +148,9 @@ export default function SmartChatTabContent({
             <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 space-y-4 opacity-70">
               <BrainCircuit className="w-12 h-12 sm:w-16 sm:h-16 text-slate-400 dark:text-slate-600" />
               <p className="text-base sm:text-lg text-center font-bold">
-                اطرح سؤالاً يخص جزئية معينة من المحاضرة وسيجيبك النظام فوراً!
+                {isDocumentOnly
+                  ? "اطرح سؤالاً يخص جزئية معينة من السلايدات وسيجيبك النظام فوراً!"
+                  : "اطرح سؤالاً يخص جزئية معينة من المحاضرة وسيجيبك النظام فوراً!"}
               </p>
             </div>
           )}
@@ -167,8 +173,10 @@ export default function SmartChatTabContent({
           {isChatLoading && (
             <div className="flex justify-start w-full">
               <div className="max-w-[75%] p-3.5 sm:p-5 rounded-2xl sm:rounded-[1.5rem] bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-400 rounded-tr-xs flex items-center gap-2 shadow-inner">
-                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-blue-600 dark:text-blue-400" />
-                <span className="text-xs sm:text-sm font-bold">يقرأ الشرائح والصوت...</span>
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-blue-600 dark:text-blue-400 shrink-0" />
+                <span className="text-xs sm:text-sm font-bold">
+                  {isDocumentOnly ? "يقرأ محتوى الشرائح..." : "يقرأ الشرائح والصوت..."}
+                </span>
               </div>
             </div>
           )}
@@ -212,8 +220,12 @@ export default function SmartChatTabContent({
             <input
               type="text"
               maxLength={500}
-              className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 text-slate-900 dark:text-slate-100 p-3 sm:p-4 rounded-xl sm:rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-slate-400 dark:placeholder-slate-500 shadow-xs font-semibold text-xs sm:text-sm md:text-base"
-              placeholder="مثال: كيف شرح الدكتور الفرق بين DOS و DDOS؟"
+              className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 text-slate-900 dark:text-slate-100 p-3 sm:p-4 rounded-xl sm:rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-slate-400 dark:placeholder-slate-500 shadow-xs font-semibold text-xs sm:text-sm md:text-base placeholder:text-xs sm:placeholder:text-sm placeholder:font-normal"
+              placeholder={
+                isDocumentOnly
+                  ? "مثال: اشرح النقطة في الشريحة رقم 2"
+                  : "مثال: كيف شرح الدكتور الفرق في الشريحة 2؟"
+              }
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               disabled={subscriptionLimit > 0 && chatCount >= subscriptionLimit}

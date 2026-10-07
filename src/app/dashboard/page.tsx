@@ -304,13 +304,14 @@ function DashboardContent() {
 
   // Context-aware file analysis for processing screen
   const isDocumentOnly = useMemo(() => {
+    if (result?.isDocumentOnly !== undefined) return !!result.isDocumentOnly;
     const hasAudio = !!audioFile || !!audioTempId || multiAudioFiles.length > 0;
     const hasUrl =
       uploadMode === "url" &&
       (lectureUrl.trim().length > 0 || lectureUrls.some((u) => u.trim().length > 0));
     const hasDoc = !!pdfFile || !!pdfTempId;
     return hasDoc && !hasAudio && !hasUrl;
-  }, [audioFile, audioTempId, multiAudioFiles, uploadMode, lectureUrl, lectureUrls, pdfFile, pdfTempId]);
+  }, [result?.isDocumentOnly, audioFile, audioTempId, multiAudioFiles, uploadMode, lectureUrl, lectureUrls, pdfFile, pdfTempId]);
 
   const activeFileName = useMemo(() => {
     if (isDocumentOnly) {
@@ -1322,6 +1323,7 @@ function DashboardContent() {
                       subscriptionLimit={subscriptionLimit}
                       isFreeTrial={isFreeTrial}
                       isDemoLecture={isDemoLecture}
+                      isDocumentOnly={isDocumentOnly}
                     />
                   )}
 
