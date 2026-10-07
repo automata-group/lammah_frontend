@@ -97,9 +97,6 @@ export default function PlansPage() {
         
         {/* Clean Hero Title */}
         <div className="text-center max-w-2xl mx-auto space-y-3">
-          <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 text-indigo-600 dark:text-indigo-400 text-xs font-black shadow-xs">
-            اشتراكات شهرية وباقات مرنة
-          </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
             باقات واشتراكات لمّاح

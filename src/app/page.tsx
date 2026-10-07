@@ -137,10 +137,6 @@ export default function Home() {
               <MessageSquare className="w-6 h-6" />
             </div>
 
-            <div className="inline-flex items-center bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/20 px-4 py-2 rounded-full mb-6 backdrop-blur-md shadow-sm">
-              <span className="text-xs font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-widest">الأسئلة الشائعة</span>
-            </div>
-            
             <h2 className="text-4xl md:text-5xl font-black mb-6 bg-clip-text text-transparent bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-900 dark:from-white dark:via-indigo-200 dark:to-purple-200 tracking-tight leading-tight">
               كل ما تود معرفته عن لمّاح
             </h2>

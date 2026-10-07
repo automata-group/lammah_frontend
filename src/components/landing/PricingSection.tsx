@@ -54,10 +54,6 @@ export default function PricingSection() {
         
         {/* Header */}
         <div className="text-center mb-12 sm:mb-14">
-          <div className="inline-flex items-center bg-white/[0.03] border border-white/[0.08] px-4 py-1.5 rounded-full mb-4 backdrop-blur-md">
-            <span className="text-xs font-black text-amber-400 uppercase tracking-widest">باقات واشتراكات لمّاح</span>
-          </div>
-          
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-3 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-700 to-slate-500 dark:from-white dark:via-slate-100 dark:to-slate-400 tracking-tight leading-tight">
             استثمر في راحتك وتفوقك الدراسي
           </h2>
@@ -281,12 +277,6 @@ export default function PricingSection() {
             })}
           </div>
         )}
-
-        <div className="mt-20 text-center">
-          <p className="text-slate-600 dark:text-slate-500 text-sm font-medium">
-            لديك مؤسسة تعليمية؟ <a href="mailto:support@lammah.site" className="text-indigo-600 dark:text-indigo-400 font-black hover:underline transition-colors">تواصل معنا لطلب عرض مخصص ←</a>
-          </p>
-        </div>
       </div>
     </section>
   );

@@ -334,11 +334,6 @@ export default function HeroSimulation({
     <section className="relative w-full py-24 z-20 flex flex-col items-center">
       {/* ── Section Headers ── */}
       <div className="mb-12 relative z-10 flex flex-col items-center">
-        <div className="inline-flex items-center gap-2 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 px-5 py-2 rounded-full mb-4 shadow-sm">
-          <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-          <span className="text-sm font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-widest">التجربة المجانية</span>
-        </div>
-        
         <h2 className="text-2xl sm:text-4xl font-black text-slate-800 dark:text-white mb-3 sm:mb-4 px-4 text-center">
           جرب المنصة الآن <span className="text-indigo-600 dark:text-indigo-400">بدون تسجيل</span>
         </h2>

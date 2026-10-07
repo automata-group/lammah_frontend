@@ -88,9 +88,6 @@ export default function FeaturesSection() {
         
         {/* Section Header */}
         <div className="text-center mb-16 sm:mb-20 flex flex-col items-center">
-          <div className="inline-flex items-center bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-5 py-2 rounded-full mb-6 shadow-sm">
-            <span className="text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">منظومة أكاديمية متكاملة</span>
-          </div>
           
           <h2 className="text-4xl sm:text-5xl font-black mb-6 text-slate-900 dark:text-white tracking-tight leading-tight">
             لماذا تختار <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 pb-2">لمّاح؟</span>
