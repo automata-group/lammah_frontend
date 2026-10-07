@@ -126,13 +126,13 @@ export default function DashboardProcessingScreen({
         <div className="my-4 relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <span>{isDocumentOnly ? "جاري تحويل السلايدات إلى دفتر ملخص تفاعلي" : "جاري تفريغ وتلخيص المحاضرة عبر لمّاح"}</span>
+              <span>{isDocumentOnly ? "جاري تحويل السلايدات إلى ملف مخطط ومظلل" : "جاري تفريغ وتلخيص المحاضرة عبر لمّاح"}</span>
               <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
               {progressStep ||
                 (isDocumentOnly
-                  ? "استخراج النصوص وتحليل الشرائح وصياغة الكبسولات الذكية وتنسيق الدفتر..."
+                  ? "استخراج النصوص وتحليل الشرائح وصياغة الكبسولات الذكية وتنسيق الملف المخطط والمظلل..."
                   : "تحويل الصوت لنص ومطابقته مع السلايدات وتوليد الملاحظات...")}
             </p>
           </div>

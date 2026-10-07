@@ -764,7 +764,7 @@ function DashboardContent() {
       }, 3750);
 
       setTimeout(() => {
-        setProgressStep("🎉 تم معالجة المحاضرة بنجاح! جاري الانتقال لدفتر الملاحظات...");
+        setProgressStep("🎉 تم معالجة المحاضرة بنجاح! جاري الانتقال للوحة المحاضرة والملف المخطط...");
         setTimeout(() => {
           router.push(`/dashboard?history_id=4198557f-5b1b-48ac-91a8-d8129de8ca0b`);
           setIsProcessing(false);

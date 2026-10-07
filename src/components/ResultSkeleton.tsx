@@ -22,7 +22,7 @@ export default function ResultSkeleton() {
           <div className="w-full h-[600px] rounded-2xl bg-slate-900/50 border border-slate-700 flex items-center justify-center">
             <div className="flex flex-col items-center gap-4">
               <div className="w-16 h-16 bg-slate-800 rounded-full animate-spin border-4 border-indigo-500/20 border-t-indigo-500"></div>
-              <p className="text-slate-500 font-medium">جاري تنسيق الدفتر عبر لمّاح...</p>
+              <p className="text-slate-500 font-medium">جاري تجهيز وتنسيق الملف المخطط والمظلل...</p>
             </div>
           </div>
         </div>

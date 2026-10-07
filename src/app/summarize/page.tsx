@@ -383,7 +383,7 @@ function SummarizeContent() {
         setProgressStep("✨ جاري إعداد البطاقات التعليمية والأسئلة المتوقعة...");
       }, 3750);
       setTimeout(() => {
-        setProgressStep("🎉 تم معالجة المحاضرة بنجاح! جاري الانتقال لدفتر الملاحظات...");
+        setProgressStep("🎉 تم معالجة المحاضرة بنجاح! جاري الانتقال للوحة المحاضرة والملف المخطط...");
         setTimeout(() => {
           router.push(`/dashboard?history_id=4198557f-5b1b-48ac-91a8-d8129de8ca0b`);
           setIsProcessing(false);
@@ -731,7 +731,7 @@ function SummarizeContent() {
                 <div className="my-4 flex items-center justify-between gap-2">
                   <div>
                     <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                      <span>{isDocumentOnly ? "جاري تحويل السلايدات إلى دفتر ملخص" : "جاري تفريغ وتلخيص المحاضرة عبر لمّاح"}</span>
+                      <span>{isDocumentOnly ? "جاري تحويل السلايدات إلى ملف مخطط ومظلل" : "جاري تفريغ وتلخيص المحاضرة عبر لمّاح"}</span>
                       <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
                     </h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
@@ -1031,7 +1031,7 @@ function SummarizeContent() {
                             : `جاري رفع الملف الصوتي (${audioUploadProgress}%)...`)
                         : isPdfUploading
                         ? `جاري رفع السلايدات (${pdfUploadProgress}%)...`
-                        : "ابدأ التلخيص الذكي وتوليد الدفتر"
+                        : "ابدأ التلخيص الذكي وتوليد الملف المخطط"
                     }
                     loadingText="جاري التوليد والتلخيص..."
                     variant="pill"
