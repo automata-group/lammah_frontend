@@ -517,7 +517,7 @@ export default function StudyInstructionsHub({
         <div className="relative z-10 flex flex-col items-center text-center max-w-xl mx-auto space-y-3.5 py-1">
           
           <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-tight">
-            ماذا تريد أن تدرس اليوم؟ 📚
+            ماذا تريد أن تدرس اليوم؟
           </h1>
 
           <p className="text-xs sm:text-sm text-indigo-100/80 font-medium max-w-md leading-relaxed">

@@ -32,8 +32,21 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
+import dynamic from "next/dynamic";
 import AppHeader from "@/components/AppHeader";
-import PDFCanvasViewer from "@/components/study/PDFCanvasViewer";
+
+const PDFCanvasViewer = dynamic(
+  () => import("@/components/study/PDFCanvasViewer"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex-1 w-full min-h-[60vh] flex flex-col items-center justify-center p-12 text-center select-none" dir="rtl">
+        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-3" />
+        <p className="text-xs font-black text-slate-700 dark:text-slate-300">جاري فتح وتجهيز المستند في مساحة المذاكرة...</p>
+      </div>
+    ),
+  }
+);
 import FocusSheet from "@/components/study/FocusSheet";
 import AIAssistantModal from "@/components/study/AIAssistantModal";
 import VaultLibraryModal from "@/components/study/VaultLibraryModal";
@@ -643,9 +656,6 @@ function StudyPageContent() {
               </button>
 
               <div className="flex items-center gap-2 min-w-0">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-700 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
-                  <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </div>
                 <div className="min-w-0">
                   <h1 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate max-w-[170px] xs:max-w-[220px] sm:max-w-md">
                     {documentTitle}
@@ -934,7 +944,7 @@ export default function StudyPage() {
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 space-y-4 select-none" dir="rtl">
         <div className="relative flex items-center justify-center">
           <div className="w-16 h-16 rounded-3xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shadow-md">
-            <BookOpen className="w-8 h-8 text-indigo-600 animate-pulse" />
+            <Sparkles className="w-8 h-8 text-indigo-600 animate-pulse" />
           </div>
           <div className="absolute -top-1 -right-1">
             <span className="flex h-3.5 w-3.5 relative">

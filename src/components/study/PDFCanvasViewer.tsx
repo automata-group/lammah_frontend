@@ -667,12 +667,15 @@ export default function PDFCanvasViewer({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const pdfCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const pdfRawBytesRef = useRef<ArrayBuffer | null>(null);
   const pageBlobCacheRef = useRef<Map<number, string>>(new Map());
 
   const [masterPdfDoc, setMasterPdfDoc] = useState<PDFDocument | null>(null);
   const [directMasterUrl, setDirectMasterUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [isPdfCanvasReady, setIsPdfCanvasReady] = useState<boolean>(false);
+  const [isMobileDockCollapsed, setIsMobileDockCollapsed] = useState<boolean>(false);
   const [isPageSliceLoading, setIsPageSliceLoading] = useState<boolean>(false);
   const [isPageDrawerOpen, setIsPageDrawerOpen] = useState<boolean>(false);
   const [pageDrawerFilter, setPageDrawerFilter] = useState<"all" | "pins">("all");
@@ -1611,6 +1614,86 @@ export default function PDFCanvasViewer({
 
     return () => {
       isCancelled = true;
+    };
+  }, [currentPage, masterPdfDoc]);
+
+  // ── Native Vector High-Res PDF Canvas Rendering via pdfjs-dist (100% Mobile Scale & Zero Cut-off) ──
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function renderPageToCanvas() {
+      if (!pdfRawBytesRef.current || !pdfCanvasRef.current) return;
+
+      try {
+        const pdfjsLib = await import("pdfjs-dist");
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+
+        const loadingTask = pdfjsLib.getDocument({
+          data: new Uint8Array(pdfRawBytesRef.current.slice(0)),
+          cMapUrl: "https://unpkg.com/pdfjs-dist@3.11.174/cmaps/",
+          cMapPacked: true,
+        });
+
+        const pdfDoc = await loadingTask.promise;
+        if (isCancelled) return;
+
+        const total = pdfDoc.numPages;
+        if (currentPage < 1 || currentPage > total) return;
+
+        const page = await pdfDoc.getPage(currentPage);
+        if (isCancelled) return;
+
+        const canvas = pdfCanvasRef.current;
+        if (!canvas) return;
+
+        // Container responsive width (exact viewport width on phone)
+        const containerW = viewportRef.current?.clientWidth || (typeof window !== "undefined" ? Math.min(window.innerWidth - 16, 1024) : 800);
+        const unscaledViewport = page.getViewport({ scale: 1 });
+        
+        // Exact responsive scale to fit mobile screen without clipping
+        const cssScale = Math.max(0.1, containerW / unscaledViewport.width);
+        const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
+        const renderViewport = page.getViewport({ scale: cssScale * dpr });
+
+        canvas.width = Math.round(renderViewport.width);
+        canvas.height = Math.round(renderViewport.height);
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        await page.render({
+          canvasContext: ctx,
+          viewport: renderViewport,
+        }).promise;
+
+        if (!isCancelled) {
+          setIsPdfCanvasReady(true);
+          setIsIframeLoading(false);
+          setPageDimensions({
+            width: unscaledViewport.width,
+            height: unscaledViewport.height,
+            ratio: unscaledViewport.width / unscaledViewport.height,
+          });
+        }
+      } catch (err) {
+        console.warn("pdfjs-dist render fallback:", err);
+      }
+    }
+
+    renderPageToCanvas();
+
+    const handleResize = () => {
+      renderPageToCanvas();
+    };
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      isCancelled = true;
+      window.removeEventListener("resize", handleResize);
     };
   }, [currentPage, masterPdfDoc]);
 
@@ -2855,154 +2938,184 @@ export default function PDFCanvasViewer({
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Mobile Tier 2: The Core Creative Drawing Tools */}
-          <div className="relative z-20 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xl px-1.5 py-1 flex items-center justify-between gap-0.5 select-none">
-            {/* Browse / Pan */}
-            <button
-              type="button"
-              onClick={() => handleSelectTool("browse")}
-              className={`p-1.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
-                activeTool === "browse" && selectedNoteId === null
-                  ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
-              title="تصفح وقراءة"
+        {/* ── MOBILE BOTTOM FLOATING ANNOTATION DOCK (sm:hidden) ── */}
+        <AnimatePresence>
+          {!isMobileDockCollapsed ? (
+            <motion.div
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 50, opacity: 0 }}
+              className="fixed bottom-3 inset-x-2 z-40 sm:hidden max-w-sm mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-2xl px-2 py-1.5 flex items-center justify-between gap-1 select-none"
             >
-              <Hand className="w-4 h-4" />
-            </button>
+              {/* Browse / Pan */}
+              <button
+                type="button"
+                onClick={() => handleSelectTool("browse")}
+                className={`p-1.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
+                  activeTool === "browse" && selectedNoteId === null
+                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+                title="تصفح وقراءة"
+              >
+                <Hand className="w-4 h-4" />
+              </button>
 
-            {/* Smart Highlighter */}
-            <button
-              type="button"
-              onClick={() => handleSelectTool("highlighter")}
-              className={`p-1.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
-                activeTool === "highlighter" && selectedNoteId === null
-                  ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
-              title="تظليل ذكي"
-            >
-              <Highlighter className="w-4 h-4" />
-            </button>
+              {/* Smart Highlighter */}
+              <button
+                type="button"
+                onClick={() => handleSelectTool("highlighter")}
+                className={`p-1.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
+                  activeTool === "highlighter" && selectedNoteId === null
+                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+                title="تظليل ذكي"
+              >
+                <Highlighter className="w-4 h-4" />
+              </button>
 
-            {/* Pen Tool */}
-            <button
+              {/* Pen Tool */}
+              <button
+                type="button"
+                onClick={() => handleSelectTool("pen")}
+                className={`p-1.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
+                  activeTool === "pen" && selectedNoteId === null
+                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+                title="قلم كتابة ورسم"
+              >
+                <PenTool className="w-4 h-4" />
+              </button>
+
+              {/* Plain Freeform Text (Word / Canva style) */}
+              <button
+                type="button"
+                onClick={() => {
+                  const currentSelected = pageTextNotes.find(n => n.id === selectedNoteId);
+                  if (selectedNoteId && currentSelected?.noteType === "plain_text") {
+                    setSelectedNoteId(null);
+                    setActiveTool("browse");
+                  } else {
+                    setActiveTool("plain_text");
+                    const plainNotes = pageTextNotes.filter(n => n.noteType === "plain_text");
+                    if (plainNotes.length > 0) {
+                      setSelectedNoteId(plainNotes[plainNotes.length - 1].id);
+                    } else {
+                      handleAddNewPlainTextAtCenter();
+                    }
+                  }
+                }}
+                className={`p-1.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
+                  activeTool === "plain_text" || (selectedNoteId !== null && pageTextNotes.find(n => n.id === selectedNoteId)?.noteType === "plain_text")
+                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+                title="نص حر"
+              >
+                <Type className="w-4 h-4" />
+              </button>
+
+              {/* Sticky Note / Memo Card */}
+              <button
+                type="button"
+                onClick={() => {
+                  const currentSelected = pageTextNotes.find(n => n.id === selectedNoteId);
+                  if (selectedNoteId && currentSelected?.noteType !== "plain_text") {
+                    setSelectedNoteId(null);
+                    setIsFontMenuOpen(false);
+                    setActiveTool("browse");
+                  } else {
+                    const stickerNotes = pageTextNotes.filter(n => n.noteType !== "plain_text");
+                    if (stickerNotes.length > 0) {
+                      setSelectedNoteId(stickerNotes[stickerNotes.length - 1].id);
+                      setActiveTool("text");
+                    } else {
+                      handleAddNewNoteAtCenter();
+                    }
+                  }
+                }}
+                className={`p-1.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
+                  activeTool === "text" || (selectedNoteId !== null && pageTextNotes.find(n => n.id === selectedNoteId)?.noteType !== "plain_text")
+                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+                title="ستيكر ملاحظات"
+              >
+                <StickyNote className="w-4 h-4" />
+              </button>
+
+              {/* Active Recall Tape */}
+              <button
+                type="button"
+                onClick={() => handleSelectTool("tape")}
+                className={`p-1.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
+                  activeTool === "tape"
+                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+                title="شريط حجب"
+              >
+                <EyeOff className="w-4 h-4" />
+              </button>
+
+              {/* Eraser */}
+              <button
+                type="button"
+                onClick={() => handleSelectTool("eraser")}
+                className={`p-1.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
+                  activeTool === "eraser"
+                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+                title="ممحاة"
+              >
+                <Eraser className="w-4 h-4" />
+              </button>
+
+              {/* Direct PDF Export */}
+              <button
+                type="button"
+                onClick={handleExportAnnotatedPdf}
+                disabled={isExportingPdf}
+                className="px-2 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold shadow-xs flex items-center gap-1 transition cursor-pointer shrink-0 disabled:opacity-50"
+                title="تنزيل الملف الحالي مع كافة التخطيطات والملاحظات"
+              >
+                {isExportingPdf ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <FileDown className="w-3.5 h-3.5" />
+                )}
+                <span>تصدير</span>
+              </button>
+
+              {/* Collapse Button (Distraction-Free) */}
+              <button
+                type="button"
+                onClick={() => setIsMobileDockCollapsed(true)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer shrink-0"
+                title="إخفاء شريط الأدوات مؤقتاً للقراءة"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            </motion.div>
+          ) : (
+            <motion.button
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
               type="button"
-              onClick={() => handleSelectTool("pen")}
-              className={`p-1.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
-                activeTool === "pen" && selectedNoteId === null
-                  ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
-              title="قلم كتابة ورسم"
+              onClick={() => setIsMobileDockCollapsed(false)}
+              className="fixed bottom-4 right-4 z-40 p-3 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xl flex items-center justify-center sm:hidden cursor-pointer"
+              title="إظهار أدوات التخطيط"
             >
               <PenTool className="w-4 h-4" />
-            </button>
-
-            {/* Plain Freeform Text (Word / Canva style) */}
-            <button
-              type="button"
-              onClick={() => {
-                const currentSelected = pageTextNotes.find(n => n.id === selectedNoteId);
-                if (selectedNoteId && currentSelected?.noteType === "plain_text") {
-                  setSelectedNoteId(null);
-                  setActiveTool("browse");
-                } else {
-                  setActiveTool("plain_text");
-                  const plainNotes = pageTextNotes.filter(n => n.noteType === "plain_text");
-                  if (plainNotes.length > 0) {
-                    setSelectedNoteId(plainNotes[plainNotes.length - 1].id);
-                  } else {
-                    handleAddNewPlainTextAtCenter();
-                  }
-                }
-              }}
-              className={`p-1.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
-                activeTool === "plain_text" || (selectedNoteId !== null && pageTextNotes.find(n => n.id === selectedNoteId)?.noteType === "plain_text")
-                  ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
-              title="نص حر"
-            >
-              <Type className="w-4 h-4" />
-            </button>
-
-            {/* Sticky Note / Memo Card */}
-            <button
-              type="button"
-              onClick={() => {
-                const currentSelected = pageTextNotes.find(n => n.id === selectedNoteId);
-                if (selectedNoteId && currentSelected?.noteType !== "plain_text") {
-                  setSelectedNoteId(null);
-                  setIsFontMenuOpen(false);
-                  setActiveTool("browse");
-                } else {
-                  const stickerNotes = pageTextNotes.filter(n => n.noteType !== "plain_text");
-                  if (stickerNotes.length > 0) {
-                    setSelectedNoteId(stickerNotes[stickerNotes.length - 1].id);
-                    setActiveTool("text");
-                  } else {
-                    handleAddNewNoteAtCenter();
-                  }
-                }
-              }}
-              className={`p-1.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
-                activeTool === "text" || (selectedNoteId !== null && pageTextNotes.find(n => n.id === selectedNoteId)?.noteType !== "plain_text")
-                  ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
-              title="ستيكر ملاحظات"
-            >
-              <StickyNote className="w-4 h-4" />
-            </button>
-
-            {/* Active Recall Tape */}
-            <button
-              type="button"
-              onClick={() => handleSelectTool("tape")}
-              className={`p-1.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
-                activeTool === "tape"
-                  ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
-              title="شريط حجب"
-            >
-              <EyeOff className="w-4 h-4" />
-            </button>
-
-            {/* Eraser */}
-            <button
-              type="button"
-              onClick={() => handleSelectTool("eraser")}
-              className={`p-1.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
-                activeTool === "eraser"
-                  ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
-              title="ممحاة"
-            >
-              <Eraser className="w-4 h-4" />
-            </button>
-
-            {/* Direct PDF Export */}
-            <button
-              type="button"
-              onClick={handleExportAnnotatedPdf}
-              disabled={isExportingPdf}
-              className="px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold shadow-xs flex items-center gap-1 transition cursor-pointer shrink-0 disabled:opacity-50"
-              title="تنزيل الملف الحالي مع كافة التخطيطات والملاحظات"
-            >
-              {isExportingPdf ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <FileDown className="w-3.5 h-3.5" />
-              )}
-              <span>{isExportingPdf ? "جارٍ التصدير..." : "تصدير"}</span>
-            </button>
-          </div>
-
-        </div>
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {/* ── DESKTOP UNIFIED MASTER DOCK (hidden sm:flex) ── */}
         <div className="lammah-main-toolbar hidden sm:flex bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xl px-2.5 sm:px-3 py-1.5 items-center justify-center gap-1.5 sm:gap-2 select-none">
@@ -4817,12 +4930,18 @@ export default function PDFCanvasViewer({
             )}
           </AnimatePresence>
 
-          {activeDocumentUrl && (
+          {/* Native Vector High-Res Render Canvas (100% fitted to mobile, zero clipping) */}
+          <canvas
+            ref={pdfCanvasRef}
+            className={`w-full h-full object-contain block bg-white ${isPdfCanvasReady ? "opacity-100" : "opacity-0"}`}
+          />
+
+          {!isPdfCanvasReady && activeDocumentUrl && (
             <iframe
               key={`doc_frame_${currentPage}_${singlePageUrl ? "slice" : "master"}`}
               src={activeDocumentUrl}
               onLoad={handleIframeLoad}
-              className={`w-full h-full border-none bg-white ${isDraggingAnyNote ? "pointer-events-none select-none" : ""}`}
+              className={`w-full h-full border-none bg-white absolute inset-0 ${isDraggingAnyNote ? "pointer-events-none select-none" : ""}`}
               title={`${documentTitle} - Page ${currentPage}`}
             />
           )}
