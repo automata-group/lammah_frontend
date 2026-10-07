@@ -110,7 +110,7 @@ export default function HeroSection() {
         </span>
 
         {/* Line 3 on Mobile (Line 2 on Desktop) */}
-        <span className="block mt-2 sm:mt-0 pt-4 pb-3 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-300 dark:to-pink-400">
+        <span className="block text-2xl xs:text-3xl sm:text-6xl lg:text-7xl whitespace-nowrap mt-2 sm:mt-0 pt-3 sm:pt-4 pb-2 sm:pb-3 text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-300 dark:to-pink-400">
           إلى أعلى العلامات
         </span>
       </h1>

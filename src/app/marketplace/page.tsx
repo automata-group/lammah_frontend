@@ -1089,7 +1089,7 @@ export default function MarketplacePage() {
                     onClick={() => router.push("/notebook")}
                     className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition cursor-pointer"
                   >
-                    أنشئ دفترك الآن 🚀
+                    أنشئ دفترك الآن
                   </button>
                 )}
               </div>

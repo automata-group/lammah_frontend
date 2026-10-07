@@ -525,60 +525,56 @@ function NotebookCreatorContent() {
   if (!session) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-white flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans" dir="rtl">
-        <div className="max-w-2xl w-full text-center space-y-8 z-10 bg-white dark:bg-[#0b0f19] p-8 sm:p-12 rounded-3xl sm:rounded-[2.5rem] border border-slate-200/90 dark:border-slate-800 shadow-sm">
-          <div className="relative inline-block">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-300 rounded-[2rem] flex items-center justify-center shadow-lg shadow-amber-500/20 mx-auto border border-amber-400/40">
-              <Lock className="w-10 h-10 sm:w-12 sm:h-12 text-slate-950" />
-            </div>
-            <div className="absolute -bottom-2 -right-2 bg-white dark:bg-slate-900 border-2 border-amber-400 p-2 rounded-full shadow-xs">
-              <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
-            </div>
+        <div className="max-w-xl w-full text-center space-y-6 z-10 bg-white dark:bg-[#0b0f19] p-7 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-600 dark:text-indigo-400 shadow-xs mb-1">
+            <BookOpen className="w-7 h-7" />
           </div>
 
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-black">
-              <span>👑 خاص وحصري بمشتركي باقة النخبة (100 ₪)</span>
+          <div className="space-y-2">
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
+              <span>خاصة بمشتركي باقة النخبة (100 ₪)</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 dark:from-amber-400 dark:via-yellow-200 dark:to-amber-500 bg-clip-text text-transparent leading-tight">
-              صانع دفاتر التلخيص الجامعية
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              توليد الدفاتر الأكاديمية الذكية
             </h1>
-            <p className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-amber-100/80 font-bold max-w-xl mx-auto leading-relaxed">
-              حوّل تفريغ محاضراتك وسلايداتك إلى دفتر ملخص متكامل (A4 PDF) بخط يد رقعي جذاب جاهز للطباعة الورقية وللنشر في المتجر! الميزة متاحة حصرياً لأصحاب باقة النخبة.
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium max-w-md mx-auto leading-relaxed">
+              حوّل تفريغ محاضراتك وسلايداتك إلى دفاتر دراسية منسقة (A4 PDF) جاهزة للطباعة الورقية وللنشر في المتجر. هذه الميزة متاحة لمشتركي باقة النخبة.
             </p>
           </div>
 
           {/* Premium Features Highlight */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-right my-6 max-w-xl mx-auto">
-            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-xs">
-              <BookOpen className="w-6 h-6 text-amber-600 dark:text-amber-400 mb-2" />
-              <h3 className="font-bold text-slate-900 dark:text-amber-200 mb-1 text-sm sm:text-base">ورق مسطر كلاسيكي</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">توليد تلقائي فخم على نمط دفتر جامعي منسق بخط رقعي يدوي جذاب.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-right my-4 max-w-lg mx-auto">
+            <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">دفاتر تلخيص جاهزة</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">توليد دفاتر A4 منسقة أكاديمياً بجودة عالية للطباعة.</p>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-xs">
-              <Sparkles className="w-6 h-6 text-amber-600 dark:text-amber-400 mb-2" />
-              <h3 className="font-bold text-slate-900 dark:text-amber-200 mb-1 text-sm sm:text-base">رخصة بائع ونشر بالمتجر</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">انشر دفاترك في المتجر بضغطة زر وحدد السعر الذي يناسبك وحقق أرباحاً.</p>
+            <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <ShoppingBag className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">رخصة النشر بالمتجر</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">طرح وتداول الدفاتر في متجر المنصة للطلاب الآخرين.</p>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-xs">
-              <User className="w-6 h-6 text-amber-600 dark:text-amber-400 mb-2" />
-              <h3 className="font-bold text-slate-900 dark:text-amber-200 mb-1 text-sm sm:text-base">رصيد 40 محاضرة كاملة</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">رصيد دقائق عملاق يكفي لتغطية جميع مساقاتك الدراسية طوال الفصل.</p>
+            <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <GraduationCap className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">تغطية كاملة للفصل</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">رصيد 2400 دقيقة ذكية يكفي حتى 40 محاضرة كاملة.</p>
             </div>
           </div>
 
-          <div className="space-y-3 max-w-sm mx-auto">
+          <div className="space-y-2.5 max-w-xs sm:max-w-sm mx-auto pt-1">
             <button 
               onClick={() => router.push("/auth?redirect=/notebook")}
-              className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black text-base py-3.5 px-8 rounded-2xl shadow-md shadow-amber-500/20 transition transform hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm py-3 px-6 rounded-xl shadow-md shadow-indigo-600/20 transition hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Sparkles className="w-5 h-5 text-slate-950 fill-slate-950" /> تسجيل الدخول للاشتراك
+              <span>تسجيل الدخول للاشتراك</span>
+              <ArrowLeft className="w-4 h-4 ml-1" />
             </button>
             
             <button 
               onClick={() => router.push("/plans")}
-              className="w-full bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-3 px-8 rounded-2xl transition border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-sm cursor-pointer"
+              className="w-full bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold py-2.5 px-6 rounded-xl transition border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4 ml-1" /> استعراض الباقات والأسعار
+              <span>استعراض الباقات والأسعار</span>
             </button>
           </div>
         </div>
@@ -593,68 +589,64 @@ function NotebookCreatorContent() {
         <AppHeader quota={quota} activePage="notebook" />
 
         <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
-          <div className="max-w-2xl w-full text-center space-y-7 bg-white dark:bg-[#0b0f19] p-8 sm:p-12 rounded-3xl sm:rounded-[2.5rem] border border-amber-300/40 dark:border-amber-500/20 shadow-xl shadow-amber-500/5">
-            <div className="relative inline-block">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-300 rounded-[2rem] flex items-center justify-center shadow-lg shadow-amber-500/20 mx-auto border border-amber-300/50">
-                <Lock className="w-10 h-10 sm:w-12 sm:h-12 text-slate-950" />
-              </div>
-              <div className="absolute -bottom-2 -right-2 bg-white dark:bg-slate-900 border-2 border-amber-400 p-2 rounded-full shadow-xs">
-                <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500" />
-              </div>
+          <div className="max-w-xl w-full text-center space-y-6 bg-white dark:bg-[#0b0f19] p-7 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-600 dark:text-indigo-400 shadow-xs mb-1">
+              <BookOpen className="w-7 h-7" />
             </div>
 
-            <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-black">
-                <span>👑 ميزة حصرية لمشتركي باقة النخبة (100 شيكل)</span>
+            <div className="space-y-2">
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
+                <span>خاصة بمشتركي باقة النخبة (100 ₪)</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 dark:from-amber-400 dark:via-yellow-200 dark:to-amber-500 bg-clip-text text-transparent leading-tight">
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                 توليد الدفاتر الأكاديمية الذكية
               </h1>
-              <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-amber-100/80 font-medium max-w-xl mx-auto leading-relaxed">
-                أهلاً بك يا <span className="font-black text-slate-900 dark:text-white">{fullName}</span>! إن ميزة إنشاء وتوليد الدفاتر الأكاديمية الملونة (PDF) ورخصة البائع المعتمد في المتجر مخصصة حصرياً لأصحاب <span className="font-bold text-amber-600 dark:text-amber-400">باقة النخبة (100 ₪)</span>.
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium max-w-md mx-auto leading-relaxed">
+                أهلاً بك يا <span className="font-bold text-slate-900 dark:text-white">{fullName}</span>! إن ميزة إنشاء وتوليد الدفاتر الدراسية ورخصة النشر في المتجر متاحة حصرياً لمشتركي <span className="font-bold text-indigo-600 dark:text-indigo-400">باقة النخبة (100 ₪)</span>.
               </p>
             </div>
 
             {/* Current Plan Pill */}
-            <div className="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
+            <div className="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400">
+              <span className="w-2 h-2 rounded-full bg-indigo-500" />
               <span>باقتك الحالية:</span>
-              <span className="font-black text-amber-600 dark:text-amber-400">{getFriendlyPlanName(planName)}</span>
-              {quota !== null && <span className="text-[11px] text-slate-400">({quota} دقيقة متبقية)</span>}
+              <span className="font-bold text-slate-900 dark:text-white">{getFriendlyPlanName(planName)}</span>
+              {quota !== null && <span className="text-slate-400">({quota} دقيقة متبقية)</span>}
             </div>
 
-            {/* Feature Comparison / Highlights */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-right my-4 max-w-xl mx-auto">
-              <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-xs">
-                <BookOpen className="w-5 h-5 text-amber-600 dark:text-amber-400 mb-2" />
-                <h3 className="font-bold text-slate-900 dark:text-amber-200 mb-1 text-xs sm:text-sm">دفاتر دراسية A4 ملونة</h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">توليد دفاتر متكاملة بخط رقعي جذاب جاهزة للطباعة الورقية.</p>
+            {/* Feature Highlights */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-right my-4 max-w-lg mx-auto">
+              <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">دفاتر تلخيص جاهزة</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">توليد دفاتر A4 منسقة أكاديمياً بجودة عالية للطباعة.</p>
               </div>
-              <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-xs">
-                <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400 mb-2" />
-                <h3 className="font-bold text-slate-900 dark:text-amber-200 mb-1 text-xs sm:text-sm">رخصة بائع ونشر بالمتجر</h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">انشر دفاترك في المتجر بضغطة زر وحقق أرباحاً من مبيعات زملائك.</p>
+              <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <ShoppingBag className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">رخصة النشر بالمتجر</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">طرح وتداول الدفاتر في متجر المنصة للطلاب الآخرين.</p>
               </div>
-              <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-amber-500/20 shadow-xs">
-                <User className="w-5 h-5 text-amber-600 dark:text-amber-400 mb-2" />
-                <h3 className="font-bold text-slate-900 dark:text-amber-200 mb-1 text-xs sm:text-sm">رصيد 40 محاضرة</h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">رصيد دقائق ضخم يغطي جميع مساقاتك الدراسية للفصل كاملاً.</p>
+              <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <GraduationCap className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">تغطية كاملة للفصل</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">رصيد 2400 دقيقة ذكية يكفي حتى 40 محاضرة كاملة.</p>
               </div>
             </div>
 
-            <div className="space-y-3 max-w-sm mx-auto pt-2">
+            <div className="space-y-2.5 max-w-xs sm:max-w-sm mx-auto pt-1">
               <button 
                 onClick={() => router.push("/plans")}
-                className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-600 hover:to-yellow-500 text-slate-950 font-black text-sm sm:text-base py-3.5 px-8 rounded-2xl shadow-md shadow-amber-500/20 transition transform hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm py-3 px-6 rounded-xl shadow-md shadow-indigo-600/20 transition hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Sparkles className="w-5 h-5 text-slate-950 fill-slate-950" /> ترقية إلى باقة النخبة (100 ₪) الآن
+                <span>ترقية الاشتراك إلى باقة النخبة (100 ₪)</span>
+                <ArrowLeft className="w-4 h-4 ml-1" />
               </button>
               
               <button 
                 onClick={() => router.push("/dashboard")}
-                className="w-full bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-2.5 px-8 rounded-2xl transition border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
+                className="w-full bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold py-2.5 px-6 rounded-xl transition border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
               >
-                <ArrowLeft className="w-4 h-4 ml-1" /> العودة للوحة التحكم
+                <span>العودة للوحة التحكم</span>
               </button>
             </div>
           </div>

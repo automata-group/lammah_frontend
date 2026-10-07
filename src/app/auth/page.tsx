@@ -81,9 +81,6 @@ function AuthForm() {
               </motion.div>
 
               <div>
-                <span className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200/80 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 text-xs font-black mb-3">
-                  <span>تسجيل فوري وآمن بنقرة واحدة</span>
-                </span>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-snug mb-1.5">
                   أهلاً بك في منصة لمّاح
                 </h2>

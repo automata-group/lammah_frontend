@@ -137,7 +137,7 @@ export default function Home() {
               <MessageSquare className="w-6 h-6" />
             </div>
 
-            <h2 className="text-4xl md:text-5xl font-black mb-6 bg-clip-text text-transparent bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-900 dark:from-white dark:via-indigo-200 dark:to-purple-200 tracking-tight leading-tight">
+            <h2 className="text-4xl md:text-5xl font-black mb-6 pb-3 pt-1 bg-clip-text text-transparent bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-900 dark:from-white dark:via-indigo-200 dark:to-purple-200 tracking-tight leading-normal">
               كل ما تود معرفته عن لمّاح
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto font-medium leading-relaxed">
