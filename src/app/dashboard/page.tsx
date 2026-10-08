@@ -198,7 +198,6 @@ function DashboardContent() {
   const hasQuota = quota !== null ? quota > 0 : false;
   const isBasicPlan = !hasPaidPlan && !isDemoLecture;
   const isDemoMode = !hasPaidPlan && !hasQuota && quota !== null && quota <= 0;
-  const isFreeTrial = isDemoMode;
 
   const subscriptionLimit = isDemoLecture
     ? 25
@@ -741,34 +740,9 @@ function DashboardContent() {
       return;
     }
 
-    if (isDemoMode) {
-      setIsProcessing(true);
-      setError(null);
-      setResult(null);
-      setIsStreaming(false);
-      setTimeLeft(5);
-      setProgressStep("📥 جاري رفع واستلام الملف الافتراضي...");
-
-      setTimeout(() => {
-        setProgressStep("🎧 جاري تفريغ المحاضرة صوتياً بدقة عالية بواسطة محركات لمّاح الذكية...");
-      }, 1250);
-
-      setTimeout(() => {
-        setProgressStep("🧠 جاري تحليل النص وتوليد الملخص والخرائط الذهنية بواسطة ذكاء لمّاح للجامعات...");
-      }, 2500);
-
-      setTimeout(() => {
-        setProgressStep("✨ جاري إعداد البطاقات التعليمية والأسئلة المتوقعة وتنسيق الملف النهائي...");
-      }, 3750);
-
-      setTimeout(() => {
-        setProgressStep("🎉 تم معالجة المحاضرة بنجاح! جاري الانتقال للوحة المحاضرة والملف المخطط...");
-        setTimeout(() => {
-          router.push(`/dashboard?history_id=4198557f-5b1b-48ac-91a8-d8129de8ca0b`);
-          setIsProcessing(false);
-        }, 1000);
-      }, 5000);
-
+    if (!hasPaidPlan || quota === null || quota <= 0) {
+      setError("يلزم وجود اشتراك نشط لمعالجة المحاضرات. يرجى الاشتراك وتفعيل حسابك.");
+      router.push("/plans");
       return;
     }
 
@@ -1318,7 +1292,7 @@ function DashboardContent() {
                       handleChatSubmit={handleChatSubmit}
                       chatCount={chatCount}
                       subscriptionLimit={subscriptionLimit}
-                      isFreeTrial={isFreeTrial}
+                      isBasicPlan={isBasicPlan}
                       isDemoLecture={isDemoLecture}
                       isDocumentOnly={isDocumentOnly}
                     />

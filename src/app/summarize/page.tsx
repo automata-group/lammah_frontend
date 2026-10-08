@@ -21,6 +21,7 @@ import {
   BrainCircuit,
   Lightbulb,
   Award,
+  MessageCircle,
 } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
@@ -179,8 +180,8 @@ function SummarizeContent() {
   }, [isProcessing, isStreaming, timeLeft]);
 
   const uploadToTemp = (file: File, type: 'audio' | 'pdf') => {
-    if (quota !== null && quota <= 0) {
-      setError("🚫 رصيدك صفر دقيقة — لا يمكن رفع ومعالجة ملفات خاصة. يرجى شحن الرصيد للمتابعة.");
+    if (!hasPaidPlan || quota === null || quota <= 0) {
+      setError("🔒 يلزم وجود اشتراك نشط لرفع ومعالجة المحاضرات. يرجى الاشتراك وتأكيد الدفع عبر واتساب لنفعّل حسابك.");
       return;
     }
     const isAudio = type === 'audio';
@@ -237,8 +238,8 @@ function SummarizeContent() {
   };
 
   const uploadSingleMultiAudio = (id: string, file: File) => {
-    if (quota !== null && quota <= 0) {
-      setError("🚫 رصيدك صفر دقيقة — لا يمكن رفع ومعالجة ملفات خاصة. يرجى شحن الرصيد للمتابعة.");
+    if (!hasPaidPlan || quota === null || quota <= 0) {
+      setError("🔒 يلزم وجود اشتراك نشط لرفع ومعالجة المحاضرات. يرجى الاشتراك وتأكيد الدفع عبر واتساب لنفعّل حسابك.");
       return;
     }
     const formData = new FormData();
@@ -361,30 +362,9 @@ function SummarizeContent() {
       return;
     }
 
-    if (isDemoMode) {
-      setIsProcessing(true);
-      setError(null);
-      setIsStreaming(false);
-      setTimeLeft(5);
-      setProgressStep("📥 جاري رفع واستلام الملف الافتراضي...");
-
-      setTimeout(() => {
-        setProgressStep("🎧 جاري تفريغ المحاضرة صوتياً بدقة عالية...");
-      }, 1250);
-      setTimeout(() => {
-        setProgressStep("🧠 جاري تحليل النص وتوليد الملخص والخرائط الذهنية...");
-      }, 2500);
-      setTimeout(() => {
-        setProgressStep("✨ جاري إعداد البطاقات التعليمية والأسئلة المتوقعة...");
-      }, 3750);
-      setTimeout(() => {
-        setProgressStep("🎉 تم معالجة المحاضرة بنجاح! جاري الانتقال للوحة المحاضرة والملف المخطط...");
-        setTimeout(() => {
-          router.push(`/dashboard?history_id=4198557f-5b1b-48ac-91a8-d8129de8ca0b`);
-          setIsProcessing(false);
-        }, 1000);
-      }, 5000);
-
+    if (!hasPaidPlan || quota === null || quota <= 0) {
+      setError("يلزم وجود اشتراك نشط لمعالجة المحاضرات. يرجى الاشتراك وتفعيل حسابك.");
+      router.push("/plans");
       return;
     }
 
@@ -590,7 +570,7 @@ function SummarizeContent() {
       return [
         { id: "read", label: "قراءة السلايدات", icon: FileText },
         { id: "capsules", label: "استخراج الأفكار", icon: BrainCircuit },
-        { id: "mindmap", label: "الخرائط والأسئلة", icon: Lightbulb },
+        { id: "mindmap", label: "بنك الأسئلة والملخص", icon: Lightbulb },
         { id: "design", label: "ملف مخطط ومظلل", icon: Award }
       ];
     }
@@ -655,9 +635,9 @@ function SummarizeContent() {
               <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-500 shrink-0" />
             </h1>
             <p className="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5 leading-snug">
-              {quota !== null && quota <= 0
-                ? "وضع المحاكاة التفاعلية النموذجية — تجربة مباشرة لمخرجات الذكاء الاصطناعي"
-                : "ارفع التسجيل الصوتي أو السلايدات لتجهيز ملفك وخطة دراستك والشات فوراً"}
+              {(!hasPaidPlan || (quota !== null && quota <= 0))
+                ? "يلزم وجود اشتراك نشط لمعالجة المحاضرات"
+                : "ارفع التسجيل الصوتي أو السلايدات لتجهيز ملفك وشرحك التفاعلي فوراً"}
             </p>
           </div>
         </div>
@@ -675,15 +655,45 @@ function SummarizeContent() {
               <Loader2 className="w-7 h-7 text-indigo-600 animate-spin mb-3" />
               <p className="text-xs font-bold text-slate-600 dark:text-slate-300">جاري التحقق من الرصيد والاشتراك...</p>
             </motion.div>
-          ) : quota !== null && quota <= 0 ? (
+          ) : (!hasPaidPlan || (quota !== null && quota <= 0)) ? (
             <motion.div
-              key="simulation"
+              key="paywall"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="w-full max-w-4xl"
+              className="w-full max-w-xl mx-auto"
             >
-              <HeroSimulation isEmbedded={true} onRecharge={() => router.push("/plans")} />
+              <div className="bg-white dark:bg-[#0b0f19] rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xl text-center space-y-5">
+                <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto border border-amber-500/20">
+                  <Lock className="w-7 h-7 text-amber-500" />
+                </div>
+                <div className="space-y-1.5">
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                    يلزم وجود اشتراك نشط
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-md mx-auto">
+                    رصيدك الحالي 0 دقيقة. لرفع وتلخيص المحاضرات، اختر باقتك وتواصل معنا عبر واتساب لتفعيل حسابك.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                  <button
+                    onClick={() => router.push("/plans")}
+                    className="w-full sm:w-auto bg-gradient-to-l from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black px-6 py-3 rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-2 text-xs sm:text-sm"
+                  >
+                    <Crown className="w-4 h-4 text-amber-300" />
+                    عرض الباقات والاشتراك
+                  </button>
+                  <a
+                    href="https://wa.me/972598298930?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D8%A7%D8%B4%D8%AA%D8%B1%D8%A7%D9%83%D9%8A%20%D9%81%D9%8A%20%D9%84%D9%85%D9%91%D8%A7%D8%AD"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-xs sm:text-sm"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    تواصل عبر واتساب للتفعيل
+                  </a>
+                </div>
+              </div>
             </motion.div>
           ) : isProcessing || isStreaming ? (
             <motion.div

@@ -14,7 +14,7 @@ interface SmartChatTabContentProps {
   handleChatSubmit: (e: React.FormEvent) => void;
   chatCount: number;
   subscriptionLimit: number;
-  isFreeTrial: boolean;
+  isBasicPlan?: boolean;
   isDemoLecture: boolean;
   isDocumentOnly?: boolean;
 }
@@ -27,7 +27,7 @@ export default function SmartChatTabContent({
   handleChatSubmit,
   chatCount,
   subscriptionLimit,
-  isFreeTrial,
+  isBasicPlan = false,
   isDemoLecture,
   isDocumentOnly = false,
 }: SmartChatTabContentProps) {
@@ -94,7 +94,7 @@ export default function SmartChatTabContent({
     }
   }, [chatMessages]);
 
-  const isLimitReached = isFreeTrial && !isDemoLecture && chatCount >= subscriptionLimit;
+  const isLimitReached = !isDemoLecture && chatCount >= subscriptionLimit;
 
   return (
     <div className="flex flex-col h-[500px] sm:h-[650px] lg:h-[700px] bg-white dark:bg-[#0b0f19] border border-slate-200/90 dark:border-blue-500/20 rounded-2xl sm:rounded-[2.5rem] shadow-xs overflow-hidden relative z-10 group">

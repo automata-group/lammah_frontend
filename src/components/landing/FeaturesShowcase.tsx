@@ -22,7 +22,7 @@ const features = [
   {
     id: "mindmap",
     title: "الملف المخطط الذكي",
-    description: "احصل على خريطة شاملة تربط المفاهيم وتبرز لك هيكل المحاضرة مع تخطيط ذكي للملف الأصلي.",
+    description: "تخطيط وتظليل ذكي يبرز لك أهم مفاهيم وهيكل المحاضرة داخل الملف الأصلي.",
     icon: <BrainCircuit className="w-5 h-5" />,
     images: ["/features/mindmap.png"],
     likes: "1,482",
