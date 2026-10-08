@@ -94,6 +94,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   document.documentElement.style.colorScheme = 'light';
                 }
               } catch (_) {}
+
+              // Auto-recover from ChunkLoadError caused by new deployments
+              window.addEventListener('error', function(e) {
+                var msg = (e && e.message) ? e.message : '';
+                if (msg.indexOf('ChunkLoadError') !== -1 || msg.indexOf('Failed to load chunk') !== -1 || msg.indexOf('Loading chunk') !== -1) {
+                  var key = 'last_chunk_reload';
+                  var last = sessionStorage.getItem(key);
+                  var now = Date.now();
+                  if (!last || now - Number(last) > 10000) {
+                    sessionStorage.setItem(key, String(now));
+                    window.location.reload();
+                  }
+                }
+              });
             `,
           }}
         />
