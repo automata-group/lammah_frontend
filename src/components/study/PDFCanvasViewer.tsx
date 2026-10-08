@@ -56,7 +56,9 @@ import {
   Bold,
   Baseline,
   StickyNote,
-  FilePlus2
+  FilePlus2,
+  FlipVertical,
+  FlipHorizontal
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
@@ -685,19 +687,139 @@ export default function PDFCanvasViewer({
   const [isExportingPdf, setIsExportingPdf] = useState<boolean>(false);
   const [exportSuccessToast, setExportSuccessToast] = useState<boolean>(false);
 
-  // Page Rotations State (0, 90, 180, 270 degrees per page to fix upside-down or sideways scans)
+  // Page Transformations State (Rotations, Vertical Flip ↕️, Horizontal Flip ↔️)
   const [pageRotations, setPageRotations] = useState<Record<number, number>>({});
+  const [pageFlipsV, setPageFlipsV] = useState<Record<number, boolean>>({});
+  const [pageFlipsH, setPageFlipsH] = useState<Record<number, boolean>>({});
+  const [detectedInvertedPages, setDetectedInvertedPages] = useState<boolean>(false);
+  const [showAutoFixBanner, setShowAutoFixBanner] = useState<boolean>(false);
+
+  // Persistent storage for page transformations per document
+  useEffect(() => {
+    if (!documentTitle) return;
+    try {
+      const rot = localStorage.getItem(`lammah_rot_${documentTitle}`);
+      if (rot) setPageRotations(JSON.parse(rot));
+      const fv = localStorage.getItem(`lammah_flipv_${documentTitle}`);
+      if (fv) setPageFlipsV(JSON.parse(fv));
+      const fh = localStorage.getItem(`lammah_fliph_${documentTitle}`);
+      if (fh) setPageFlipsH(JSON.parse(fh));
+    } catch {}
+  }, [documentTitle]);
 
   const handleRotatePage = useCallback(() => {
     setPageRotations((prev) => {
       const cur = prev[currentPage] || 0;
       const next = (cur + 90) % 360;
-      return {
+      const updated = {
         ...prev,
         [currentPage]: next,
       };
+      if (documentTitle) {
+        try {
+          localStorage.setItem(`lammah_rot_${documentTitle}`, JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
     });
-  }, [currentPage]);
+  }, [currentPage, documentTitle]);
+
+  const handleFlipPageV = useCallback((allPages = false) => {
+    setPageFlipsV((prev) => {
+      const currentVal = Boolean(prev[currentPage]);
+      const nextVal = !currentVal;
+      let updated: Record<number, boolean>;
+      if (allPages) {
+        updated = {};
+        for (let i = 1; i <= (totalPages || 1); i++) {
+          updated[i] = nextVal;
+        }
+      } else {
+        updated = {
+          ...prev,
+          [currentPage]: nextVal,
+        };
+      }
+      if (documentTitle) {
+        try {
+          localStorage.setItem(`lammah_flipv_${documentTitle}`, JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
+    setShowAutoFixBanner(false);
+  }, [currentPage, totalPages, documentTitle]);
+
+  const handleFlipPageH = useCallback((allPages = false) => {
+    setPageFlipsH((prev) => {
+      const currentVal = Boolean(prev[currentPage]);
+      const nextVal = !currentVal;
+      let updated: Record<number, boolean>;
+      if (allPages) {
+        updated = {};
+        for (let i = 1; i <= (totalPages || 1); i++) {
+          updated[i] = nextVal;
+        }
+      } else {
+        updated = {
+          ...prev,
+          [currentPage]: nextVal,
+        };
+      }
+      if (documentTitle) {
+        try {
+          localStorage.setItem(`lammah_fliph_${documentTitle}`, JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
+  }, [currentPage, totalPages, documentTitle]);
+
+  const handleResetTransforms = useCallback((allPages = false) => {
+    if (allPages) {
+      setPageRotations({});
+      setPageFlipsV({});
+      setPageFlipsH({});
+      if (documentTitle) {
+        try {
+          localStorage.removeItem(`lammah_rot_${documentTitle}`);
+          localStorage.removeItem(`lammah_flipv_${documentTitle}`);
+          localStorage.removeItem(`lammah_fliph_${documentTitle}`);
+        } catch {}
+      }
+    } else {
+      setPageRotations((prev) => {
+        const next = { ...prev };
+        delete next[currentPage];
+        if (documentTitle) {
+          try {
+            localStorage.setItem(`lammah_rot_${documentTitle}`, JSON.stringify(next));
+          } catch {}
+        }
+        return next;
+      });
+      setPageFlipsV((prev) => {
+        const next = { ...prev };
+        delete next[currentPage];
+        if (documentTitle) {
+          try {
+            localStorage.setItem(`lammah_flipv_${documentTitle}`, JSON.stringify(next));
+          } catch {}
+        }
+        return next;
+      });
+      setPageFlipsH((prev) => {
+        const next = { ...prev };
+        delete next[currentPage];
+        if (documentTitle) {
+          try {
+            localStorage.setItem(`lammah_fliph_${documentTitle}`, JSON.stringify(next));
+          } catch {}
+        }
+        return next;
+      });
+    }
+  }, [currentPage, documentTitle]);
 
   // Pomodoro Study Timer State (Unique Student Feature)
   const [pomodoroSeconds, setPomodoroSeconds] = useState<number>(25 * 60);
@@ -1685,16 +1807,71 @@ export default function PDFCanvasViewer({
         const canvas = pdfCanvasRef.current;
         if (!canvas) return;
 
+        // Auto-detect if slide text matrix was generated with inverted coordinates
+        try {
+          if (!pageFlipsV[currentPage] && !detectedInvertedPages) {
+            const textContent = await page.getTextContent();
+            let negDetCount = 0;
+            let totalWithTransform = 0;
+            for (const item of textContent.items) {
+              if ("transform" in item && Array.isArray((item as any).transform) && (item as any).transform.length >= 4) {
+                const [a, b, c, d] = (item as any).transform;
+                const det = a * d - b * c;
+                if (det < -0.01) {
+                  negDetCount++;
+                }
+                totalWithTransform++;
+              }
+            }
+            if (totalWithTransform >= 3 && (negDetCount / totalWithTransform) >= 0.5) {
+              setDetectedInvertedPages(true);
+              // AUTO-FIX: Apply vertical flip to all pages automatically so the student never sees inverted text!
+              const allFlips: Record<number, boolean> = {};
+              for (let i = 1; i <= (total || 1); i++) {
+                allFlips[i] = true;
+              }
+              setPageFlipsV(allFlips);
+              if (documentTitle) {
+                try {
+                  localStorage.setItem(`lammah_flipv_${documentTitle}`, JSON.stringify(allFlips));
+                } catch {}
+              }
+              return;
+            }
+          }
+        } catch (detErr) {
+          // ignore detection error
+        }
+
         // Container responsive width (exact viewport width on phone)
         const containerW = viewportRef.current?.clientWidth || (typeof window !== "undefined" ? Math.max(280, window.innerWidth - 32) : 800);
         const userRot = pageRotations[currentPage] || 0;
         const effectiveRotation = ((page.rotate || 0) + userRot) % 360;
-        const unscaledViewport = page.getViewport({ scale: 1, rotation: effectiveRotation });
+        const isFlipV = Boolean(pageFlipsV[currentPage]);
+        const isFlipH = Boolean(pageFlipsH[currentPage]);
+
+        // CRITICAL: dontFlip: isFlipV flips the vertical coordinate mapping in PDF.js natively!
+        const unscaledViewport = page.getViewport({ 
+          scale: 1, 
+          rotation: effectiveRotation,
+          dontFlip: isFlipV,
+        });
         
         // Exact responsive scale to fit mobile screen without clipping
         const cssScale = Math.max(0.1, containerW / unscaledViewport.width);
         const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
-        const renderViewport = page.getViewport({ scale: cssScale * dpr, rotation: effectiveRotation });
+        const renderViewport = page.getViewport({ 
+          scale: cssScale * dpr, 
+          rotation: effectiveRotation,
+          dontFlip: isFlipV,
+        });
+
+        // Apply horizontal reflection if requested by user
+        if (isFlipH && renderViewport.transform) {
+          renderViewport.transform[0] = -renderViewport.transform[0];
+          renderViewport.transform[2] = -renderViewport.transform[2];
+          renderViewport.transform[4] = renderViewport.width - renderViewport.transform[4];
+        }
 
         canvas.width = Math.round(renderViewport.width);
         canvas.height = Math.round(renderViewport.height);
@@ -1758,7 +1935,7 @@ export default function PDFCanvasViewer({
       }
       window.removeEventListener("resize", handleResize);
     };
-  }, [currentPage, masterPdfDoc, pageRotations]);
+  }, [currentPage, masterPdfDoc, pageRotations, pageFlipsV, pageFlipsH]);
 
   // Load saved annotations for current page from local storage
   useEffect(() => {
@@ -2524,16 +2701,29 @@ export default function PDFCanvasViewer({
         }
       }
 
-      // Apply any user-defined page rotations to the exported PDF
+      // Apply any user-defined page rotations and flips to the exported PDF
       for (let p = 1; p <= total; p++) {
         const userRot = pageRotations[p] || 0;
-        if (userRot !== 0) {
+        const userFlipV = Boolean(pageFlipsV[p]);
+        const userFlipH = Boolean(pageFlipsH[p]);
+
+        if (userRot !== 0 || userFlipV || userFlipH) {
           try {
             const exportPage = exportDoc.getPage(p - 1);
-            const currentAngle = exportPage.getRotation().angle;
-            exportPage.setRotation(degrees((currentAngle + userRot) % 360));
-          } catch (rotErr) {
-            console.warn(`Could not set rotation on page ${p}:`, rotErr);
+            if (userRot !== 0) {
+              const currentAngle = exportPage.getRotation().angle;
+              exportPage.setRotation(degrees((currentAngle + userRot) % 360));
+            }
+            if (userFlipV) {
+              exportPage.translateContent(0, exportPage.getHeight());
+              exportPage.scaleContent(1, -1);
+            }
+            if (userFlipH) {
+              exportPage.translateContent(exportPage.getWidth(), 0);
+              exportPage.scaleContent(-1, 1);
+            }
+          } catch (transformErr) {
+            console.warn(`Could not set transform on page ${p}:`, transformErr);
           }
         }
       }
@@ -2906,6 +3096,20 @@ export default function PDFCanvasViewer({
                 )}
               </button>
 
+              {/* Quick Flip Vertical Button (Mobile - Fix Inverted Text) */}
+              <button
+                type="button"
+                onClick={() => handleFlipPageV(false)}
+                className={`p-1.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
+                  pageFlipsV[currentPage]
+                    ? "bg-amber-500 text-white shadow-xs font-bold ring-2 ring-amber-400/50"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-amber-600 dark:hover:text-amber-400"
+                }`}
+                title={pageFlipsV[currentPage] ? "إلغاء الانعكاس الرأسي ↕️" : "انعكاس رأسي (إصلاح النص المقلوب ↕️)"}
+              >
+                <FlipVertical className="w-3.5 h-3.5" />
+              </button>
+
               {/* Rotate Page Button (Mobile) */}
               <button
                 type="button"
@@ -2939,16 +3143,53 @@ export default function PDFCanvasViewer({
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, y: -4 }}
                       data-lammah-dropdown="true"
-                      className="absolute left-0 top-full mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 z-[99999] flex flex-col gap-1 text-xs"
+                      className="absolute left-0 top-full mt-2 w-60 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 z-[99999] flex flex-col gap-1 text-xs"
                     >
                       {/* Little pointer triangle directly under the [...] button */}
                       <div className="absolute -top-1.5 left-3.5 w-3 h-3 bg-white dark:bg-slate-900 border-t border-l border-slate-200 dark:border-slate-800 rotate-45 pointer-events-none" />
 
                       <div className="px-2.5 py-1 text-[11px] font-black text-slate-400 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between mb-0.5">
-                        <span>أدوات إضافية</span>
+                        <span>أدوات واتجاه الشريحة</span>
                         <span className="text-[10px] text-slate-400 font-normal">ص {currentPage}</span>
                       </div>
 
+                      {/* Flip Vertical Current Page */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleFlipPageV(false);
+                          setIsMobileMoreToolsOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl font-bold transition text-right cursor-pointer ${
+                          pageFlipsV[currentPage]
+                            ? "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
+                            : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <FlipVertical className="w-4 h-4 text-amber-500" />
+                          <span>انعكاس رأسي للشريحة (↕️)</span>
+                        </div>
+                        {pageFlipsV[currentPage] && <Check className="w-3.5 h-3.5" />}
+                      </button>
+
+                      {/* Flip Vertical ALL Pages */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleFlipPageV(true);
+                          setIsMobileMoreToolsOpen(false);
+                        }}
+                        className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold transition text-right cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Layers className="w-4 h-4 text-amber-600" />
+                          <span>قلب كل الشرائح الـ {totalPages || 1} ⚡</span>
+                        </div>
+                        <span className="text-[10px] bg-amber-200/60 dark:bg-amber-900/60 px-1.5 py-0.5 rounded-md">الكل</span>
+                      </button>
+
+                      {/* Rotate 90 deg */}
                       <button
                         type="button"
                         onClick={() => {
@@ -2960,6 +3201,36 @@ export default function PDFCanvasViewer({
                         <RotateCw className="w-4 h-4" />
                         <span>تدوير الصفحة 90° (↻)</span>
                       </button>
+
+                      {/* Flip Horizontal */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleFlipPageH(false);
+                          setIsMobileMoreToolsOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium transition text-right cursor-pointer"
+                      >
+                        <FlipHorizontal className="w-4 h-4 text-blue-500" />
+                        <span>انعكاس أفقي (↔️)</span>
+                      </button>
+
+                      {/* Reset All Transforms */}
+                      {(pageRotations[currentPage] || pageFlipsV[currentPage] || pageFlipsH[currentPage]) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleResetTransforms(false);
+                            setIsMobileMoreToolsOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-semibold transition text-right cursor-pointer"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          <span>إعادة ضبط اتجاه الشريحة</span>
+                        </button>
+                      )}
+
+                      <div className="h-px bg-slate-100 dark:bg-slate-800 my-0.5" />
 
                       <button
                         type="button"
@@ -3485,6 +3756,21 @@ export default function PDFCanvasViewer({
 
           {/* 4. Document Actions & Export */}
           <div className="flex items-center gap-1 shrink-0">
+            {/* Flip Vertical Button (Desktop - Fix Inverted Text) */}
+            <button
+              type="button"
+              onClick={() => handleFlipPageV(false)}
+              className={`p-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                pageFlipsV[currentPage]
+                  ? "bg-amber-500 text-white font-bold shadow-xs ring-2 ring-amber-400/50"
+                  : "text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              }`}
+              title="انعكاس رأسي للشريحة (إصلاح النص المقلوب ↕️)"
+            >
+              <FlipVertical className="w-4 h-4" />
+              <span className="text-xs font-bold hidden xl:inline">انعكاس رأسي</span>
+            </button>
+
             {/* Rotate Page Button (Desktop) */}
             <button
               type="button"
@@ -5036,6 +5322,47 @@ export default function PDFCanvasViewer({
                     <div className="h-2 bg-slate-200/60 rounded-full animate-pulse w-3/4 mx-auto"></div>
                     <div className="h-2 bg-slate-200/40 rounded-full animate-pulse w-1/2 mx-auto"></div>
                   </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Smart One-Click Fix Banner when Inverted Slide Text is Detected */}
+          <AnimatePresence>
+            {showAutoFixBanner && !pageFlipsV[currentPage] && (
+              <motion.div
+                initial={{ opacity: 0, y: -16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                className="absolute top-3 left-3 right-3 z-40 bg-amber-500/95 dark:bg-amber-600/95 backdrop-blur-md text-white p-2.5 px-3 rounded-2xl shadow-xl flex items-center justify-between gap-2 text-xs font-bold border border-amber-300/40"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-base shrink-0">↕️</span>
+                  <span>يبدو أن نصوص هذا العرض مقلوبة للأعلى!</span>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleFlipPageV(true)}
+                    className="bg-white text-amber-900 hover:bg-amber-100 px-2.5 py-1 rounded-xl font-black text-[11px] shadow-sm transition active:scale-95 cursor-pointer"
+                  >
+                    إصلاح الكل ({totalPages || 1}) ⚡
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFlipPageV(false)}
+                    className="bg-amber-700/80 hover:bg-amber-700 px-2 py-1 rounded-xl text-[11px] text-white transition cursor-pointer"
+                  >
+                    هذه فقط
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAutoFixBanner(false)}
+                    className="p-1 hover:bg-black/20 rounded-lg text-white/80 cursor-pointer"
+                    title="إغلاق"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </motion.div>
             )}
