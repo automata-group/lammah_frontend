@@ -1110,12 +1110,13 @@ export default function PDFCanvasViewer({
       const target = (rawTarget instanceof Element ? rawTarget : (rawTarget as Node)?.parentElement) as HTMLElement | null;
       if (!target || typeof target.closest !== "function") return;
 
-      // If clicked inside the note card, top inspector ribbon, font menu, main toolbar, or any dropdown, keep active
+      // If clicked inside the note card, top inspector ribbon, font menu, main toolbar, mobile text bar, or any dropdown, keep active
       if (
         target.closest(".lammah-text-note-card") || 
         target.closest(".lammah-inspector-ribbon") || 
         target.closest(".lammah-font-menu") ||
         target.closest(".lammah-main-toolbar") ||
+        target.closest(".lammah-mobile-text-bar") ||
         target.closest("[data-lammah-dropdown]")
       ) {
         return;
@@ -1807,41 +1808,6 @@ export default function PDFCanvasViewer({
         const canvas = pdfCanvasRef.current;
         if (!canvas) return;
 
-        // Auto-detect if slide text matrix was generated with inverted coordinates
-        try {
-          if (!pageFlipsV[currentPage] && !detectedInvertedPages) {
-            const textContent = await page.getTextContent();
-            let negDetCount = 0;
-            let totalWithTransform = 0;
-            for (const item of textContent.items) {
-              if ("transform" in item && Array.isArray((item as any).transform) && (item as any).transform.length >= 4) {
-                const [a, b, c, d] = (item as any).transform;
-                const det = a * d - b * c;
-                if (det < -0.01) {
-                  negDetCount++;
-                }
-                totalWithTransform++;
-              }
-            }
-            if (totalWithTransform >= 3 && (negDetCount / totalWithTransform) >= 0.5) {
-              setDetectedInvertedPages(true);
-              // AUTO-FIX: Apply vertical flip to all pages automatically so the student never sees inverted text!
-              const allFlips: Record<number, boolean> = {};
-              for (let i = 1; i <= (total || 1); i++) {
-                allFlips[i] = true;
-              }
-              setPageFlipsV(allFlips);
-              if (documentTitle) {
-                try {
-                  localStorage.setItem(`lammah_flipv_${documentTitle}`, JSON.stringify(allFlips));
-                } catch {}
-              }
-              return;
-            }
-          }
-        } catch (detErr) {
-          // ignore detection error
-        }
 
         // Container responsive width (exact viewport width on phone)
         const containerW = viewportRef.current?.clientWidth || (typeof window !== "undefined" ? Math.max(280, window.innerWidth - 32) : 800);
@@ -1920,7 +1886,16 @@ export default function PDFCanvasViewer({
 
     renderPageToCanvas();
 
+    let lastWidth = typeof window !== "undefined" ? window.innerWidth : 800;
     const handleResize = () => {
+      // On mobile devices, virtual keyboard opening changes window.innerHeight, NOT window.innerWidth.
+      // Ignore vertical keyboard resize events to prevent canvas jumps, re-renders, and accidental flips!
+      if (typeof window !== "undefined") {
+        if (Math.abs(window.innerWidth - lastWidth) < 25) {
+          return;
+        }
+        lastWidth = window.innerWidth;
+      }
       renderPageToCanvas();
     };
     window.addEventListener("resize", handleResize);
@@ -3312,7 +3287,7 @@ export default function PDFCanvasViewer({
 
         {/* ── MOBILE BOTTOM FLOATING ANNOTATION DOCK (sm:hidden) ── */}
         <AnimatePresence>
-          {!isMobileDockCollapsed ? (
+          {!isMobileDockCollapsed && selectedNoteId === null ? (
             <motion.div
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -3472,7 +3447,7 @@ export default function PDFCanvasViewer({
                 <ChevronDown className="w-4 h-4" />
               </button>
             </motion.div>
-          ) : (
+          ) : isMobileDockCollapsed && selectedNoteId === null ? (
             <motion.button
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -3484,7 +3459,159 @@ export default function PDFCanvasViewer({
             >
               <PenTool className="w-4 h-4" />
             </motion.button>
-          )}
+          ) : null}
+        </AnimatePresence>
+
+        {/* ── CANVA-STYLE MOBILE TEXT ACTION BAR (sm:hidden) ── */}
+        <AnimatePresence>
+          {selectedNoteId !== null && (() => {
+            const activeNote = pageTextNotes.find((n) => n.id === selectedNoteId);
+            if (!activeNote) return null;
+            const isPlain = activeNote.noteType === "plain_text";
+            const currentFontSize = activeNote.fontSize || (isPlain ? 18 : 16);
+
+            return (
+              <motion.div
+                key="canva-mobile-text-bar"
+                initial={{ y: 50, opacity: 0, scale: 0.95 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                exit={{ y: 50, opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.16 }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                data-lammah-dropdown="true"
+                className="lammah-mobile-text-bar fixed bottom-3 inset-x-2 z-50 sm:hidden max-w-sm mx-auto bg-slate-900/95 text-white backdrop-blur-2xl border border-white/15 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.5)] p-2 px-2.5 flex items-center justify-between gap-1.5 select-none"
+              >
+                {/* 1. Quick Font Size Controller (A- / A+) */}
+                <div className="flex items-center gap-1 bg-white/10 p-0.5 px-1 rounded-xl shrink-0">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const next = Math.max(10, currentFontSize - 2);
+                      updateTextNote(activeNote.id, { fontSize: next });
+                    }}
+                    className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white/20 text-white font-black text-xs cursor-pointer active:scale-95 transition"
+                    title="تصغير الخط"
+                  >
+                    A-
+                  </button>
+                  <span className="text-[11px] font-bold text-slate-300 min-w-[20px] text-center">
+                    {currentFontSize}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const next = Math.min(60, currentFontSize + 2);
+                      updateTextNote(activeNote.id, { fontSize: next });
+                    }}
+                    className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white/20 text-white font-black text-xs cursor-pointer active:scale-95 transition"
+                    title="تكبير الخط"
+                  >
+                    A+
+                  </button>
+                </div>
+
+                {/* 2. Quick Color Swatches */}
+                <div className="flex items-center gap-1.5 bg-white/10 px-2 py-1 rounded-xl overflow-x-auto no-scrollbar">
+                  {isPlain ? (
+                    // Plain Text: 5 clean contrast colors
+                    [
+                      { color: "#0F172A", title: "أسود" },
+                      { color: "#4F46E5", title: "أزرق" },
+                      { color: "#E11D48", title: "أحمر" },
+                      { color: "#059669", title: "أخضر" },
+                      { color: "#D97706", title: "عسلي" },
+                    ].map((c) => {
+                      const isSel = (activeNote.color || "#0F172A") === c.color;
+                      return (
+                        <button
+                          key={c.color}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            updateTextNote(activeNote.id, { color: c.color });
+                          }}
+                          style={{ backgroundColor: c.color }}
+                          className={`w-4 h-4 rounded-full border border-white/40 transition transform hover:scale-125 cursor-pointer shrink-0 flex items-center justify-center ${
+                            isSel ? "scale-125 ring-2 ring-emerald-400" : "opacity-80"
+                          }`}
+                          title={c.title}
+                        />
+                      );
+                    })
+                  ) : (
+                    // Sticky Note: 5 student favorite presets
+                    [
+                      { id: "yellow", bg: "#FEF08A", name: "أصفر" },
+                      { id: "green", bg: "#BBF7D0", name: "أخضر" },
+                      { id: "blue", bg: "#BAE6FD", name: "سماوي" },
+                      { id: "pink", bg: "#FBCFE8", name: "وردي" },
+                      { id: "transparent", bg: "transparent", name: "شفاف" },
+                    ].map((c) => {
+                      const isSel = (activeNote.bgStyle || "yellow") === c.id;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            updateTextNote(activeNote.id, { bgStyle: c.id });
+                          }}
+                          style={{ backgroundColor: c.bg === "transparent" ? undefined : c.bg }}
+                          className={`w-4.5 h-4.5 rounded-full transition transform hover:scale-125 cursor-pointer shrink-0 flex items-center justify-center ${
+                            c.bg === "transparent" ? "border border-dashed border-white/60" : "border border-black/20"
+                          } ${isSel ? "scale-120 ring-2 ring-emerald-400 shadow-xs" : "opacity-80"}`}
+                          title={c.name}
+                        >
+                          {isSel && <Check className="w-2.5 h-2.5 text-slate-900 stroke-[3]" />}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* 3. Delete Note */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    deleteTextNote(activeNote.id);
+                    setSelectedNoteId(null);
+                  }}
+                  className="p-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white transition cursor-pointer shrink-0"
+                  title="حذف الملاحظة"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+
+                {/* 4. Done Button (تم ✓) */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSelectedNoteId(null);
+                    setActiveTool("browse");
+                    if (typeof document !== "undefined") {
+                      (document.activeElement as HTMLElement)?.blur();
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black transition cursor-pointer flex items-center gap-1 shadow-md shadow-emerald-500/20 active:scale-95 shrink-0"
+                  title="إنهاء التعديل والعودة للقراءة"
+                >
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>تم ✓</span>
+                </button>
+              </motion.div>
+            );
+          })()}
         </AnimatePresence>
 
         {/* ── DESKTOP UNIFIED MASTER DOCK (hidden sm:flex) ── */}
@@ -3919,8 +4046,9 @@ export default function PDFCanvasViewer({
               transition={{ duration: 0.18 }}
               onPointerDown={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}
-              data-lammah-dropdown="true"
-              className="lammah-inspector-ribbon w-full max-w-full overflow-x-auto scrollbar-none touch-pan-x bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm px-2.5 sm:px-3 py-1.5 sm:py-2 flex items-center justify-start sm:justify-center gap-2 sm:gap-4 flex-nowrap sm:flex-wrap text-xs relative z-50"
+              className={`lammah-inspector-ribbon w-full max-w-full overflow-x-auto scrollbar-none touch-pan-x bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm px-2.5 sm:px-3 py-1.5 sm:py-2 ${
+                selectedNoteId !== null ? "hidden sm:flex" : "flex"
+              } items-center justify-start sm:justify-center gap-2 sm:gap-4 flex-nowrap sm:flex-wrap text-xs relative z-50`}
             >
               
               {/* ── HIGHLIGHTER INSPECTOR ── */}
@@ -5535,9 +5663,9 @@ export default function PDFCanvasViewer({
                       className="flex-1 w-full bg-transparent resize-none border-none outline-none placeholder:text-black/30 dark:placeholder:text-white/30 select-text cursor-text p-0 m-0"
                     />
 
-                    {/* Canva Corner Handles (Visible when selected) */}
+                    {/* Canva Corner Handles (Visible when selected on desktop) */}
                     {isSelected && (
-                      <>
+                      <div className="hidden sm:block">
                         <span
                           onPointerDown={(e) => handleNoteResizeStart(e, note, "nw")}
                           className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-emerald-600 rounded-full shadow-md cursor-nwse-resize hover:scale-130 transition-transform z-40 touch-none"
@@ -5558,7 +5686,7 @@ export default function PDFCanvasViewer({
                           className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-emerald-600 rounded-full shadow-md cursor-nwse-resize hover:scale-130 transition-transform z-40 touch-none"
                           title="تحجيم"
                         />
-                      </>
+                      </div>
                     )}
                   </div>
                 );
@@ -5703,9 +5831,9 @@ export default function PDFCanvasViewer({
                     />
                   </div>
 
-                  {/* ── Canva-Style 8-Point Transform Bounding Box Handles (Active when selected) ── */}
+                  {/* ── Canva-Style 8-Point Transform Bounding Box Handles (Active when selected on desktop) ── */}
                   {isSelected && (
-                    <>
+                    <div className="hidden sm:block">
                       {/* Top-Left Corner (NW) */}
                       <span
                         onPointerDown={(e) => handleNoteResizeStart(e, note, "nw")}
@@ -5761,15 +5889,15 @@ export default function PDFCanvasViewer({
                         title="سحب لضبط العرض لليمين (مثل كانفا)"
                         className="absolute -right-1 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-white border border-indigo-500 rounded-full shadow-xs cursor-ew-resize hover:scale-125 transition-transform z-40 touch-none before:absolute before:-inset-2 before:content-['']"
                       />
-                    </>
+                    </div>
                   )}
 
-                  {/* Subtle always-available corner resize grip when not selected */}
+                  {/* Subtle always-available corner resize grip when not selected (desktop only) */}
                   {!isSelected && (
                     <span
                       onPointerDown={(e) => handleNoteResizeStart(e, note, "se")}
                       title="اسحب لتكبير وتصغير الملاحظة بحرية"
-                      className="absolute bottom-0.5 right-0.5 cursor-nwse-resize text-black/20 hover:text-indigo-600 p-1 touch-none rounded-br-xl hover:scale-125 transition-transform z-30"
+                      className="hidden sm:inline absolute bottom-0.5 right-0.5 cursor-nwse-resize text-black/20 hover:text-indigo-600 p-1 touch-none rounded-br-xl hover:scale-125 transition-transform z-30"
                     >
                       <MoveDiagonal2 className="w-3 h-3" />
                     </span>
