@@ -72,13 +72,15 @@ function NotebookCreatorContent() {
       if (existing) return existing;
     }
     try {
-      const fp = await getThumbmark();
-      if (typeof window !== "undefined") {
+      const fp = await Promise.race([
+        getThumbmark(),
+        new Promise<string>((resolve) => setTimeout(() => resolve(`device_${Date.now().toString(36)}`), 600))
+      ]);
+      if (typeof window !== "undefined" && fp) {
         localStorage.setItem("device_id_v3", fp);
       }
       return fp;
     } catch (e) {
-      console.error("Device ID generation failed:", e);
       return `fallback_${Math.random().toString(36).substring(7)}`;
     }
   };
@@ -604,79 +606,6 @@ function NotebookCreatorContent() {
             >
               <span>استعراض الباقات والأسعار</span>
             </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // SUBSCRIBED USERS ON LOWER TIERS (FREE, 25 ILS, 60 ILS) PAYWALL
-  if (session && !is100Plan) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-hidden" dir="rtl">
-        <AppHeader quota={quota} activePage="notebook" />
-
-        <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
-          <div className="max-w-xl w-full text-center space-y-6 bg-white dark:bg-[#0b0f19] p-7 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-600 dark:text-indigo-400 shadow-xs mb-1">
-              <BookOpen className="w-7 h-7" />
-            </div>
-
-            <div className="space-y-2">
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
-                <span>خاصة بمشتركي باقة النخبة (100 ₪)</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                توليد الدفاتر الأكاديمية الذكية
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium max-w-md mx-auto leading-relaxed">
-                أهلاً بك يا <span className="font-bold text-slate-900 dark:text-white">{fullName}</span>! إن ميزة إنشاء وتوليد الدفاتر الدراسية ورخصة النشر في المتجر متاحة حصرياً لمشتركي <span className="font-bold text-indigo-600 dark:text-indigo-400">باقة النخبة (100 ₪)</span>.
-              </p>
-            </div>
-
-            {/* Current Plan Pill */}
-            <div className="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400">
-              <span className="w-2 h-2 rounded-full bg-indigo-500" />
-              <span>باقتك الحالية:</span>
-              <span className="font-bold text-slate-900 dark:text-white">{getFriendlyPlanName(planName)}</span>
-              {quota !== null && <span className="text-slate-400">({quota} دقيقة متبقية)</span>}
-            </div>
-
-            {/* Feature Highlights */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-right my-4 max-w-lg mx-auto">
-              <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">دفاتر تلخيص جاهزة</h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">توليد دفاتر A4 منسقة أكاديمياً بجودة عالية للطباعة.</p>
-              </div>
-              <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <ShoppingBag className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">رخصة النشر بالمتجر</h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">طرح وتداول الدفاتر في متجر المنصة للطلاب الآخرين.</p>
-              </div>
-              <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <GraduationCap className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">تغطية كاملة للفصل</h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">رصيد 2400 دقيقة ذكية يكفي حتى 40 محاضرة كاملة.</p>
-              </div>
-            </div>
-
-            <div className="space-y-2.5 max-w-xs sm:max-w-sm mx-auto pt-1">
-              <button 
-                onClick={() => router.push("/plans")}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm py-3 px-6 rounded-xl shadow-md shadow-indigo-600/20 transition hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>ترقية الاشتراك إلى باقة النخبة (100 ₪)</span>
-                <ArrowLeft className="w-4 h-4 ml-1" />
-              </button>
-              
-              <button 
-                onClick={() => router.push("/dashboard")}
-                className="w-full bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold py-2.5 px-6 rounded-xl transition border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
-              >
-                <span>العودة للوحة التحكم</span>
-              </button>
-            </div>
           </div>
         </div>
       </div>

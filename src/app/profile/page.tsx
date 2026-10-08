@@ -2,60 +2,215 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Loader2, User, Package, Calendar, LogOut, Shield, 
-  Fingerprint, Edit3, Check, X, BookOpen, Trash2, Pencil, 
+  Edit3, Check, X, BookOpen, Trash2, Pencil, 
   Eye, Sparkles, ChevronLeft, ArrowRight, ShieldCheck, Mail, GraduationCap
 } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import StudentProfileModal from "@/components/StudentProfileModal";
 
+function ProfileSkeleton() {
+  return (
+    <div className="space-y-6 sm:space-y-8 animate-pulse" dir="rtl">
+      {/* 1. Account / Profile Identity Skeleton */}
+      <div className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center mb-8 gap-5 sm:gap-6">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-200 dark:bg-slate-800 rounded-2xl sm:rounded-3xl shrink-0" />
+          <div className="flex-1 space-y-3">
+            <div className="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+            <div className="h-4 w-64 bg-slate-200 dark:bg-slate-800 rounded-md" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 space-y-2">
+            <div className="h-3.5 w-28 bg-slate-200 dark:bg-slate-800 rounded" />
+            <div className="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded" />
+          </div>
+          <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 space-y-2">
+            <div className="h-3.5 w-24 bg-slate-200 dark:bg-slate-800 rounded" />
+            <div className="h-6 w-28 bg-slate-200 dark:bg-slate-800 rounded-full" />
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Academic Profile Skeleton */}
+      <div className="bg-white dark:bg-slate-900/60 border border-purple-200/60 dark:border-purple-500/20 rounded-3xl p-6 sm:p-8">
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-purple-100 dark:bg-purple-950/40" />
+            <div className="space-y-1.5">
+              <div className="h-5 w-40 bg-slate-200 dark:bg-slate-800 rounded" />
+              <div className="h-3 w-56 bg-slate-200 dark:bg-slate-800 rounded" />
+            </div>
+          </div>
+          <div className="h-8 w-36 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div className="h-16 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200/80 dark:border-slate-800" />
+          <div className="h-16 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200/80 dark:border-slate-800" />
+          <div className="h-16 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200/80 dark:border-slate-800" />
+        </div>
+      </div>
+
+      {/* 3. Subscription & Quota Skeleton */}
+      <div className="bg-white dark:bg-slate-900/60 border border-indigo-200/60 dark:border-indigo-500/20 rounded-3xl p-6 sm:p-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/40" />
+          <div className="h-5 w-44 bg-slate-200 dark:bg-slate-800 rounded" />
+        </div>
+        <div className="space-y-4">
+          <div className="h-14 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200/80 dark:border-slate-800" />
+          <div className="h-14 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200/80 dark:border-slate-800" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const { user, session, loading, signOut } = useAuth();
   const router = useRouter();
-  const [info, setInfo] = useState<any>(null);
-  const [loadingInfo, setLoadingInfo] = useState(true);
-  const [academicProfile, setAcademicProfile] = useState<any>(null);
+
+  // Optimistic initial state from localStorage for instantaneous 0ms rendering
+  const [info, setInfo] = useState<any>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("cached_profile_info");
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
+    return null;
+  });
+  const [loadingInfo, setLoadingInfo] = useState(() => {
+    if (typeof window !== "undefined") {
+      return !localStorage.getItem("cached_profile_info");
+    }
+    return true;
+  });
+  const [academicProfile, setAcademicProfile] = useState<any>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("cached_academic_profile");
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
+    return null;
+  });
+  const [loadingAcademic, setLoadingAcademic] = useState(() => {
+    if (typeof window !== "undefined") {
+      return !localStorage.getItem("cached_academic_profile");
+    }
+    return true;
+  });
   const [showProfileModal, setShowProfileModal] = useState(false);
 
-  const fetchAcademicProfile = () => {
-    if (session?.access_token) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/student-profile`, {
-        headers: { "Authorization": `Bearer ${session.access_token}` }
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (data?.academic_profile) {
-            setAcademicProfile(data.academic_profile);
-          }
-        })
-        .catch(() => {});
+  // Notebooks state with optimistic local cache
+  const [myNotebooks, setMyNotebooks] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("cached_my_notebooks");
+        if (cached) return JSON.parse(cached);
+      } catch {}
     }
-  };
-
-  const refreshInfo = () => {
-    if (session) {
-      setLoadingInfo(true);
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/me`, {
-        headers: { "Authorization": `Bearer ${session.access_token}` }
-      }).then(r => r.json()).then(data => {
-        setInfo(data);
-        setLoadingInfo(false);
-      }).catch(() => setLoadingInfo(false));
-      fetchAcademicProfile();
+    return [];
+  });
+  const [loadingNotebooks, setLoadingNotebooks] = useState(() => {
+    if (typeof window !== "undefined") {
+      return !localStorage.getItem("cached_my_notebooks");
     }
-  };
-
-  useEffect(() => {
-    refreshInfo();
-  }, [session]);
+    return true;
+  });
+  const [editingNotebook, setEditingNotebook] = useState<any | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editPrice, setEditPrice] = useState(0);
+  const [editDescription, setEditDescription] = useState("");
+  const [editStudentName, setEditStudentName] = useState("");
+  const [editUniversity, setEditUniversity] = useState("");
+  const [showEditCustomUni, setShowEditCustomUni] = useState(false);
+  const [editReflectPrefix, setEditReflectPrefix] = useState("+972");
+  const [editReflectPhone, setEditReflectPhone] = useState("");
+  const [editReflectAccount, setEditReflectAccount] = useState("");
+  const [isSavingNotebook, setIsSavingNotebook] = useState(false);
+  const [editError, setEditError] = useState("");
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [newName, setNewName] = useState("");
   const [isUpdatingName, setIsUpdatingName] = useState(false);
   const [nameError, setNameError] = useState("");
+
+  // Parallel resilient data fetching with background cache synchronization
+  const refreshInfo = useCallback(async () => {
+    if (!session?.access_token) return;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+    const headers = { "Authorization": `Bearer ${session.access_token}` };
+
+    try {
+      const [subRes, acadRes, nbRes] = await Promise.allSettled([
+        fetch(`${apiUrl}/api/v1/subscription/me`, { headers }).then(r => r.json()),
+        fetch(`${apiUrl}/api/v1/subscription/student-profile`, { headers }).then(r => r.json()),
+        fetch(`${apiUrl}/api/v1/marketplace/my-notebooks`, { headers }).then(r => r.json()),
+      ]);
+
+      if (subRes.status === "fulfilled" && subRes.value) {
+        setInfo(subRes.value);
+        try {
+          localStorage.setItem("cached_profile_info", JSON.stringify(subRes.value));
+          if (subRes.value.quota_remaining !== undefined) {
+            localStorage.setItem("cached_user_quota", String(subRes.value.quota_remaining));
+          }
+        } catch {}
+      }
+
+      if (acadRes.status === "fulfilled" && acadRes.value?.academic_profile) {
+        setAcademicProfile(acadRes.value.academic_profile);
+        try {
+          localStorage.setItem("cached_academic_profile", JSON.stringify(acadRes.value.academic_profile));
+        } catch {}
+      }
+
+      if (nbRes.status === "fulfilled" && nbRes.value?.status === "success") {
+        const nbs = nbRes.value.notebooks || [];
+        setMyNotebooks(nbs);
+        try {
+          localStorage.setItem("cached_my_notebooks", JSON.stringify(nbs));
+        } catch {}
+      }
+    } catch (err) {
+      console.error("Error refreshing profile data:", err);
+    } finally {
+      setLoadingInfo(false);
+      setLoadingAcademic(false);
+      setLoadingNotebooks(false);
+    }
+  }, [session]);
+
+  const fetchMyNotebooks = useCallback(async () => {
+    if (!session?.access_token) return;
+    setLoadingNotebooks(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+      const res = await fetch(`${apiUrl}/api/v1/marketplace/my-notebooks`, {
+        headers: { "Authorization": `Bearer ${session.access_token}` }
+      });
+      const data = await res.json();
+      if (data?.status === "success") {
+        const nbs = data.notebooks || [];
+        setMyNotebooks(nbs);
+        try { localStorage.setItem("cached_my_notebooks", JSON.stringify(nbs)); } catch {}
+      }
+    } catch {} finally {
+      setLoadingNotebooks(false);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (session) {
+      refreshInfo();
+    }
+  }, [session, refreshInfo]);
 
   const handleUpdateName = async () => {
     if (!newName.trim()) {
@@ -86,42 +241,6 @@ export default function ProfilePage() {
       setIsUpdatingName(false);
     }
   };
-
-  const [myNotebooks, setMyNotebooks] = useState<any[]>([]);
-  const [loadingNotebooks, setLoadingNotebooks] = useState(true);
-  const [editingNotebook, setEditingNotebook] = useState<any | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editPrice, setEditPrice] = useState(0);
-  const [editDescription, setEditDescription] = useState("");
-  const [editStudentName, setEditStudentName] = useState("");
-  const [editUniversity, setEditUniversity] = useState("");
-  const [showEditCustomUni, setShowEditCustomUni] = useState(false);
-  const [editReflectPrefix, setEditReflectPrefix] = useState("+972");
-  const [editReflectPhone, setEditReflectPhone] = useState("");
-  const [editReflectAccount, setEditReflectAccount] = useState("");
-  const [isSavingNotebook, setIsSavingNotebook] = useState(false);
-  const [editError, setEditError] = useState("");
-
-  const fetchMyNotebooks = () => {
-    if (session) {
-      setLoadingNotebooks(true);
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/marketplace/my-notebooks`, {
-        headers: { "Authorization": `Bearer ${session.access_token}` }
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (data.status === "success") {
-            setMyNotebooks(data.notebooks || []);
-          }
-          setLoadingNotebooks(false);
-        })
-        .catch(() => setLoadingNotebooks(false));
-    }
-  };
-
-  useEffect(() => {
-    fetchMyNotebooks();
-  }, [session]);
 
   const handleDeleteNotebook = async (notebookId: string) => {
     if (!confirm("هل أنت متأكد من رغبتك في حذف هذا الدفتر نهائياً من المتجر؟")) return;
@@ -231,11 +350,14 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        <div className="space-y-6 sm:space-y-8">
+        {(!info && loadingInfo) ? (
+          <ProfileSkeleton />
+        ) : (
+          <div className="space-y-6 sm:space-y-8">
             
             {/* Profile Info Card */}
             <motion.div 
-              initial={{ opacity: 0, y: 15 }} 
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xs"
             >
@@ -295,39 +417,27 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Device Fingerprint Status Cards */}
+              {/* Student Verified Account Status (No device fingerprint) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800">
                   <div className="flex items-center text-slate-500 dark:text-slate-400 text-xs font-bold mb-2">
-                    <Fingerprint className="w-4 h-4 ml-2 text-indigo-600 dark:text-indigo-400" />البصمة الرقمية
+                    <Mail className="w-4 h-4 ml-2 text-indigo-600 dark:text-indigo-400" />
+                    البريد الإلكتروني المعتمد
                   </div>
                   <p className="font-mono text-xs text-slate-700 dark:text-slate-300 truncate" dir="ltr">
-                    {profile?.device_fingerprint ? (
-                      profile.device_fingerprint.slice(0, 24) + "..."
-                    ) : loadingInfo ? (
-                      <span className="inline-block h-3.5 w-32 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
-                    ) : (
-                      "—"
-                    )}
+                    {user?.email || "—"}
                   </p>
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800">
                   <div className="flex items-center text-slate-500 dark:text-slate-400 text-xs font-bold mb-2">
-                    <Shield className="w-4 h-4 ml-2 text-indigo-600 dark:text-indigo-400" />حالة الحساب
+                    <ShieldCheck className="w-4 h-4 ml-2 text-emerald-600 dark:text-emerald-400" />
+                    حالة الحساب الجامعي
                   </div>
                   <div>
-                    {profile?.device_fingerprint ? (
-                      <div className="inline-flex items-center text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 text-xs">
-                        <Check className="w-3.5 h-3.5 ml-1" /> موثق بالبصمة
-                      </div>
-                    ) : loadingInfo ? (
-                      <span className="inline-block h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse" />
-                    ) : (
-                      <div className="inline-flex items-center text-amber-700 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-500/10 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-500/20 text-xs">
-                        <span className="ml-1">⚠</span> في انتظار البصمة
-                      </div>
-                    )}
+                    <div className="inline-flex items-center text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 text-xs">
+                      <Check className="w-3.5 h-3.5 ml-1" /> نشط ومفعل ✓
+                    </div>
                   </div>
                 </div>
               </div>
@@ -335,9 +445,8 @@ export default function ProfilePage() {
 
             {/* Academic Profile & Interests Card */}
             <motion.div 
-              initial={{ opacity: 0, y: 15 }} 
+              initial={false}
               animate={{ opacity: 1, y: 0 }} 
-              transition={{ delay: 0.05 }}
               className="bg-white dark:bg-slate-900/60 border border-purple-200 dark:border-purple-500/20 rounded-3xl p-6 sm:p-8 shadow-xs"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
@@ -369,21 +478,33 @@ export default function ProfilePage() {
                 <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800">
                   <span className="text-[11px] font-bold text-slate-400 block mb-1">الجامعة أو الكلية</span>
                   <span className="text-sm font-black text-slate-800 dark:text-slate-200">
-                    {academicProfile?.university || <span className="text-slate-400 italic font-normal">لم تُحدد بعد</span>}
+                    {loadingAcademic && !academicProfile ? (
+                      <span className="inline-block h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                    ) : (
+                      academicProfile?.university || <span className="text-slate-400 italic font-normal">لم تُحدد بعد</span>
+                    )}
                   </span>
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800">
                   <span className="text-[11px] font-bold text-slate-400 block mb-1">التخصص الجامعي</span>
                   <span className="text-sm font-black text-slate-800 dark:text-slate-200">
-                    {academicProfile?.major || <span className="text-slate-400 italic font-normal">لم يُحدد بعد</span>}
+                    {loadingAcademic && !academicProfile ? (
+                      <span className="inline-block h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                    ) : (
+                      academicProfile?.major || <span className="text-slate-400 italic font-normal">لم تُحدد بعد</span>
+                    )}
                   </span>
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-950/60 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800">
                   <span className="text-[11px] font-bold text-slate-400 block mb-1">المستوى الدراسي</span>
                   <span className="text-sm font-black text-slate-800 dark:text-slate-200">
-                    {academicProfile?.academic_year || <span className="text-slate-400 italic font-normal">غير محدد</span>}
+                    {loadingAcademic && !academicProfile ? (
+                      <span className="inline-block h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                    ) : (
+                      academicProfile?.academic_year || <span className="text-slate-400 italic font-normal">غير محدد</span>
+                    )}
                   </span>
                 </div>
               </div>
@@ -418,9 +539,8 @@ export default function ProfilePage() {
 
             {/* Subscription Card */}
             <motion.div 
-              initial={{ opacity: 0, y: 15 }} 
+              initial={false}
               animate={{ opacity: 1, y: 0 }} 
-              transition={{ delay: 0.08 }}
               className="bg-white dark:bg-slate-900/60 border border-indigo-200 dark:border-indigo-500/20 rounded-3xl p-6 sm:p-8 shadow-xs"
             >
               <h3 className="text-lg sm:text-xl font-black flex items-center mb-6 text-slate-900 dark:text-white">
@@ -515,9 +635,8 @@ export default function ProfilePage() {
 
             {/* Published Notebooks Card */}
             <motion.div 
-              initial={{ opacity: 0, y: 15 }} 
+              initial={false}
               animate={{ opacity: 1, y: 0 }} 
-              transition={{ delay: 0.14 }}
               className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xs"
             >
               <h3 className="text-lg sm:text-xl font-black flex items-center mb-6 text-slate-900 dark:text-white">
@@ -807,6 +926,7 @@ export default function ProfilePage() {
             </button>
 
           </div>
+        )}
       </div>
 
       <StudentProfileModal
