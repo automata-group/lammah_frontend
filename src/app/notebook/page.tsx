@@ -15,6 +15,23 @@ import {
 import AppHeader from "@/components/AppHeader";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
 
+function NotebookSkeleton() {
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-hidden" dir="rtl">
+      <AppHeader activePage="notebook" />
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center select-none relative z-10">
+        <div className="w-16 h-16 rounded-3xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-4 shadow-sm animate-pulse">
+          <BookOpen className="w-8 h-8" />
+        </div>
+        <div className="flex items-center gap-2.5 text-slate-700 dark:text-slate-300 font-bold text-sm">
+          <Loader2 className="w-4 h-4 animate-spin text-indigo-600 dark:text-indigo-400" />
+          <span>جاري فتح وتجهيز الدفتر الأكاديمي...</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function NotebookCreatorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -24,41 +41,31 @@ function NotebookCreatorContent() {
   const studentNameParam = searchParams.get("student_name");
   const { session, loading: authLoading, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [isMounted, setIsMounted] = useState<boolean>(false);
   const [quotaFetched, setQuotaFetched] = useState<boolean>(false);
-  const [planName, setPlanName] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("cached_user_plan") || "";
-    }
-    return "";
-  });
-  const [canGenerateNotebook, setCanGenerateNotebook] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      const cachedFlag = localStorage.getItem("cached_can_generate_notebook");
-      if (cachedFlag !== null) return cachedFlag === "true";
-      const cachedPlan = (localStorage.getItem("cached_user_plan") || "").toLowerCase();
-      return Boolean(
-        (cachedPlan.includes("الذهبية") || cachedPlan.includes("النخبة") || cachedPlan.includes("elite") || cachedPlan.includes("100") || cachedPlan.includes("full term")) &&
-        !cachedPlan.includes("الإنقاذ") && !cachedPlan.includes("الميدتيرم") && !cachedPlan.includes("التفوق") && !cachedPlan.includes("الأساسية") && !cachedPlan.includes("مجاني") && cachedPlan !== "free"
-      );
-    }
-    return false;
-  });
-  const [quota, setQuota] = useState<number | null>(() => {
-    if (typeof window !== "undefined") {
-      const cachedQuota = localStorage.getItem("cached_user_quota");
-      if (cachedQuota !== null && !isNaN(Number(cachedQuota))) return Number(cachedQuota);
-    }
-    return null;
-  });
+  const [planName, setPlanName] = useState<string>("");
+  const [canGenerateNotebook, setCanGenerateNotebook] = useState<boolean>(false);
+  const [quota, setQuota] = useState<number | null>(null);
 
   useEffect(() => {
+    setIsMounted(true);
     try {
-      const cachedPlan = localStorage.getItem("cached_user_plan");
+      const cachedPlan = localStorage.getItem("cached_user_plan") || "";
       if (cachedPlan) setPlanName(cachedPlan);
       const cachedQuota = localStorage.getItem("cached_user_quota");
       if (cachedQuota !== null && !isNaN(Number(cachedQuota))) setQuota(Number(cachedQuota));
       const cachedFlag = localStorage.getItem("cached_can_generate_notebook");
-      if (cachedFlag !== null) setCanGenerateNotebook(cachedFlag === "true");
+      if (cachedFlag !== null) {
+        setCanGenerateNotebook(cachedFlag === "true");
+      } else if (cachedPlan) {
+        const cp = cachedPlan.toLowerCase();
+        setCanGenerateNotebook(
+          Boolean(
+            (cp.includes("الذهبية") || cp.includes("النخبة") || cp.includes("elite") || cp.includes("100") || cp.includes("full term")) &&
+            !cp.includes("الإنقاذ") && !cp.includes("الميدتيرم") && !cp.includes("التفوق") && !cp.includes("الأساسية") && !cp.includes("مجاني") && cp !== "free"
+          )
+        );
+      }
     } catch {}
   }, []);
   const [fullName, setFullName] = useState<string>("طالب متميز");
@@ -542,70 +549,142 @@ function NotebookCreatorContent() {
     planName !== "free")
   );
 
-  // Minimal loading only during initial auth resolution
-  if (authLoading) {
+  // 1. Initial hydration and auth check skeleton
+  if (!isMounted || authLoading) {
+    return <NotebookSkeleton />;
+  }
+
+  // 2. GUEST PAYWALL (FOR NOT LOGGED IN USERS)
+  if (!session) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#030712] flex items-center justify-center font-sans">
-        <div className="w-8 h-8 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
+      <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-white flex flex-col font-sans relative overflow-x-hidden" dir="rtl">
+        <AppHeader activePage="notebook" />
+        <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
+          <div className="max-w-xl w-full text-center space-y-6 bg-white dark:bg-[#0b0f19] p-7 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-600 dark:text-indigo-400 shadow-xs mb-1">
+              <BookOpen className="w-7 h-7" />
+            </div>
+
+            <div className="space-y-2">
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
+                <span>خاصة بمشتركي باقة النخبة (100 ₪)</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                توليد الدفاتر الأكاديمية الذكية
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium max-w-md mx-auto leading-relaxed">
+                حوّل تفريغ محاضراتك وسلايداتك إلى دفاتر دراسية منسقة (A4 PDF) جاهزة للطباعة الورقية وللنشر في المتجر. هذه الميزة متاحة لمشتركي باقة النخبة.
+              </p>
+            </div>
+
+            {/* Premium Features Highlight */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-right my-4 max-w-lg mx-auto">
+              <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">دفاتر تلخيص جاهزة</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">توليد دفاتر A4 منسقة أكاديمياً بجودة عالية للطباعة.</p>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <ShoppingBag className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">رخصة النشر بالمتجر</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">طرح وتداول الدفاتر في متجر المنصة للطلاب الآخرين.</p>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <GraduationCap className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">تغطية كاملة للفصل</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">رصيد 2400 دقيقة ذكية يكفي حتى 40 محاضرة كاملة.</p>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 max-w-xs sm:max-w-sm mx-auto pt-1">
+              <button 
+                onClick={() => router.push("/auth?redirect=/notebook")}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm py-3 px-6 rounded-xl shadow-md shadow-indigo-600/20 transition hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>تسجيل الدخول للاشتراك</span>
+                <ArrowLeft className="w-4 h-4 ml-1" />
+              </button>
+              
+              <button 
+                onClick={() => router.push("/#pricing")}
+                className="w-full bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold py-2.5 px-6 rounded-xl transition border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
+              >
+                <span>استعراض الباقات والأسعار</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
-  // GUEST PAYWALL (FOR NOT LOGGED IN USERS)
-  if (!session) {
+  // 3. SUBSCRIBED USERS ON LOWER TIERS (FREE, 25 ILS, 60 ILS) PAYWALL
+  if (session && !is100Plan && !result) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-white flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans" dir="rtl">
-        <div className="max-w-xl w-full text-center space-y-6 z-10 bg-white dark:bg-[#0b0f19] p-7 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-600 dark:text-indigo-400 shadow-xs mb-1">
-            <BookOpen className="w-7 h-7" />
-          </div>
+      <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-hidden" dir="rtl">
+        <AppHeader quota={quota} activePage="notebook" />
 
-          <div className="space-y-2">
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
-              <span>خاصة بمشتركي باقة النخبة (100 ₪)</span>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
+          <div className="max-w-xl w-full text-center space-y-6 bg-white dark:bg-[#0b0f19] p-7 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-600 dark:text-indigo-400 shadow-xs mb-1">
+              <BookOpen className="w-7 h-7" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              توليد الدفاتر الأكاديمية الذكية
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium max-w-md mx-auto leading-relaxed">
-              حوّل تفريغ محاضراتك وسلايداتك إلى دفاتر دراسية منسقة (A4 PDF) جاهزة للطباعة الورقية وللنشر في المتجر. هذه الميزة متاحة لمشتركي باقة النخبة.
-            </p>
-          </div>
 
-          {/* Premium Features Highlight */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-right my-4 max-w-lg mx-auto">
-            <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-              <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
-              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">دفاتر تلخيص جاهزة</h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">توليد دفاتر A4 منسقة أكاديمياً بجودة عالية للطباعة.</p>
+            <div className="space-y-2">
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
+                <span>خاصة بمشتركي باقة النخبة (100 ₪)</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                توليد الدفاتر الأكاديمية الذكية
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium max-w-md mx-auto leading-relaxed">
+                أهلاً بك يا <span className="font-bold text-slate-900 dark:text-white">{fullName}</span>! إن ميزة إنشاء وتوليد الدفاتر الدراسية ورخصة النشر في المتجر متاحة حصرياً لمشتركي <span className="font-bold text-indigo-600 dark:text-indigo-400">باقة النخبة (100 ₪)</span>.
+              </p>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-              <ShoppingBag className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
-              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">رخصة النشر بالمتجر</h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">طرح وتداول الدفاتر في متجر المنصة للطلاب الآخرين.</p>
-            </div>
-            <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-              <GraduationCap className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
-              <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">تغطية كاملة للفصل</h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">رصيد 2400 دقيقة ذكية يكفي حتى 40 محاضرة كاملة.</p>
-            </div>
-          </div>
 
-          <div className="space-y-2.5 max-w-xs sm:max-w-sm mx-auto pt-1">
-            <button 
-              onClick={() => router.push("/auth?redirect=/notebook")}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm py-3 px-6 rounded-xl shadow-md shadow-indigo-600/20 transition hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span>تسجيل الدخول للاشتراك</span>
-              <ArrowLeft className="w-4 h-4 ml-1" />
-            </button>
-            
-            <button 
-              onClick={() => router.push("/#pricing")}
-              className="w-full bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold py-2.5 px-6 rounded-xl transition border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
-            >
-              <span>استعراض الباقات والأسعار</span>
-            </button>
+            {/* Current Plan Pill */}
+            <div className="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400">
+              <span className="w-2 h-2 rounded-full bg-indigo-500" />
+              <span>باقتك الحالية:</span>
+              <span className="font-bold text-slate-900 dark:text-white">{getFriendlyPlanName(planName)}</span>
+              {quota !== null && <span className="text-slate-400">({quota} دقيقة متبقية)</span>}
+            </div>
+
+            {/* Feature Highlights */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-right my-4 max-w-lg mx-auto">
+              <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">دفاتر تلخيص جاهزة</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">توليد دفاتر A4 منسقة أكاديمياً بجودة عالية للطباعة.</p>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <ShoppingBag className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">رخصة النشر بالمتجر</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">طرح وتداول الدفاتر في متجر المنصة للطلاب الآخرين.</p>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <GraduationCap className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">تغطية كاملة للفصل</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">رصيد 2400 دقيقة ذكية يكفي حتى 40 محاضرة كاملة.</p>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 max-w-xs sm:max-w-sm mx-auto pt-1">
+              <button 
+                onClick={() => router.push("/#pricing")}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm py-3 px-6 rounded-xl shadow-md shadow-indigo-600/20 transition hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>ترقية الاشتراك إلى باقة النخبة (100 ₪)</span>
+                <ArrowLeft className="w-4 h-4 ml-1" />
+              </button>
+              
+              <button 
+                onClick={() => router.push("/#pricing")}
+                className="w-full bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold py-2.5 px-6 rounded-xl transition border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
+              >
+                <span>استعراض الباقات والأسعار</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1049,7 +1128,7 @@ function NotebookCreatorContent() {
 
 export default function NotebookCreatorPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-50 dark:bg-[#030712] animate-pulse" />}>
+    <Suspense fallback={<NotebookSkeleton />}>
       <NotebookCreatorContent />
     </Suspense>
   );
