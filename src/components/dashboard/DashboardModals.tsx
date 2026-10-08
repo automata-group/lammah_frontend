@@ -173,14 +173,14 @@ export function VirtualDemoModal({
                   <FileAudio className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
-                  استيراد محاضرة تجريبية 🎙️
+                  استيراد محاضرة نموذجية 🎙️
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 leading-relaxed">
-                  أنت حالياً في النسخة التجريبية. لتجربة سرعة ودقة محرك لمّاح، تفضل بتحميل المحاضرة الصوتية المميزة من نظامنا السحابي:
+                  معاينة توضيحية: لمعاينة سرعة ودقة محرك لمّاح، تفضل بتحميل المحاضرة الصوتية النموذجية من نظامنا السحابي:
                 </p>
 
                 <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl text-right mb-6">
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">اسم الملف التجريبي:</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">اسم الملف النموذجي:</p>
                   <p className="text-sm font-black text-indigo-700 dark:text-indigo-300 mb-3" dir="ltr">
                     محاضرة_تشفير_البلوك_والستريم_سايفر.mp3
                   </p>
@@ -194,7 +194,7 @@ export function VirtualDemoModal({
                   onClick={onImportDemoAudio}
                   className="w-full py-3.5 sm:py-4 bg-gradient-to-l from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black rounded-xl shadow-lg transition-all transform active:scale-[0.98] flex justify-center items-center gap-2 cursor-pointer"
                 >
-                  استيراد الملف التجريبي وبدء المعالجة 🚀
+                  استيراد الملف النموذجي وبدء المعالجة 🚀
                 </button>
               </>
             )}
@@ -205,14 +205,14 @@ export function VirtualDemoModal({
                   <FileText className="w-8 h-8 text-purple-600 dark:text-purple-400" />
                 </div>
                 <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">
-                  استيراد ملف شرائح تجريبي 📁
+                  استيراد ملف شرائح نموذجي 📁
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 leading-relaxed">
-                  أنت حالياً في النسخة التجريبية. لتجربة آلية استخراج وتظليل الشرائح وتنسيق الملاحظات، تفضل باستيراد ملف الـ PDF التجريبي:
+                  معاينة توضيحية: لمعاينة آلية استخراج وتظليل الشرائح وتنسيق الملاحظات، تفضل باستيراد ملف الـ PDF النموذجي:
                 </p>
 
                 <div className="bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl text-right mb-6">
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">اسم الملف التجريبي:</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">اسم الملف النموذجي:</p>
                   <p className="text-sm font-black text-purple-700 dark:text-purple-300 mb-3" dir="ltr">
                     سلايدات_تشفير_البلوك_والستريم_سايفر.pdf
                   </p>
@@ -226,7 +226,7 @@ export function VirtualDemoModal({
                   onClick={onImportDemoPdf}
                   className="w-full py-3.5 sm:py-4 bg-gradient-to-l from-purple-600 via-purple-500 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black rounded-xl shadow-lg transition-all transform active:scale-[0.98] flex justify-center items-center gap-2 cursor-pointer"
                 >
-                  استيراد الملف التجريبي وبدء المعالجة 🚀
+                  استيراد الملف النموذجي وبدء المعالجة 🚀
                 </button>
               </>
             )}

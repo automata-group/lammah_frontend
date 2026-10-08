@@ -98,17 +98,17 @@ export default function SmartChatTabContent({
 
   return (
     <div className="flex flex-col h-[500px] sm:h-[650px] lg:h-[700px] bg-white dark:bg-[#0b0f19] border border-slate-200/90 dark:border-blue-500/20 rounded-2xl sm:rounded-[2.5rem] shadow-xs overflow-hidden relative z-10 group">
-      {/* Lock overlay only shown if a free trial user exhausted their 5 trial questions */}
+      {/* Lock overlay shown if user exhausted their question limit */}
       {isLimitReached && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-white/95 dark:bg-slate-950/90 p-4 sm:p-8 text-center border border-blue-200 dark:border-blue-500/20">
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 dark:bg-blue-500/10 rounded-full flex items-center justify-center mb-6 shadow-sm border border-blue-200 dark:border-blue-500/30">
             <Lock className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600 dark:text-blue-400" />
           </div>
           <h3 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-l dark:from-blue-200 dark:to-cyan-400 mb-4">
-            انتهت الأسئلة التجريبية لهذه المحاضرة!
+            انتهى رصيد الأسئلة لهذه المحاضرة!
           </h3>
           <p className="text-sm sm:text-lg text-slate-600 dark:text-slate-300 max-w-lg mb-6 sm:mb-8 leading-relaxed font-medium">
-            لقد استهلكت الـ 5 أسئلة المجانية المخصصة لهذه المحاضرة. <br />
+            لقد استهلكت الأسئلة المتاحة لهذه المحاضرة وفق خطتك الحالية. <br />
             <span className="text-slate-500 dark:text-slate-400 text-sm mt-2 block">
               اشترك في إحدى باقات لمّاح لفتح حتى 100 سؤال لكل محاضرة ومناقشة كل تفصيلة في السلايدات!
             </span>

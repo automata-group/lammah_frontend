@@ -622,7 +622,7 @@ export default function ProfilePage() {
                   <div className="w-14 h-14 bg-indigo-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3 text-indigo-600 dark:text-indigo-400">
                     <Package className="w-7 h-7" />
                   </div>
-                  <p className="text-slate-600 dark:text-slate-400 mb-5 font-bold text-xs sm:text-sm">أنت تستخدم النسخة التجريبية المجانية حالياً</p>
+                  <p className="text-slate-600 dark:text-slate-400 mb-5 font-bold text-xs sm:text-sm">لا يوجد لديك اشتراك نشط حالياً</p>
                   <button 
                     onClick={() => router.push("/plans")}
                     className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-lg shadow-indigo-600/20 transition-all text-xs sm:text-sm cursor-pointer"

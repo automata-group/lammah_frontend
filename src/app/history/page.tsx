@@ -574,7 +574,7 @@ export default function HistoryPage() {
                               </p>
                               {log.id === "4198557f-5b1b-48ac-91a8-d8129de8ca0b" && (
                                 <span className="px-2 py-0.5 text-[9px] font-black rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/35 select-none mr-2">
-                                  تجربة افتراضية 🧪
+                                  محاضرة نموذجية 🧪
                                 </span>
                               )}
                               <button

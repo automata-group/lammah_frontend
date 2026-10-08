@@ -66,7 +66,7 @@ export default function PlansPage() {
   };
 
   const getFriendlyPlanName = (name: string) => {
-    if (!name || name === "free" || name === "مجاني") return "الباقة المجانية";
+    if (!name || name === "free" || name === "مجاني" || name.includes("بدون")) return "بدون باقة نشطة";
     if (name.includes("الذهبية") || name === "الباقة الذهبية" || name.toLowerCase().includes("elite")) return "باقة النخبة (Elite)";
     if (name.includes("الميدتيرم") || name === "باقة الميدتيرم" || name.toLowerCase().includes("premium")) return "باقة التفوق (Premium)";
     if (name.includes("الإنقاذ") || name === "باقة الإنقاذ" || name.toLowerCase().includes("essential")) return "باقة إنقاذ الكويزات (Essential)";
@@ -113,11 +113,19 @@ export default function PlansPage() {
         
         {/* Header - EXACT SAME AS LANDING PAGE */}
         <div className="text-center mb-10 sm:mb-12 overflow-visible">
-          <div className="inline-flex items-center gap-2 bg-white dark:bg-[#0b0f19] border border-emerald-200 dark:border-emerald-500/30 px-4 py-1.5 rounded-full shadow-xs text-xs font-bold text-slate-700 dark:text-slate-300 mb-4">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>باقتك الحالية:</span>
-            <span className="font-black text-emerald-600 dark:text-emerald-400">{getFriendlyPlanName(userPlanName)}</span>
-          </div>
+          {Boolean(userPlanName && userPlanName !== "free" && userPlanName !== "مجاني" && !userPlanName.includes("بدون")) ? (
+            <div className="inline-flex items-center gap-2 bg-white dark:bg-[#0b0f19] border border-emerald-200 dark:border-emerald-500/30 px-4 py-1.5 rounded-full shadow-xs text-xs font-bold text-slate-700 dark:text-slate-300 mb-4">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>باقتك الحالية:</span>
+              <span className="font-black text-emerald-600 dark:text-emerald-400">{getFriendlyPlanName(userPlanName)}</span>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2 bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 px-4 py-1.5 rounded-full shadow-xs text-xs font-bold text-slate-700 dark:text-slate-300 mb-4">
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <span>حالة الاشتراك:</span>
+              <span className="font-black text-amber-600 dark:text-amber-400">لا يوجد اشتراك نشط</span>
+            </div>
+          )}
 
           <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-black mb-4 pb-6 pt-2 text-slate-900 dark:text-white tracking-tight leading-[1.8] sm:leading-[1.5] overflow-visible">
             <span className="block sm:inline">استثمر في راحتك</span>{" "}

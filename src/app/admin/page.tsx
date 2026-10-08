@@ -191,7 +191,7 @@ export default function AdminPage() {
   };
 
   const handleCancelPlan = async (userId: string, userName: string) => {
-    if (!confirm(`هل أنت متأكد من إلغاء خطة المستخدم (${userName})؟ سيتم تصفير حصته وإعادته للتجربة المجانية.`)) return;
+    if (!confirm(`هل أنت متأكد من إلغاء خطة المستخدم (${userName})؟ سيتم تصفير حصته وإلغاء باقته.`)) return;
     setProcessing(userId);
     try {
       const res = await fetch(`${API}/api/v1/admin/users/${userId}/cancel-plan`, {
@@ -296,7 +296,7 @@ export default function AdminPage() {
 
   const handleBulkCancelPlans = async () => {
     if (selectedUserIds.size === 0) return;
-    if (!confirm(`هل أنت متأكد من إلغاء خطط ${selectedUserIds.size} مستخدم؟ سيتم تصفير حصصهم وإعادتهم للتجربة المجانية.`)) return;
+    if (!confirm(`هل أنت متأكد من إلغاء خطط ${selectedUserIds.size} مستخدم؟ سيتم تصفير حصصهم وإلغاء باقاتهم.`)) return;
     setBulkProcessing(true);
     try {
       const res = await fetch(`${API}/api/v1/admin/users/bulk-cancel-plan`, {
@@ -715,7 +715,7 @@ export default function AdminPage() {
                     </div>
 
                     <div className="bg-white dark:bg-[#0b0f19] rounded-3xl p-5 border border-slate-200/90 dark:border-slate-800 shadow-xs">
-                      <span className="text-xs font-bold text-amber-600 dark:text-amber-400 block mb-1">مستخدمو التجربة المجانية</span>
+                      <span className="text-xs font-bold text-amber-600 dark:text-amber-400 block mb-1">المستخدمون بدون اشتراك نشط</span>
                       <span className="text-3xl font-black text-amber-600 dark:text-amber-400 font-mono">{usageStats.free_users_count}</span>
                     </div>
 

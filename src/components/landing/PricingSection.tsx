@@ -31,7 +31,7 @@ export default function PricingSection() {
   }, []);
 
   const getFriendlyPlanName = (name: string) => {
-    if (!name || name === "مجاني") return "الباقة المجانية (Free)";
+    if (!name || name === "مجاني" || name === "free" || name.includes("بدون")) return "بدون باقة نشطة";
     if (name.includes("الذهبية") || name === "الباقة الذهبية") return "باقة النخبة (Elite)";
     if (name.includes("الميدتيرم") || name === "باقة الميدتيرم") return "باقة التفوق (Premium)";
     if (name.includes("الإنقاذ") || name === "باقة الإنقاذ") return "باقة إنقاذ الكويزات (Essential)";

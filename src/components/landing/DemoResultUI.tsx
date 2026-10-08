@@ -585,7 +585,7 @@ export default function DemoResultUI({ actionText, onAction }: DemoResultUIProps
                     className="absolute inset-0 bg-white/80 dark:bg-slate-950/70 backdrop-blur-[2px] rounded-xl flex items-center justify-center border border-blue-200 dark:border-blue-500/30 cursor-pointer hover:bg-white/90 dark:hover:bg-slate-950/80 transition-all"
                   >
                     <span className="text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center gap-1.5">
-                      <Crown className="w-3.5 h-3.5" /> سجّل لتجربة المحادثة مجاناً
+                      <Crown className="w-3.5 h-3.5" /> اشترك الآن لبدء المحادثة الذكية
                     </span>
                   </div>
                 </div>

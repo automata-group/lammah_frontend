@@ -459,7 +459,7 @@ export default function UserManagement({ session }: { session: any }) {
                       {/* Plan & Quota */}
                       <td className="p-4">
                         <span className="font-bold text-slate-800 dark:text-slate-200 block">
-                          {u.subscription_plans?.name || "تجربة مجانية"}
+                          {u.subscription_plans?.name || "بدون باقة"}
                         </span>
                         <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">
                           ({u.quota_remaining || 0} رصيد متبقي)

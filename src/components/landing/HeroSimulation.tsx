@@ -223,15 +223,15 @@ export default function HeroSimulation({
               </div>
               
               <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2 text-center">
-                استيراد {showDemoModal === 'audio' ? 'محاضرة تجريبية' : 'ملف شرائح تجريبي'}
+                استيراد {showDemoModal === 'audio' ? 'محاضرة نموذجية' : 'ملف شرائح نموذجي'}
               </h3>
               
               <p className="text-slate-500 dark:text-slate-400 text-xs text-center mb-6 leading-relaxed">
-                أنت حالياً في النسخة التجريبية (رصيدك 0 دقيقة). لتجربة سرعة ودقة محرك لمّاح، تفضل بتحميل {showDemoModal === 'audio' ? 'المحاضرة الصوتية المميزة' : 'ملف الـ PDF التجريبي'}:
+                معاينة توضيحية مباشرة: لمعاينة سرعة ودقة محرك لمّاح، تفضل باختيار {showDemoModal === 'audio' ? 'المحاضرة الصوتية النموذجية' : 'ملف الـ PDF النموذجي'}:
               </p>
               
               <div className="bg-slate-50 dark:bg-slate-950 rounded-xl p-4 border border-slate-200 dark:border-slate-800 mb-6 text-center">
-                <p className="text-[10px] text-slate-500 mb-1">اسم الملف التجريبي:</p>
+                <p className="text-[10px] text-slate-500 mb-1">اسم الملف النموذجي:</p>
                 <p className="text-sm font-black text-indigo-600 dark:text-indigo-300 truncate" dir="ltr">
                   {showDemoModal === 'audio' ? 'محاضرة_تطور_العملات_الذهب_للبيتكوين.mp3' : 'سلايدات_تطور_العملات_الذهب_للبيتكوين.pdf'}
                 </p>
@@ -245,7 +245,7 @@ export default function HeroSimulation({
                 onClick={() => handleImportDemo(showDemoModal)}
                 className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-indigo-500/20"
               >
-                استيراد الملف التجريبي وبدء المعالجة
+                استيراد الملف النموذجي وبدء المعالجة
               </button>
             </motion.div>
           </motion.div>
@@ -262,14 +262,14 @@ export default function HeroSimulation({
             <div className="fixed top-0 inset-x-0 h-14 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 z-[110] flex items-center justify-between px-3 sm:px-8 shadow-sm">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-white">النتيجة التجريبية المباشرة • لمّاح</span>
+                <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-white">المعاينة التوضيحية المباشرة • لمّاح</span>
               </div>
               
               <button 
                 type="button"
                 onClick={() => setShowResultPopup(false)} 
                 className="px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-black flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shadow-xs active:scale-95"
-                title="إغلاق النتيجة التجريبية"
+                title="إغلاق المعاينة التوضيحية"
               >
                 <span>إغلاق النتيجة</span>
                 <X className="w-4 h-4" />

@@ -521,7 +521,7 @@ function NotebookCreatorContent() {
   };
 
   const getFriendlyPlanName = (name: string) => {
-    if (!name || name === "free" || name === "مجاني") return "الباقة المجانية";
+    if (!name || name === "free" || name === "مجاني" || name.includes("بدون")) return "لا يوجد اشتراك نشط";
     if (name.includes("الذهبية") || name === "الباقة الذهبية" || name.toLowerCase().includes("elite") || name.toLowerCase().includes("full term")) return "باقة النخبة (Elite - 100 ₪)";
     if (name.includes("الميدتيرم") || name.includes("التفوق") || name.toLowerCase().includes("premium")) return "باقة التفوق (Premium - 60 ₪)";
     if (name.includes("الإنقاذ") || name.includes("الأساسية") || name.toLowerCase().includes("essential")) return "الباقة الأساسية (Essential - 25 ₪)";
@@ -640,10 +640,10 @@ function NotebookCreatorContent() {
 
             {/* Current Plan Pill */}
             <div className="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400">
-              <span className="w-2 h-2 rounded-full bg-indigo-500" />
-              <span>باقتك الحالية:</span>
+              <span className={`w-2 h-2 rounded-full ${(!planName || planName === 'free' || planName === 'مجاني' || planName.includes('بدون')) ? 'bg-amber-500' : 'bg-indigo-500'}`} />
+              <span>{(!planName || planName === 'free' || planName === 'مجاني' || planName.includes('بدون')) ? "حالة الاشتراك:" : "باقتك الحالية:"}</span>
               <span className="font-bold text-slate-900 dark:text-white">{getFriendlyPlanName(planName)}</span>
-              {quota !== null && <span className="text-slate-400">({quota} دقيقة متبقية)</span>}
+              {quota !== null && quota > 0 && <span className="text-slate-400">({quota} دقيقة متبقية)</span>}
             </div>
 
             {/* Feature Highlights */}

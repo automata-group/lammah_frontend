@@ -76,9 +76,6 @@ function SummarizeContent() {
     }
     return true;
   });
-  const [deviceAbuse, setDeviceAbuse] = useState<boolean>(false);
-  const [deviceAbuseMessage, setDeviceAbuseMessage] = useState<string | null>(null);
-
   // Pre-upload States
   const [audioUploadProgress, setAudioUploadProgress] = useState(0);
   const [pdfUploadProgress, setPdfUploadProgress] = useState(0);
@@ -95,7 +92,7 @@ function SummarizeContent() {
     !planName.toLowerCase().includes("free")
   );
   const hasQuota = quota !== null ? quota > 0 : false;
-  const isFreeTrial = !hasPaidPlan && !hasQuota && (quota !== null && quota <= 0);
+  const isDemoMode = !hasPaidPlan && !hasQuota && (quota !== null && quota <= 0);
 
   // Multi-Audio Upload Computations
   const isMultiAudioUploading = multiAudioFiles.length > 0 && multiAudioFiles.some(f => f.isUploading || !f.tempId);
@@ -304,8 +301,6 @@ function SummarizeContent() {
       if (r.ok) {
         setQuota(data.quota_remaining);
         setPlanName(data.plan_name);
-        setDeviceAbuse(!!data.device_abuse);
-        setDeviceAbuseMessage(data.device_abuse_message || null);
         setIsQuotaChecking(false);
         if (typeof window !== "undefined") {
           try {
@@ -366,7 +361,7 @@ function SummarizeContent() {
       return;
     }
 
-    if (isFreeTrial) {
+    if (isDemoMode) {
       setIsProcessing(true);
       setError(null);
       setIsStreaming(false);
@@ -998,7 +993,7 @@ function SummarizeContent() {
                   </div>
 
                 {/* Quota Lock Banner */}
-                {quota !== null && quota <= 0 && !isFreeTrial && (
+                {quota !== null && quota <= 0 && !hasPaidPlan && (
                   <div className="mb-6 rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-rose-50/80 dark:bg-rose-950/40 p-4 text-right">
                     <p className="text-xs font-bold text-rose-900 dark:text-rose-200">
                       🚫 رصيدك صفر دقيقة — يرجى شحن الرصيد للمتابعة.
@@ -1022,8 +1017,7 @@ function SummarizeContent() {
                       isPdfUploading
                     }
                     isProcessing={isProcessing}
-                    quota={isFreeTrial ? null : quota}
-                    deviceAbuse={deviceAbuse}
+                    quota={quota}
                     text={
                       isAnyAudioUploading
                         ? (multiAudioFiles.length > 0

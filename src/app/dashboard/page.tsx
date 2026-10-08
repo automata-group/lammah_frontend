@@ -90,8 +90,6 @@ function DashboardContent() {
   const [quota, setQuota] = useState<number | null>(null);
   const [planName, setPlanName] = useState<string>("");
   const [chatCount, setChatCount] = useState<number>(0);
-  const [, setDeviceAbuse] = useState<boolean>(false);
-  const [, setDeviceAbuseMessage] = useState<string | null>(null);
 
   // Student Profile & Onboarding
   const [showStudentProfileModal, setShowStudentProfileModal] = useState(false);
@@ -199,7 +197,8 @@ function DashboardContent() {
   );
   const hasQuota = quota !== null ? quota > 0 : false;
   const isBasicPlan = !hasPaidPlan && !isDemoLecture;
-  const isFreeTrial = !hasPaidPlan && !hasQuota && quota !== null && quota <= 0;
+  const isDemoMode = !hasPaidPlan && !hasQuota && quota !== null && quota <= 0;
+  const isFreeTrial = isDemoMode;
 
   const subscriptionLimit = isDemoLecture
     ? 25
@@ -541,8 +540,6 @@ function DashboardContent() {
         setQuota(data.quota_remaining);
         setPlanName(data.plan_name);
         setUserFullName(data.full_name || null);
-        setDeviceAbuse(!!data.device_abuse);
-        setDeviceAbuseMessage(data.device_abuse_message || null);
         if (typeof window !== "undefined") {
           try {
             localStorage.setItem("cached_user_quota", String(data.quota_remaining ?? 0));
@@ -744,7 +741,7 @@ function DashboardContent() {
       return;
     }
 
-    if (isFreeTrial) {
+    if (isDemoMode) {
       setIsProcessing(true);
       setError(null);
       setResult(null);
@@ -1205,8 +1202,8 @@ function DashboardContent() {
                   }}
                 />
 
-                {/* Warning Banner for Trimmed Free Audio */}
-                {result?.annotations?.is_audio_trimmed && planName === "مجاني" && (
+                {/* Warning Banner for Trimmed Audio */}
+                {result?.annotations?.is_audio_trimmed && (!hasPaidPlan || planName === "مجاني" || planName.includes("بدون")) && (
                   <div className="lg:col-span-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/50 p-3.5 sm:p-4 rounded-xl flex flex-col sm:flex-row items-center sm:items-start gap-3 shadow-xs text-center sm:text-right">
                     <AlertCircle className="w-6 h-6 text-amber-600 dark:text-amber-500 shrink-0" />
                     <div className="flex-1">
@@ -1214,7 +1211,7 @@ function DashboardContent() {
                         تنبيه: تم تحليل جزء من المحاضرة فقط
                       </h4>
                       <p className="text-amber-800/90 dark:text-amber-200/90 text-xs leading-relaxed">
-                        أنت تستخدم التجربة المجانية، لذلك تم استخراج وتحليل أول 15 دقيقة فقط من المحاضرة بدلاً من كامل المحتوى. للوصول إلى تفريغ وتلخيص كامل لأي محاضرة مهما كان طولها، اشترك الآن.
+                        تم استخراج وتحليل جزء من المحاضرة وفق الرصيد المتاح. للوصول إلى تفريغ وتلخيص كامل لأي محاضرة مهما كان طولها، اشترك في إحدى باقات لمّاح الآن.
                       </p>
                     </div>
                     <button
