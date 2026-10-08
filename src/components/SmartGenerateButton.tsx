@@ -12,7 +12,7 @@ export interface SmartGenerateButtonProps {
   text?: string;
   loadingText?: string;
   quota?: number | null;
-  deviceAbuse?: boolean;
+  deviceAbuse?: boolean; // legacy compatibility, unused
   className?: string;
   variant?: "primary" | "pill" | "compact";
   size?: "sm" | "md" | "lg";
@@ -36,11 +36,9 @@ export default function SmartGenerateButton({
 }: SmartGenerateButtonProps) {
   const hasNoQuota = quota !== null && quota <= 0;
 
-  // Determine active display text
-  const displayText = deviceAbuse
-    ? "🚫 التجربة مستخدمة على هذا الجهاز"
-    : hasNoQuota
-    ? "🚫 رصيدك 0 دقيقة — اشحن للمتابعة"
+  // Determine active display text (Free from any obsolete trial messaging)
+  const displayText = hasNoQuota
+    ? "رصيدك 0 دقيقة — اضغط للشحن والمتابعة 👑"
     : isProcessing
     ? progressMessage || loadingText
     : text.replace(/✨/g, "").trim();
@@ -54,30 +52,40 @@ export default function SmartGenerateButton({
 
   const radiusClass = variant === "pill" ? "rounded-full" : "rounded-2xl";
 
-  // Luxury Royal Indigo & Electric Violet gradient matching Lammah's brand palette
-  let bgClasses = "bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-500 hover:via-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-600/30 hover:shadow-xl hover:shadow-indigo-600/45 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.985] cursor-pointer";
+  // Strict adherence to Lammah's Royal Indigo & Violet palette - NO red or orange
+  let bgClasses = "bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-500 hover:via-indigo-500 hover:to-violet-500 text-white shadow-lg shadow-indigo-600/30 hover:shadow-xl hover:shadow-indigo-600/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.985] cursor-pointer";
 
-  if (deviceAbuse) {
-    bgClasses = "bg-gradient-to-r from-amber-600 to-rose-600 text-white shadow-md shadow-rose-600/20 cursor-not-allowed";
-  } else if (hasNoQuota) {
-    bgClasses = "bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-md shadow-rose-600/20 cursor-pointer";
+  if (hasNoQuota) {
+    // Elegant on-brand indigo-violet tone with golden crown, never jarring red/orange
+    bgClasses = "bg-gradient-to-r from-indigo-700 via-indigo-600 to-violet-700 hover:from-indigo-600 hover:to-violet-600 text-white shadow-md shadow-indigo-600/25 hover:shadow-lg hover:shadow-indigo-600/35 cursor-pointer";
   } else if (isProcessing) {
     bgClasses = "bg-gradient-to-r from-indigo-700 via-indigo-600 to-violet-700 text-white shadow-xl shadow-indigo-600/40 cursor-wait scale-[0.995]";
   } else if (disabled) {
-    // When disabled (e.g. before file upload or during active upload)
-    bgClasses = "bg-gradient-to-r from-indigo-500/60 via-indigo-600/60 to-violet-600/60 text-white/80 shadow-none border border-indigo-400/20 opacity-80 cursor-not-allowed";
+    // Tasteful muted state harmonizing with light/dark palettes
+    bgClasses = "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-300 dark:border-slate-700/60 shadow-none cursor-not-allowed";
   }
 
-  const isActuallyDisabled = disabled || isProcessing || deviceAbuse;
+  const isActuallyDisabled = (disabled && !hasNoQuota) || isProcessing;
+
+  const handleClick = () => {
+    if (isActuallyDisabled) return;
+    if (hasNoQuota) {
+      if (typeof window !== "undefined") {
+        window.location.href = "/#pricing";
+      }
+      return;
+    }
+    if (onClick) onClick();
+  };
 
   return (
     <div className={`relative ${fullWidth ? "w-full" : "w-auto inline-block"} ${className}`}>
       <button
         type="button"
-        onClick={isActuallyDisabled ? undefined : onClick}
+        onClick={handleClick}
         disabled={isActuallyDisabled}
         aria-label={displayText}
-        className={`relative ${fullWidth ? "w-full" : "w-auto min-w-[260px]"} ${sizeClasses} ${radiusClass} ${bgClasses} border border-indigo-400/40 dark:border-white/20 ring-1 ring-white/15 flex items-center justify-center font-black transition-all duration-200 select-none overflow-hidden group`}
+        className={`relative ${fullWidth ? "w-full" : "w-auto min-w-[260px]"} ${sizeClasses} ${radiusClass} ${bgClasses} border border-indigo-400/40 dark:border-white/15 ring-1 ring-white/10 flex items-center justify-center font-black transition-all duration-200 select-none overflow-hidden group`}
       >
         {/* Subtle Ambient Light Shimmer Overlay */}
         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
@@ -94,11 +102,6 @@ export default function SmartGenerateButton({
           ) : hasNoQuota ? (
             <>
               <Crown className="w-4 h-4 text-amber-300 shrink-0" />
-              <span className="truncate drop-shadow-xs font-bold">{displayText}</span>
-            </>
-          ) : deviceAbuse ? (
-            <>
-              <AlertTriangle className="w-4 h-4 text-white shrink-0" />
               <span className="truncate drop-shadow-xs font-bold">{displayText}</span>
             </>
           ) : (

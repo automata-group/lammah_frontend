@@ -69,8 +69,6 @@ function NotebookCreatorContent() {
     } catch {}
   }, []);
   const [fullName, setFullName] = useState<string>("طالب متميز");
-  const [deviceAbuse, setDeviceAbuse] = useState<boolean>(false);
-  const [deviceAbuseMessage, setDeviceAbuseMessage] = useState<string | null>(null);
 
   // -- FINGERPRINTING LOGIC --
   const getFingerprint = async () => {
@@ -195,8 +193,6 @@ function NotebookCreatorContent() {
             setQuota(data.quota_remaining ?? 0);
             setFullName(data.full_name || "طالب متميز");
             setCustomStudentName(data.full_name || "طالب متميز");
-            setDeviceAbuse(!!data.device_abuse);
-            setDeviceAbuseMessage(data.device_abuse_message || null);
 
             const p = rawPlan.toLowerCase();
             const isEligible = Boolean(
@@ -838,7 +834,7 @@ function NotebookCreatorContent() {
                     audioFile || multiAudioFiles.length > 0 
                       ? "border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20" 
                       : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 hover:border-violet-400 hover:bg-violet-50/20 dark:hover:bg-violet-950/20"
-                  } ${(quota !== null && quota <= 0) || deviceAbuse ? "opacity-35 pointer-events-none" : ""}`}>
+                  }`}>
                     <input 
                       type="file" 
                       accept="audio/*" 
@@ -940,7 +936,7 @@ function NotebookCreatorContent() {
                     pdfFile 
                       ? "border-violet-500 bg-violet-50/40 dark:bg-violet-950/20" 
                       : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 hover:border-violet-400 hover:bg-violet-50/20 dark:hover:bg-violet-950/20"
-                  } ${(quota !== null && quota <= 0) || deviceAbuse ? "opacity-35 pointer-events-none" : ""}`}>
+                  }`}>
                     <input 
                       type="file" 
                       accept=".pdf,.pptx,.ppt,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation" 
@@ -1088,7 +1084,6 @@ function NotebookCreatorContent() {
                   progressStep={progressStep}
                   progressMessage={progressMessage}
                   quota={quota}
-                  deviceAbuse={deviceAbuse}
                   text={
                     isAnyAudioUploading
                       ? (multiAudioFiles.length > 0
