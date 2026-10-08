@@ -68,7 +68,7 @@ function NotebookCreatorContent() {
       }
     } catch {}
   }, []);
-  const [fullName, setFullName] = useState<string>("طالب متميز");
+  const [fullName, setFullName] = useState<string>("");
 
   // -- FINGERPRINTING LOGIC --
   const getFingerprint = async () => {
@@ -191,8 +191,8 @@ function NotebookCreatorContent() {
             const rawPlan = data.plan_name || "free";
             setPlanName(rawPlan);
             setQuota(data.quota_remaining ?? 0);
-            setFullName(data.full_name || "طالب متميز");
-            setCustomStudentName(data.full_name || "طالب متميز");
+            setFullName(data.full_name || "");
+            setCustomStudentName(data.full_name || "");
 
             const p = rawPlan.toLowerCase();
             const isEligible = Boolean(
@@ -258,7 +258,7 @@ function NotebookCreatorContent() {
               : (data.metadata.has_audio !== undefined ? !data.metadata.has_audio : !data.metadata.transcript?.trim());
 
             setLectureTitle(data.metadata.title || "دفتر دراسي");
-            setCustomStudentName(data.metadata.student_name || "طالب متميز");
+            setCustomStudentName(data.metadata.student_name || "");
             setResult({
               downloadUrl: `/api/v1/notebook/download/${data.metadata.job_id}.pdf`,
               previewUrl: data.metadata.preview_url || "",
@@ -620,67 +620,53 @@ function NotebookCreatorContent() {
       <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-hidden" dir="rtl">
         <AppHeader quota={quota} activePage="notebook" />
 
-        <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
-          <div className="max-w-xl w-full text-center space-y-6 bg-white dark:bg-[#0b0f19] p-7 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-600 dark:text-indigo-400 shadow-xs mb-1">
-              <BookOpen className="w-7 h-7" />
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 relative z-10">
+          <div className="max-w-md w-full text-center space-y-7 bg-white dark:bg-[#0b0f19] p-8 sm:p-11 rounded-3xl border border-slate-200/90 dark:border-white/10 shadow-xl shadow-slate-200/40 dark:shadow-none">
+            
+            <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-white/10 flex items-center justify-center mx-auto text-slate-800 dark:text-slate-200">
+              <BookOpen className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
             </div>
 
-            <div className="space-y-2">
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
-                <span>خاصة بمشتركي باقة النخبة (100 ₪)</span>
+            <div className="space-y-3">
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold">
+                <span>خاص بمشتركي باقة النخبة (100 ₪)</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                توليد الدفاتر الأكاديمية الذكية
+              <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                توليد الدفاتر الأكاديمية
               </h1>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium max-w-md mx-auto leading-relaxed">
-                أهلاً بك يا <span className="font-bold text-slate-900 dark:text-white">{fullName}</span>! إن ميزة إنشاء وتوليد الدفاتر الدراسية ورخصة النشر في المتجر متاحة حصرياً لمشتركي <span className="font-bold text-indigo-600 dark:text-indigo-400">باقة النخبة (100 ₪)</span>.
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-sm mx-auto">
+                إنشاء وتوليد دفاتر المذاكرة A4 القابلة للطباعة ورخصة النشر بالمتجر متاحة حصرياً لمشتركي باقة النخبة.
               </p>
             </div>
 
             {/* Current Plan Pill */}
-            <div className="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400">
-              <span className={`w-2 h-2 rounded-full ${(!planName || planName === 'free' || planName === 'مجاني' || planName.includes('بدون')) ? 'bg-amber-500' : 'bg-indigo-500'}`} />
-              <span>{(!planName || planName === 'free' || planName === 'مجاني' || planName.includes('بدون')) ? "حالة الاشتراك:" : "باقتك الحالية:"}</span>
-              <span className="font-bold text-slate-900 dark:text-white">{getFriendlyPlanName(planName)}</span>
-              {quota !== null && quota > 0 && <span className="text-slate-400">({quota} دقيقة متبقية)</span>}
-            </div>
-
-            {/* Feature Highlights */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-right my-4 max-w-lg mx-auto">
-              <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">دفاتر تلخيص جاهزة</h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">توليد دفاتر A4 منسقة أكاديمياً بجودة عالية للطباعة.</p>
-              </div>
-              <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <ShoppingBag className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">رخصة النشر بالمتجر</h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">طرح وتداول الدفاتر في متجر المنصة للطلاب الآخرين.</p>
-              </div>
-              <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <GraduationCap className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
-                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">تغطية كاملة للفصل</h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">رصيد 2400 دقيقة ذكية يكفي حتى 40 محاضرة كاملة.</p>
+            <div>
+              <div className="inline-flex items-center gap-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 px-4 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400">
+                <span className={`w-2 h-2 rounded-full ${(!planName || planName === 'free' || planName === 'مجاني' || planName.includes('بدون')) ? 'bg-amber-500' : 'bg-indigo-500'}`} />
+                <span>{(!planName || planName === 'free' || planName === 'مجاني' || planName.includes('بدون')) ? "حالة الاشتراك:" : "باقتك الحالية:"}</span>
+                <span className="font-bold text-slate-900 dark:text-white">{getFriendlyPlanName(planName)}</span>
+                {quota !== null && quota > 0 && <span className="text-slate-400">({quota} دقيقة)</span>}
               </div>
             </div>
 
-            <div className="space-y-2.5 max-w-xs sm:max-w-sm mx-auto pt-1">
+            {/* Action Buttons */}
+            <div className="space-y-3 pt-2">
               <button 
-                onClick={() => router.push("/#pricing")}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm py-3 px-6 rounded-xl shadow-md shadow-indigo-600/20 transition hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
+                onClick={() => router.push("/plans")}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm py-3 px-6 rounded-xl shadow-md shadow-indigo-600/20 transition cursor-pointer flex items-center justify-center gap-2"
               >
-                <span>ترقية الاشتراك إلى باقة النخبة (100 ₪)</span>
-                <ArrowLeft className="w-4 h-4 ml-1" />
+                <span>الترقية إلى باقة النخبة (100 ₪)</span>
+                <ArrowLeft className="w-4 h-4" />
               </button>
               
               <button 
-                onClick={() => router.push("/#pricing")}
-                className="w-full bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold py-2.5 px-6 rounded-xl transition border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
+                onClick={() => router.push("/plans")}
+                className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold py-2.5 px-6 rounded-xl transition border border-slate-200/80 dark:border-slate-700 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
               >
                 <span>استعراض الباقات والأسعار</span>
               </button>
             </div>
+
           </div>
         </div>
       </div>
@@ -709,9 +695,11 @@ function NotebookCreatorContent() {
                     <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate">
                       {result.title || "دفترك الملخص جاهز"}
                     </h1>
-                    <span className="text-xs text-slate-500 font-medium block mt-0.5">
-                      إعداد الطالب: {customStudentName || fullName || "طالب متميز"}
-                    </span>
+                    {(customStudentName || fullName) && (
+                      <span className="text-xs text-slate-500 font-medium block mt-0.5">
+                        إعداد: {customStudentName || fullName}
+                      </span>
+                    )}
                   </div>
                 </div>
 

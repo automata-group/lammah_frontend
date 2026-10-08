@@ -43,7 +43,6 @@ export default function Home() {
 
   // FAQ States
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [showAllFaqs, setShowAllFaqs] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -97,7 +96,7 @@ export default function Home() {
     }
   ];
 
-  const displayedFaqs = showAllFaqs ? faqs : faqs.slice(0, 3);
+  const displayedFaqs = faqs.slice(0, 3);
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 selection:bg-indigo-500/30 overflow-x-hidden relative transition-colors duration-300" dir="rtl">
@@ -194,17 +193,8 @@ export default function Home() {
             })}
           </div>
 
-          {/* Action Area: Toggle All FAQs inline OR Visit Dedicated FAQ page */}
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3.5 relative z-20">
-            <button
-              type="button"
-              onClick={() => setShowAllFaqs((prev) => !prev)}
-              className="w-full sm:w-auto px-7 py-3.5 rounded-full font-bold text-sm text-slate-800 dark:text-slate-200 bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 shadow-md hover:border-indigo-400 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span>{showAllFaqs ? "عرض أقل (أهم 3 أسئلة فقط)" : "عرض جميع الأسئلة هنا (10 أسئلة)"}</span>
-              <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showAllFaqs ? "rotate-180" : ""}`} />
-            </button>
-
+          {/* Action Area: Visit Dedicated FAQ page */}
+          <div className="mt-10 flex items-center justify-center relative z-20">
             <Link
               href="/faq"
               className="w-full sm:w-auto px-8 py-3.5 rounded-full font-black text-sm text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 shadow-lg shadow-indigo-600/25 dark:shadow-[0_0_30px_rgba(99,102,241,0.35)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2.5 group cursor-pointer"
