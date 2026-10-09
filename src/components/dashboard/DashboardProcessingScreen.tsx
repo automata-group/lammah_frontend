@@ -114,9 +114,9 @@ export default function DashboardProcessingScreen({
               <span className="text-sm sm:text-base font-black text-indigo-600 dark:text-indigo-300 tabular-nums tracking-wider">
                 {timeLeft === null
                   ? "جاري الحساب..."
-                  : timeLeft > 0
-                  ? `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, "0")}`
-                  : "ثوانٍ معدودة..."}
+                  : timeLeft > 10
+                  ? `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, "0")} د`
+                  : "لحظات قليلة، جاري إنهاء وتدقيق الملف..."}
               </span>
             </div>
           </div>
