@@ -38,7 +38,8 @@ import {
   Copy,
   CheckCircle2,
   Phone,
-  Compass
+  Compass,
+  Store
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -47,6 +48,7 @@ import FinancialAnalytics from "@/components/admin/FinancialAnalytics";
 import AnnouncementsManager from "@/components/admin/AnnouncementsManager";
 import TutoringManager from "@/components/admin/TutoringManager";
 import UserBehaviorAnalytics from "@/components/admin/UserBehaviorAnalytics";
+import AdminKioskTab from "@/components/admin/AdminKioskTab";
 
 // Helper: Arabic relative time
 function getArabicRelativeTime(dateStr: string): { label: string; isOld: boolean } {
@@ -483,6 +485,23 @@ export default function AdminPage() {
             >
               <Megaphone className="w-4 h-4" />
               <span>الإشعارات العامة</span>
+            </button>
+
+            <button 
+              onClick={() => setActiveTab("kiosk")}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer ${
+                activeTab === "kiosk" 
+                  ? "bg-amber-600 text-white shadow-md shadow-amber-600/20" 
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Store className="w-4 h-4 text-amber-500" />
+                <span>كشك المشاريع الطلابية</span>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300">
+                جديد
+              </span>
             </button>
 
           </nav>
@@ -983,6 +1002,7 @@ export default function AdminPage() {
           {activeTab === "analytics" && <UserBehaviorAnalytics sessionToken={session?.access_token} />}
           {activeTab === "tutoring" && <TutoringManager session={session} />}
           {activeTab === "announcements" && <AnnouncementsManager session={session} />}
+          {activeTab === "kiosk" && <AdminKioskTab token={session?.access_token || ""} />}
 
         </div>
 

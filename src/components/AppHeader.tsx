@@ -15,7 +15,7 @@ import StudentProfileModal from "@/components/StudentProfileModal";
 
 interface AppHeaderProps {
   quota?: number | null;
-  activePage?: "dashboard" | "summarize" | "notebook" | "plans" | "ytdl" | "marketplace" | "history" | "profile" | "tutor" | "sessions" | "study";
+  activePage?: "dashboard" | "summarize" | "notebook" | "plans" | "ytdl" | "marketplace" | "history" | "profile" | "tutor" | "sessions" | "study" | "kiosk";
 }
 
 export default function AppHeader({ quota = null, activePage }: AppHeaderProps) {
@@ -121,9 +121,17 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
     {
       id: "marketplace",
       label: "المتجر",
-      icon: Store,
+      icon: Package,
       path: "/marketplace",
       show: true,
+    },
+    {
+      id: "kiosk",
+      label: "كشك المشاريع",
+      icon: Store,
+      path: "/kiosk",
+      show: true,
+      badge: "جديد 🔥",
     },
     {
       id: "sessions",
