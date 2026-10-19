@@ -28,6 +28,7 @@ import {
 import AppHeader from "@/components/AppHeader";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
 import HeroSimulation from "@/components/landing/HeroSimulation";
+import { createClient } from "@/lib/supabase";
 
 function SummarizeContent() {
   const { user, session, loading, signOut } = useAuth();
@@ -87,14 +88,15 @@ function SummarizeContent() {
   const [isAudioUploading, setIsAudioUploading] = useState(false);
   const [isPdfUploading, setIsPdfUploading] = useState(false);
 
-  const hasPaidPlan = Boolean(
-    planName &&
-    planName !== "free" &&
-    planName !== "مجاني" &&
-    !planName.includes("مجاني") &&
-    !planName.toLowerCase().includes("free")
-  );
   const hasQuota = quota !== null ? quota > 0 : false;
+  const hasPaidPlan = Boolean(
+    hasQuota ||
+    (planName &&
+      planName !== "free" &&
+      planName !== "مجاني" &&
+      !planName.includes("مجاني") &&
+      !planName.toLowerCase().includes("free"))
+  );
   const isDemoMode = !hasPaidPlan && !hasQuota && (quota !== null && quota <= 0);
 
   // Multi-Audio Upload Computations
@@ -287,6 +289,9 @@ function SummarizeContent() {
 
   const fetchQuota = React.useCallback(async () => {
     if (!session?.access_token) return;
+    let resolved = false;
+
+    // 1. Try Backend API
     try {
       const fp = (typeof window !== "undefined" && localStorage.getItem("device_id_v3")) || await getFingerprint();
       const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/quota`, {
@@ -301,23 +306,85 @@ function SummarizeContent() {
         router.replace("/login");
         return;
       }
-      const data = await r.json();
       if (r.ok) {
-        setQuota(data.quota_remaining);
-        setPlanName(data.plan_name);
-        setIsQuotaChecking(false);
-        if (typeof window !== "undefined") {
-          try {
-            localStorage.setItem("cached_user_quota", String(data.quota_remaining ?? 0));
-            localStorage.setItem("cached_user_plan", data.plan_name || "");
-          } catch {}
+        const data = await r.json();
+        if (data.quota_remaining !== undefined) {
+          setQuota(data.quota_remaining);
+          setPlanName(data.plan_name || "");
+          setIsQuotaChecking(false);
+          resolved = true;
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem("cached_user_quota", String(data.quota_remaining ?? 0));
+              localStorage.setItem("cached_user_plan", data.plan_name || "");
+            } catch {}
+          }
+          return;
         }
-      } else {
-        setIsQuotaChecking(false);
       }
-    } catch {
-      setIsQuotaChecking(false);
+    } catch (e) {
+      console.warn("Backend quota check failed, checking direct Supabase:", e);
     }
+
+    // 2. Direct Supabase Fallback (Bulletproof)
+    if (!resolved && session?.user?.id) {
+      try {
+        const supabase = createClient();
+        const { data: subData } = await supabase
+          .from("user_subscriptions")
+          .select("*, subscription_plans(*)")
+          .eq("user_id", session.user.id)
+          .eq("status", "active")
+          .gte("expires_at", new Date().toISOString())
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (subData?.subscription_plans) {
+          const spName = subData.subscription_plans.name;
+          const remaining = Math.max(0, (subData.subscription_plans.lecture_quota || 0) - (subData.lectures_used || 0));
+          setQuota(remaining);
+          setPlanName(spName);
+          setIsQuotaChecking(false);
+          resolved = true;
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem("cached_user_quota", String(remaining));
+              localStorage.setItem("cached_user_plan", spName);
+            } catch {}
+          }
+          return;
+        }
+
+        // Check profile quota
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("quota_remaining, current_plan_id")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        if (prof) {
+          const pQuota = prof.quota_remaining ?? 0;
+          setQuota(pQuota);
+          if (pQuota > 0) {
+            setPlanName("باقة إنقاذ الكويزات (Essential)");
+          }
+          setIsQuotaChecking(false);
+          resolved = true;
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem("cached_user_quota", String(pQuota));
+              if (pQuota > 0) localStorage.setItem("cached_user_plan", "باقة إنقاذ الكويزات (Essential)");
+            } catch {}
+          }
+          return;
+        }
+      } catch (sbErr) {
+        console.error("Direct Supabase fallback failed in summarize:", sbErr);
+      }
+    }
+
+    setIsQuotaChecking(false);
   }, [session, router, signOut]);
 
   useEffect(() => {

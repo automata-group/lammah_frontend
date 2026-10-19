@@ -9,9 +9,10 @@ import {
   Package, Store, BookOpen, Download, Crown, 
   History, User, Sun, Moon, LogOut, LayoutDashboard,
   GraduationCap, Video, PenTool, ChevronDown, Menu, X,
-  Sparkles, CheckCircle2, Shield, HelpCircle
+  Sparkles, CheckCircle2, Shield, HelpCircle, Zap
 } from "lucide-react";
 import StudentProfileModal from "@/components/StudentProfileModal";
+import { createClient } from "@/lib/supabase";
 
 interface AppHeaderProps {
   quota?: number | null;
@@ -29,19 +30,115 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const [isMounted, setIsMounted] = useState(false);
+  const [fetchedQuota, setFetchedQuota] = useState<number | null>(() => {
+    if (quota !== null && quota !== undefined) return quota;
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("cached_user_quota");
+      if (cached !== null && !isNaN(Number(cached))) return Number(cached);
+    }
+    return null;
+  });
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Optimistic Instant Quota from localStorage cache (hydrates cleanly on mount)
-  const effectiveQuota = useMemo(() => {
+  useEffect(() => {
     if (quota !== null && quota !== undefined) {
-      if (typeof window !== "undefined") {
-        try { localStorage.setItem("cached_user_quota", String(quota)); } catch {}
-      }
-      return quota;
+      setFetchedQuota(quota);
     }
+  }, [quota]);
+
+  // Robust Quota Synchronization (API + Direct Supabase Fallback)
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    let isSubscribed = true;
+
+    const syncQuota = async () => {
+      // 1. Try Backend API
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/quota`, {
+          headers: { "Authorization": `Bearer ${session.access_token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.quota_remaining !== undefined && isSubscribed) {
+            setFetchedQuota(data.quota_remaining);
+            if (typeof window !== "undefined") {
+              try {
+                localStorage.setItem("cached_user_quota", String(data.quota_remaining));
+                if (data.plan_name) localStorage.setItem("cached_user_plan", data.plan_name);
+              } catch {}
+            }
+            return;
+          }
+        }
+      } catch {}
+
+      // 2. Direct Supabase Fallback (Bulletproof if API returns 502/down)
+      try {
+        const supabase = createClient();
+        const { data: subData } = await supabase
+          .from("user_subscriptions")
+          .select("*, subscription_plans(*)")
+          .eq("user_id", session.user.id)
+          .eq("status", "active")
+          .gte("expires_at", new Date().toISOString())
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (subData?.subscription_plans && isSubscribed) {
+          const remaining = Math.max(0, (subData.subscription_plans.lecture_quota || 0) - (subData.lectures_used || 0));
+          setFetchedQuota(remaining);
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem("cached_user_quota", String(remaining));
+              localStorage.setItem("cached_user_plan", subData.subscription_plans.name);
+            } catch {}
+          }
+          return;
+        }
+
+        // 3. Direct Profiles Fallback
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("quota_remaining")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        if (prof && prof.quota_remaining !== undefined && isSubscribed) {
+          setFetchedQuota(prof.quota_remaining);
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem("cached_user_quota", String(prof.quota_remaining));
+            } catch {}
+          }
+        }
+      } catch (err) {
+        console.warn("Direct Supabase quota sync in AppHeader:", err);
+      }
+    };
+
+    syncQuota();
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "cached_user_quota" && e.newValue !== null) {
+        setFetchedQuota(Number(e.newValue));
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      isSubscribed = false;
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, [session]);
+
+  const effectiveQuota = useMemo(() => {
+    if (quota !== null && quota !== undefined) return quota;
+    if (fetchedQuota !== null) return fetchedQuota;
     if (isMounted && typeof window !== "undefined") {
       const cached = localStorage.getItem("cached_user_quota");
       if (cached !== null && !isNaN(Number(cached))) {
@@ -49,7 +146,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
       }
     }
     return null;
-  }, [quota, isMounted]);
+  }, [quota, fetchedQuota, isMounted]);
 
   useEffect(() => {
     if (session?.access_token) {
@@ -221,18 +318,24 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
           {/* ── ZONE 3: Quota, Quick Tools & User Profile Menu ── */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             
-            {/* Quota Badge */}
-            {effectiveQuota !== null && (
+            {/* Quota Badge (Always Visible for logged-in users on all screen sizes) */}
+            {user && (
               <div 
                 suppressHydrationWarning
-                className="bg-indigo-50/90 dark:bg-indigo-500/10 border border-indigo-200/80 dark:border-indigo-500/20 rounded-full px-3 py-1.5 text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-all"
+                className={`border rounded-full px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-all duration-200 ${
+                  (effectiveQuota ?? 0) > 0
+                    ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-300 hover:border-emerald-400 dark:hover:border-emerald-400 hover:shadow-emerald-500/10"
+                    : "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-300 hover:border-amber-300"
+                }`}
                 onClick={() => router.push("/plans")}
-                title="اضغط لشحن أو ترقية رصيد الدقائق"
+                title="رصيد الدقائق المشحونة - اضغط لعرض الباقات والشحن"
               >
-                <Package className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                <span className="text-slate-500 dark:text-slate-400 hidden xl:inline font-bold">رصيدك:</span>
-                <span className={`font-black ${effectiveQuota > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>{effectiveQuota}</span>
-                <span className="text-slate-500 dark:text-slate-400 font-bold hidden sm:inline">دقيقة</span>
+                <Zap className={`w-3.5 h-3.5 shrink-0 fill-current ${(effectiveQuota ?? 0) > 0 ? "text-amber-500 animate-pulse" : "text-amber-500"}`} />
+                <span className="font-bold text-slate-500 dark:text-slate-400 hidden md:inline">الرصيد:</span>
+                <span className={`font-black ${(effectiveQuota ?? 0) > 0 ? "text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm" : "text-amber-600 dark:text-amber-400 text-xs sm:text-sm"}`}>
+                  {effectiveQuota !== null ? effectiveQuota : "..."}
+                </span>
+                <span className="font-bold text-slate-600 dark:text-slate-300 text-[11px] sm:text-xs">دقيقة</span>
               </div>
             )}
 
@@ -287,6 +390,19 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                             {user?.email || ""}
                           </p>
                         </div>
+                      </div>
+
+                      {/* Explicit Balance in Header Card */}
+                      <div className="mt-2.5 pt-2 border-t border-indigo-100/60 dark:border-indigo-500/20 flex items-center justify-between text-xs">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">الرصيد المشحون:</span>
+                        <span className={`font-black px-2.5 py-0.5 rounded-full border text-[11px] flex items-center gap-1 ${
+                          (effectiveQuota ?? 0) > 0
+                            ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/40"
+                            : "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800/40"
+                        }`}>
+                          <Zap className="w-3 h-3 fill-current text-amber-500" />
+                          <span>{effectiveQuota !== null ? `${effectiveQuota} دقيقة` : "..."}</span>
+                        </span>
                       </div>
                     </div>
 
@@ -472,8 +588,8 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
               {/* Clean Quick Footer Bar inside Mobile Menu */}
               <div className="mt-2 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs px-2 text-slate-500">
                 <div className="flex items-center gap-1.5 font-bold text-[11px] text-slate-600 dark:text-slate-300">
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>رصيد التلخيص: <strong className="text-indigo-600 dark:text-indigo-400">{effectiveQuota ?? 0}</strong></span>
+                  <Zap className="w-3.5 h-3.5 fill-current text-amber-500" />
+                  <span>الرصيد المشحون: <strong className="text-emerald-600 dark:text-emerald-400 font-black">{effectiveQuota ?? 0} دقيقة</strong></span>
                 </div>
                 <button
                   type="button"

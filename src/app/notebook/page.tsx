@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
+import { createClient } from "@/lib/supabase";
 
 function NotebookSkeleton() {
   return (
@@ -211,11 +212,70 @@ function NotebookCreatorContent() {
               } catch {}
             }
           } else {
+            // Direct Supabase Fallback if API returns error
+            if (session?.user?.id) {
+              try {
+                const supabase = createClient();
+                const { data: subData } = await supabase
+                  .from("user_subscriptions")
+                  .select("*, subscription_plans(*)")
+                  .eq("user_id", session.user.id)
+                  .eq("status", "active")
+                  .gte("expires_at", new Date().toISOString())
+                  .order("created_at", { ascending: false })
+                  .limit(1)
+                  .maybeSingle();
+
+                if (subData?.subscription_plans?.name) {
+                  const spName = subData.subscription_plans.name;
+                  const remaining = Math.max(0, (subData.subscription_plans.lecture_quota || 0) - (subData.lectures_used || 0));
+                  setPlanName(spName);
+                  setQuota(remaining);
+                  const p = spName.toLowerCase();
+                  const isEligible = Boolean(
+                    (p.includes("الذهبية") || p.includes("النخبة") || p.includes("elite") || p.includes("100") || p.includes("full term")) &&
+                    !p.includes("الإنقاذ") && !p.includes("الميدتيرم") && !p.includes("التفوق") && !p.includes("الأساسية") && !p.includes("مجاني") && p !== "free"
+                  );
+                  setCanGenerateNotebook(isEligible);
+                }
+              } catch (sbErr) {
+                console.warn("Direct Supabase fallback error:", sbErr);
+              }
+            }
             setQuotaFetched(true);
           }
         })
-        .catch(e => {
-          console.error("Failed to load quota info:", e);
+        .catch(async (e) => {
+          console.error("Failed to load quota info from API, checking Supabase directly:", e);
+          if (session?.user?.id) {
+            try {
+              const supabase = createClient();
+              const { data: subData } = await supabase
+                .from("user_subscriptions")
+                .select("*, subscription_plans(*)")
+                .eq("user_id", session.user.id)
+                .eq("status", "active")
+                .gte("expires_at", new Date().toISOString())
+                .order("created_at", { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+              if (subData?.subscription_plans?.name) {
+                const spName = subData.subscription_plans.name;
+                const remaining = Math.max(0, (subData.subscription_plans.lecture_quota || 0) - (subData.lectures_used || 0));
+                setPlanName(spName);
+                setQuota(remaining);
+                const p = spName.toLowerCase();
+                const isEligible = Boolean(
+                  (p.includes("الذهبية") || p.includes("النخبة") || p.includes("elite") || p.includes("100") || p.includes("full term")) &&
+                  !p.includes("الإنقاذ") && !p.includes("الميدتيرم") && !p.includes("التفوق") && !p.includes("الأساسية") && !p.includes("مجاني") && p !== "free"
+                );
+                setCanGenerateNotebook(isEligible);
+              }
+            } catch (sbErr) {
+              console.warn("Direct Supabase fallback error:", sbErr);
+            }
+          }
           setQuotaFetched(true);
         });
       };

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import AppHeader from "@/components/AppHeader";
+import { createClient } from "@/lib/supabase";
 
 const DEFAULT_PLANS = {
   weekly: [
@@ -44,15 +45,50 @@ export default function PlansPage() {
       .catch(() => setLoadingPlans(false));
       
     if (session) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/quota`, {
-        headers: { "Authorization": `Bearer ${session.access_token}` }
-      })
-      .then(r => r.json())
-      .then(data => {
-        if (data.plan_name) setUserPlanName(data.plan_name);
-        if (data.quota_remaining !== undefined) setUserQuota(data.quota_remaining);
-      })
-      .catch(e => console.error("Failed to fetch user plan:", e));
+      const fetchQuotaAndPlan = async () => {
+        let planResolved = false;
+        try {
+          const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/quota`, {
+            headers: { "Authorization": `Bearer ${session.access_token}` }
+          });
+          if (r.ok) {
+            const data = await r.json();
+            if (data.plan_name && data.plan_name !== "free" && data.plan_name !== "بدون اشتراك") {
+              setUserPlanName(data.plan_name);
+              if (data.quota_remaining !== undefined) setUserQuota(data.quota_remaining);
+              planResolved = true;
+            }
+          }
+        } catch (e) {
+          console.warn("Backend plan fetch failed, falling back to Supabase:", e);
+        }
+
+        // Direct Supabase Fallback if backend API is offline or returns error
+        if (!planResolved && session?.user?.id) {
+          try {
+            const supabase = createClient();
+            const { data: subData } = await supabase
+              .from("user_subscriptions")
+              .select("*, subscription_plans(*)")
+              .eq("user_id", session.user.id)
+              .eq("status", "active")
+              .gte("expires_at", new Date().toISOString())
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (subData?.subscription_plans?.name) {
+              setUserPlanName(subData.subscription_plans.name);
+              const remaining = Math.max(0, (subData.subscription_plans.lecture_quota || 0) - (subData.lectures_used || 0));
+              setUserQuota(remaining);
+            }
+          } catch (sbErr) {
+            console.error("Direct Supabase plan query error:", sbErr);
+          }
+        }
+      };
+
+      fetchQuotaAndPlan();
     }
   }, [session]);
 

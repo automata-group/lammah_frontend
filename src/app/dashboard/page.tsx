@@ -45,6 +45,7 @@ import {
   generatePastExamQuestions,
   parseTranscriptLines,
 } from "@/lib/dashboardUtils";
+import { createClient } from "@/lib/supabase";
 
 function DashboardContent() {
   const { user, session, loading, signOut } = useAuth();
@@ -188,14 +189,15 @@ function DashboardContent() {
 
   // Plan Calculations
   const isDemoLecture = currentHistoryId === "4198557f-5b1b-48ac-91a8-d8129de8ca0b";
+  const hasQuota = quota !== null ? quota > 0 : false;
   const hasPaidPlan = Boolean(
-    planName &&
+    hasQuota ||
+    (planName &&
       planName !== "free" &&
       planName !== "مجاني" &&
       !planName.includes("مجاني") &&
-      !planName.toLowerCase().includes("free")
+      !planName.toLowerCase().includes("free"))
   );
-  const hasQuota = quota !== null ? quota > 0 : false;
   const isBasicPlan = !hasPaidPlan && !isDemoLecture;
   const isDemoMode = !hasPaidPlan && !hasQuota && quota !== null && quota <= 0;
 
@@ -552,8 +554,42 @@ function DashboardContent() {
       }
       const data = await r.json();
       if (!r.ok) {
-        const msg = data.detail?.user_message || data.detail?.technical || JSON.stringify(data);
-        setError(`⚠️ خطأ من الخادم: ${msg}`);
+        // Direct Supabase Fallback when API returns error (e.g. 502 Bad Gateway)
+        let resolved = false;
+        if (session?.user?.id) {
+          try {
+            const supabase = createClient();
+            const { data: subData } = await supabase
+              .from("user_subscriptions")
+              .select("*, subscription_plans(*)")
+              .eq("user_id", session.user.id)
+              .eq("status", "active")
+              .gte("expires_at", new Date().toISOString())
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (subData?.subscription_plans?.name) {
+              const remaining = Math.max(0, (subData.subscription_plans.lecture_quota || 0) - (subData.lectures_used || 0));
+              setQuota(remaining);
+              setPlanName(subData.subscription_plans.name);
+              if (typeof window !== "undefined") {
+                try {
+                  localStorage.setItem("cached_user_quota", String(remaining));
+                  localStorage.setItem("cached_user_plan", subData.subscription_plans.name);
+                } catch {}
+              }
+              setError(null);
+              resolved = true;
+            }
+          } catch (sbErr) {
+            console.warn("Direct Supabase fallback failed in !r.ok:", sbErr);
+          }
+        }
+        if (!resolved) {
+          const msg = data.detail?.user_message || data.detail?.technical || JSON.stringify(data);
+          setError(`⚠️ خطأ من الخادم: ${msg}`);
+        }
       } else {
         setQuota(data.quota_remaining);
         setPlanName(data.plan_name);
@@ -567,8 +603,40 @@ function DashboardContent() {
         setError(null);
       }
     } catch (e: any) {
-      console.warn("Failed to fetch quota:", e);
-      if (typeof window !== "undefined") {
+      console.warn("Failed to fetch quota from API, trying direct Supabase:", e);
+      let resolved = false;
+      if (session?.user?.id) {
+        try {
+          const supabase = createClient();
+          const { data: subData } = await supabase
+            .from("user_subscriptions")
+            .select("*, subscription_plans(*)")
+            .eq("user_id", session.user.id)
+            .eq("status", "active")
+            .gte("expires_at", new Date().toISOString())
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (subData?.subscription_plans?.name) {
+            const remaining = Math.max(0, (subData.subscription_plans.lecture_quota || 0) - (subData.lectures_used || 0));
+            setQuota(remaining);
+            setPlanName(subData.subscription_plans.name);
+            if (typeof window !== "undefined") {
+              try {
+                localStorage.setItem("cached_user_quota", String(remaining));
+                localStorage.setItem("cached_user_plan", subData.subscription_plans.name);
+              } catch {}
+            }
+            setError(null);
+            resolved = true;
+          }
+        } catch (sbErr) {
+          console.warn("Direct Supabase fallback error:", sbErr);
+        }
+      }
+
+      if (!resolved && typeof window !== "undefined") {
         try {
           const cached = localStorage.getItem("cached_user_quota");
           if (cached !== null) setQuota(Number(cached));
