@@ -71,10 +71,23 @@ function getArabicRelativeTime(dateStr: string): { label: string; isOld: boolean
   return { label, isOld };
 }
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+function getApiBase() {
+  if (typeof window !== "undefined") {
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+      const envUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (envUrl && (envUrl.includes("localhost") || envUrl.includes("127.0.0.1"))) {
+        return envUrl;
+      }
+      return "http://localhost:8003";
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+}
+
+const API = getApiBase();
 
 export default function AdminPage() {
-  const { user, session, loading } = useAuth();
+  const { user, session, loading, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   
@@ -111,19 +124,34 @@ export default function AdminPage() {
   
   const fetchOverview = async () => {
     try {
+      setFetching(true);
+      setError("");
       const res = await fetch(`${API}/api/v1/transactions/admin/pending`, {
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
+      if (!res.ok) {
+        if (res.status === 403) {
+          throw new Error("🚫 هذا الحساب لا يملك صلاحيات الأدمن.");
+        }
+        if (res.status === 401) {
+          throw new Error("🔒 انتهت صلاحية الجلسة، يرجى إعادة تسجيل الدخول.");
+        }
+        let errMsg = `خطأ من الخادم (${res.status})`;
+        try {
+          const errData = await res.json();
+          errMsg = errData.detail?.user_message || (typeof errData.detail === "string" ? errData.detail : errMsg);
+        } catch (_) {}
+        throw new Error(errMsg);
+      }
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail?.user_message || "فشل الجلب - ربما لست أدمن");
-      setTransactions(data);
+      setTransactions(Array.isArray(data) ? data : []);
 
       try {
         const usageRes = await fetch(`${API}/api/v1/admin/stats`, {
            headers: { "Authorization": `Bearer ${session?.access_token}` }
         });
-        const usageData = await usageRes.json();
         if (usageRes.ok) {
+          const usageData = await usageRes.json();
           setUsageStats(usageData);
           setStats({ system_health: usageData.system_health, errors: usageData.errors });
         }
@@ -145,7 +173,10 @@ export default function AdminPage() {
         console.error("Failed to fetch tutor applications count:", err);
       }
     } catch (e: any) {
-      setError(e.message);
+      const msg = e.message?.includes("Failed to fetch")
+        ? `تعذر الاتصال بخادم المنظومة (${API}). يرجى التأكد من تشغيل الباك إند على المنفذ 8003.`
+        : e.message;
+      setError(msg);
     } finally {
       setFetching(false);
     }
@@ -319,20 +350,46 @@ export default function AdminPage() {
   };
 
 
-  if (error) {
+  const isAdminEmail = user?.email?.toLowerCase().trim() === "lamaszero@gmail.com";
+
+  if (error && !isAdminEmail) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-[#030712] p-8 flex flex-col items-center justify-center text-center font-sans" dir="rtl">
         <div className="w-16 h-16 rounded-3xl bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-4 border border-rose-200 dark:border-rose-500/20">
           <AlertCircle className="w-8 h-8" />
         </div>
         <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-2">تسجيل دخول غير مصرح</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-xs max-w-sm">{error}</p>
-        <button 
-          onClick={() => router.push("/")} 
-          className="mt-6 px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow-md shadow-indigo-600/20 cursor-pointer"
-        >
-          العودة للرئيسية
-        </button>
+        
+        <div className="my-4 p-4 rounded-2xl bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 max-w-sm w-full text-right text-xs space-y-2.5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400">الحساب الحالي:</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200 font-mono text-[11px] dir-ltr">{user?.email || "غير مسجل"}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400">حساب الأدمن المعتمد:</span>
+            <span className="font-bold text-indigo-600 dark:text-indigo-400 font-mono text-[11px] dir-ltr">lamaszero@gmail.com</span>
+          </div>
+        </div>
+
+        <p className="text-slate-500 dark:text-slate-400 text-xs max-w-sm mb-6 leading-relaxed">{error}</p>
+        
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button 
+            onClick={async () => {
+              if (signOut) await signOut();
+              router.push("/login?redirect=/admin");
+            }} 
+            className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20 cursor-pointer transition-colors"
+          >
+            تسجيل الدخول بحساب الأدمن
+          </button>
+          <button 
+            onClick={() => router.push("/")} 
+            className="px-6 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs cursor-pointer transition-colors"
+          >
+            العودة للرئيسية
+          </button>
+        </div>
       </div>
     );
   }
@@ -365,6 +422,13 @@ export default function AdminPage() {
               </span>
             </div>
           </Link>
+
+          {/* Admin Email Badge */}
+          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="font-mono text-[11px] dir-ltr">{user?.email || "Admin"}</span>
+            <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-[10px]">أدمن</span>
+          </div>
         </div>
 
         {/* Status, Theme Switcher & Actions */}
@@ -392,7 +456,29 @@ export default function AdminPage() {
       </header>
 
       {/* Main Layout */}
-      <div className="max-w-7xl mx-auto p-4 sm:p-8 flex flex-col md:flex-row gap-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-8 flex flex-col gap-6">
+        
+        {/* Backend Warning Banner if Error but Admin is logged in */}
+        {error && (
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 text-amber-700 dark:text-amber-400">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+              <div>
+                <p className="font-bold text-sm">تنبيه اتصال بالخادم (Backend API Alert)</p>
+                <p className="text-xs opacity-90">{error}</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => { setError(""); setFetching(true); fetchOverview(); }}
+              className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              إعادة المحاولة
+            </button>
+          </div>
+        )}
+
+        <div className="flex flex-col md:flex-row gap-6">
         
         {/* Sidebar Navigation */}
         <aside className="w-full md:w-64 shrink-0 flex flex-col gap-2">
@@ -1005,6 +1091,8 @@ export default function AdminPage() {
           {activeTab === "kiosk" && <AdminKioskTab token={session?.access_token || ""} />}
 
         </div>
+
+      </div>
 
       </div>
 
