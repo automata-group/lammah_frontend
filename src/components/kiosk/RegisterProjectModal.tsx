@@ -109,6 +109,41 @@ export default function RegisterProjectModal({
 
   if (!isOpen) return null;
 
+  if (!token) {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn"
+        dir="rtl"
+      >
+        <div className="relative w-full max-w-md bg-white dark:bg-[#0f172a] rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-2xl text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto border border-indigo-200/60 dark:border-indigo-500/20">
+            <Store className="w-7 h-7" />
+          </div>
+          <h3 className="text-lg font-black text-slate-900 dark:text-white">
+            تسجيل الدخول مطلوب
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            يمكنك تصفح جميع المشاريع والطلب مباشرة عبر واتساب بدون تسجيل. لتسجيل مشروعك الخاص وعرضه لزملائك، يرجى تسجيل الدخول أولاً.
+          </p>
+          <div className="flex items-center gap-2 pt-2">
+            <a
+              href="/login?redirect=/kiosk"
+              className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm text-center shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
+            >
+              تسجيل الدخول
+            </a>
+            <button
+              onClick={onClose}
+              className="px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-all cursor-pointer"
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const toggleLocation = (loc: string) => {
     if (selectedLocations.includes(loc)) {
       setSelectedLocations(selectedLocations.filter((l) => l !== loc));
@@ -244,7 +279,7 @@ export default function RegisterProjectModal({
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                تسجيل مشروع طلابي في الكشك 🚀
+                تسجيل مشروع في الكشك
               </h2>
               <span className="text-[11px] text-slate-700 dark:text-slate-300 font-medium">
                 اعرض منتجاتك لآلاف الطلاب داخل الحرم الجامعي مجاناً
@@ -269,7 +304,7 @@ export default function RegisterProjectModal({
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-black text-slate-900 dark:text-white">
-                تم استلام طلب تسجيل مشروعك بنجاح! 🎉
+                تم استلام طلب تسجيل مشروعك بنجاح
               </h3>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
                 سيقوم فريق الإشراف بمراجعة بيانات المشروع والصور واعتماده خلال ساعات ليظهر مباشرة لجميع طلاب الجامعة في الكشك. بالتوفيق!

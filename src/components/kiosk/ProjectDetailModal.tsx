@@ -127,7 +127,7 @@ export default function ProjectDetailModal({
   // Like Toggle
   const handleLike = async () => {
     if (!token) {
-      alert("يرجى تسجيل الدخول أولاً للإعجاب بالمشاريع الطلابية 💛");
+      alert("يرجى تسجيل الدخول أولاً للإعجاب بالمشروع");
       return;
     }
 
@@ -160,7 +160,7 @@ export default function ProjectDetailModal({
     });
 
     const prefilledMessage = 
-      `مرحباً ${project.owner_name}، شفت مشروعك "${project.title}" في كشك المشاريع بلمّاح 🎓\n` +
+      `مرحباً ${project.owner_name}، شفت مشروعك "${project.title}" في كشك المشاريع بلمّاح\n` +
       `وحابب أطلب منك للتوصيل داخل الجامعة:\n\n` +
       `• اسم المنتج / الخدمة: \n` +
       `• الكمية: \n` +
@@ -255,7 +255,7 @@ export default function ProjectDetailModal({
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-indigo-500 p-6 text-center">
                   <Sparkles className="w-12 h-12 mb-2 opacity-80" />
-                  <span className="text-sm font-bold">مشروع طلابي معتمد</span>
+                  <span className="text-sm font-bold">مشروع طلابي</span>
                 </div>
               )}
 
@@ -407,7 +407,7 @@ export default function ProjectDetailModal({
 
                 <div className="pt-2 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>طالب جامعي معتمد في منصة لمّاح</span>
+                  <span>طالب جامعي</span>
                 </div>
               </div>
 
@@ -426,7 +426,7 @@ export default function ProjectDetailModal({
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-sm shadow-md shadow-emerald-700/20 active:scale-95 transition-all cursor-pointer"
                 >
                   <Phone className="w-4 h-4 fill-white/20" />
-                  <span>طلب الآن عبر واتساب 💬</span>
+                  <span>طلب عبر واتساب</span>
                 </button>
               </div>
             </div>
@@ -562,7 +562,7 @@ export default function ProjectDetailModal({
               </div>
             ) : (
               <div className="text-center py-8 text-slate-400 dark:text-slate-500 text-xs">
-                كن أول من يقيّم هذا المشروع ويكتب تجربته لزملائه! 🌟
+                كن أول من يقيّم هذا المشروع ويكتب تجربته لزملائه
               </div>
             )}
           </div>

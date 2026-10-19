@@ -43,8 +43,8 @@ export default function TrendingSection({
             <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
               الأكثر رواجاً في الجامعة
             </h2>
-            <span className="px-2 py-0.5 rounded-full bg-rose-500 text-white text-[11px] font-extrabold shadow-sm">
-              Trending 🔥
+            <span className="px-2.5 py-0.5 rounded-full bg-rose-500 text-white text-[11px] font-extrabold shadow-sm">
+              الأكثر تفاعلاً
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-300 font-medium">

@@ -170,7 +170,7 @@ export default function KioskPage() {
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800"
               }`}
             >
-              استكشف جميع المشاريع 🛍️
+              جميع المشاريع
             </button>
 
             {user && (
@@ -182,7 +182,7 @@ export default function KioskPage() {
                     : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800"
                 }`}
               >
-                <span>مشاريعي الخاصة 💼</span>
+                <span>مشاريعي الخاصة</span>
                 {myProjects.length > 0 && (
                   <span className="mr-1.5 px-1.5 py-0.5 rounded-full text-[10px] bg-white/20 text-white font-extrabold">
                     {myProjects.length}
@@ -249,10 +249,10 @@ export default function KioskPage() {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 cursor-pointer"
                 >
-                  <option value="trending">الأكثر رواجاً وتفاعلاً 🔥</option>
-                  <option value="top_rated">الأعلى تقييماً بالنجوم ⭐</option>
-                  <option value="most_liked">الأكثر إعجاباً 💛</option>
-                  <option value="newest">الأحدث وصولاً 🚀</option>
+                  <option value="trending">الأكثر تفاعلاً</option>
+                  <option value="top_rated">الأعلى تقييماً</option>
+                  <option value="most_liked">الأكثر إعجاباً</option>
+                  <option value="newest">الأحدث وصولاً</option>
                 </select>
               </div>
             </div>
@@ -296,7 +296,7 @@ export default function KioskPage() {
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20 active:scale-95 transition-all cursor-pointer"
                 >
                   <PlusCircle className="w-4 h-4" />
-                  <span>سجّل مشروعك مجاناً 🚀</span>
+                  <span>سجّل مشروعك مجاناً</span>
                 </button>
               </div>
             )}
@@ -339,10 +339,10 @@ export default function KioskPage() {
                     archived: "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700",
                   };
                   const statusLabels = {
-                    approved: "معتمد ونشط في الكشك ✅",
-                    pending: "قيد المراجعة والتدقيق ⏳",
-                    rejected: "مرفوض ❌",
-                    archived: "مؤرشف 📦",
+                    approved: "معتمد ونشط",
+                    pending: "قيد المراجعة والتدقيق",
+                    rejected: "مرفوض",
+                    archived: "مؤرشف",
                   };
 
                   return (
@@ -365,7 +365,7 @@ export default function KioskPage() {
                         </div>
 
                         <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded-xl">
-                          👁️ {p.clicks_count} زيارة للمتجر
+                          {p.clicks_count} زيارة للمتجر
                         </div>
                       </div>
 
@@ -382,9 +382,9 @@ export default function KioskPage() {
                       )}
 
                       <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
-                        <span>⭐ تقييم: {p.rating_avg.toFixed(1)} ({p.rating_count})</span>
-                        <span>❤️ إعجابات: {p.likes_count}</span>
-                        <span>💬 تعليقات: {p.comments_count}</span>
+                        <span>تقييم: {p.rating_avg.toFixed(1)} ({p.rating_count})</span>
+                        <span>إعجابات: {p.likes_count}</span>
+                        <span>تعليقات: {p.comments_count}</span>
                       </div>
                     </div>
                   );
@@ -403,7 +403,7 @@ export default function KioskPage() {
                   onClick={() => setIsRegisterModalOpen(true)}
                   className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20 active:scale-95 transition-all"
                 >
-                  سجّل مشروعك الآن 🚀
+                  سجّل مشروعك الآن
                 </button>
               </div>
             )}

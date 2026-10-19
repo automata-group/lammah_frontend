@@ -66,8 +66,8 @@ export default function Footer() {
                 الباقات والأسعار
               </Link>
               <Link href="/kiosk" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-1.5">
-                <span>كشك مشاريع الجامعة</span>
-                <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold px-1.5 py-0.5 rounded-full">جديد 🔥</span>
+                <span>كشك المشاريع</span>
+                <span className="text-[10px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold px-1.5 py-0.5 rounded-full">جديد</span>
               </Link>
               <Link href="/marketplace" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                 متجر الدفاتر الجامعية

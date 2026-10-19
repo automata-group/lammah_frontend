@@ -88,7 +88,7 @@ export default function ProjectCard({
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!token) {
-      alert("يرجى تسجيل الدخول أولاً للإعجاب بالمشاريع الطلابية 💛");
+      alert("يرجى تسجيل الدخول أولاً للإعجاب بالمشروع");
       return;
     }
     if (isLiking) return;
@@ -130,7 +130,7 @@ export default function ProjectCard({
     });
 
     const prefilledMessage = 
-      `مرحباً ${project.owner_name}، شفت مشروعك "${project.title}" في كشك المشاريع بلمّاح 🎓\n` +
+      `مرحباً ${project.owner_name}، شفت مشروعك "${project.title}" في كشك المشاريع بلمّاح\n` +
       `وحابب أستفسر / أطلب منك:\n\n` +
       `• المنتج / الطلب: \n` +
       `• الكمية: \n` +
@@ -160,7 +160,7 @@ export default function ProjectCard({
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500/10 to-violet-500/10 text-indigo-600 dark:text-indigo-400 p-6 text-center">
             <Sparkles className="w-10 h-10 mb-2 opacity-80" />
-            <span className="text-xs font-bold">مشروع طلابي معتمد</span>
+            <span className="text-xs font-bold">مشروع طلابي</span>
             <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
               جاهز للتوصيل بالجامعة
             </span>
@@ -190,9 +190,9 @@ export default function ProjectCard({
         {/* Trending Ribbon if Applicable */}
         {isTrending && (
           <div className="absolute top-11 right-3 z-10">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-rose-500 text-white text-[10px] font-black shadow-md shadow-rose-500/30 animate-pulse">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-rose-500 text-white text-[10px] font-black shadow-md shadow-rose-500/30">
               <Sparkles className="w-3 h-3" />
-              <span>الأكثر رواجاً 🔥</span>
+              <span>الأكثر رواجاً</span>
             </span>
           </div>
         )}
@@ -323,7 +323,7 @@ export default function ProjectCard({
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold shadow-sm hover:shadow-md hover:shadow-emerald-700/20 active:scale-95 transition-all shrink-0 cursor-pointer"
           >
             <Phone className="w-3.5 h-3.5 fill-white/20" />
-            <span>طلب واتساب 💬</span>
+            <span>طلب عبر واتساب</span>
           </button>
         </div>
       </div>

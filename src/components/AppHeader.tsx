@@ -131,7 +131,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
       icon: Store,
       path: "/kiosk",
       show: true,
-      badge: "جديد 🔥",
+      badge: "جديد",
     },
     {
       id: "sessions",
@@ -246,151 +246,161 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
               {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
             </button>
 
-            {/* User Profile Dropdown Menu */}
-            <div className="relative" ref={userMenuRef}>
-              <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className={`flex items-center gap-2 p-1.5 pr-2 pl-2.5 rounded-full border transition-all duration-200 cursor-pointer ${
-                  userMenuOpen || activePage === "profile"
-                    ? "bg-indigo-50 dark:bg-indigo-500/20 border-indigo-300 dark:border-indigo-500/50 shadow-xs ring-2 ring-indigo-500/20"
-                    : "border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white/80 dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10"
-                }`}
-                title="قائمة الحساب"
-              >
-                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center text-xs font-black shadow-xs ring-1 ring-white/20 shrink-0">
-                  {user?.email ? user.email.charAt(0).toUpperCase() : <User className="w-3.5 h-3.5" />}
-                </div>
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${userMenuOpen ? "rotate-180 text-indigo-600 dark:text-indigo-400" : ""}`} />
-              </button>
+            {/* User Profile Dropdown Menu or Sign In */}
+            {user ? (
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className={`flex items-center gap-2 p-1.5 pr-2 pl-2.5 rounded-full border transition-all duration-200 cursor-pointer ${
+                    userMenuOpen || activePage === "profile"
+                      ? "bg-indigo-50 dark:bg-indigo-500/20 border-indigo-300 dark:border-indigo-500/50 shadow-xs ring-2 ring-indigo-500/20"
+                      : "border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white/80 dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10"
+                  }`}
+                  title="قائمة الحساب"
+                >
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center text-xs font-black shadow-xs ring-1 ring-white/20 shrink-0">
+                    {user?.email ? user.email.charAt(0).toUpperCase() : <User className="w-3.5 h-3.5" />}
+                  </div>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${userMenuOpen ? "rotate-180 text-indigo-600 dark:text-indigo-400" : ""}`} />
+                </button>
 
-              {/* Floating Dropdown Card */}
-              {userMenuOpen && (
-                <div className="absolute left-0 mt-2.5 w-72 sm:w-80 bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-indigo-950/15 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 p-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                  
-                  {/* User Profile Header Card */}
-                  <div className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent dark:from-indigo-500/15 dark:via-purple-500/10 dark:to-transparent border border-indigo-100/80 dark:border-indigo-500/20 mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center text-base font-black shadow-md shadow-indigo-500/25 ring-2 ring-white dark:ring-slate-800 shrink-0">
-                        {user?.email ? user.email.charAt(0).toUpperCase() : <User className="w-5 h-5" />}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-1.5">
-                          <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
-                            {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "حسابي"}
-                          </h4>
-                          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 shrink-0">
-                            {isTutor ? "معلم" : "طالب"}
-                          </span>
+                {/* Floating Dropdown Card */}
+                {userMenuOpen && (
+                  <div className="absolute left-0 mt-2.5 w-72 sm:w-80 bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-xl rounded-3xl shadow-2xl shadow-indigo-950/15 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 p-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                    
+                    {/* User Profile Header Card */}
+                    <div className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent dark:from-indigo-500/15 dark:via-purple-500/10 dark:to-transparent border border-indigo-100/80 dark:border-indigo-500/20 mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center text-base font-black shadow-md shadow-indigo-500/25 ring-2 ring-white dark:ring-slate-800 shrink-0">
+                          {user?.email ? user.email.charAt(0).toUpperCase() : <User className="w-5 h-5" />}
                         </div>
-                        <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5 text-right" dir="ltr">
-                          {user?.email || ""}
-                        </p>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-1.5">
+                            <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
+                              {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "حسابي"}
+                            </h4>
+                            <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 shrink-0">
+                              {isTutor ? "معلم" : "طالب"}
+                            </span>
+                          </div>
+                          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5 text-right" dir="ltr">
+                            {user?.email || ""}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Menu Items List */}
-                  <div className="space-y-1">
-                    <button
-                      onClick={() => { setUserMenuOpen(false); router.push("/profile"); }}
-                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs font-bold transition-all duration-150 cursor-pointer ${
-                        activePage === "profile" 
-                          ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-2xs" 
-                          : "text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-white/5"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 shadow-2xs">
-                          <User className="w-4 h-4" />
-                        </div>
-                        <span className="whitespace-nowrap">الملف الشخصي والإعدادات</span>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => { setUserMenuOpen(false); router.push("/plans"); }}
-                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs font-bold transition-all duration-150 cursor-pointer ${
-                        activePage === "plans" 
-                          ? "bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 shadow-2xs" 
-                          : "text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-white/5"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-2xs">
-                          <Crown className="w-4 h-4" />
-                        </div>
-                        <span className="whitespace-nowrap">باقات الاشتراك والرصيد</span>
-                      </div>
-                      <span className="text-[10px] font-black px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full shadow-2xs shrink-0">ترقية</span>
-                    </button>
-
-                    <button
-                      onClick={() => { setUserMenuOpen(false); router.push("/history"); }}
-                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs font-bold transition-all duration-150 cursor-pointer ${
-                        activePage === "history" 
-                          ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-2xs" 
-                          : "text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-white/5"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-2xs">
-                          <History className="w-4 h-4" />
-                        </div>
-                        <span className="whitespace-nowrap">سجل العمليات والمحاضرات</span>
-                      </div>
-                    </button>
-
-                    {isTutor && (
+                    {/* Menu Items List */}
+                    <div className="space-y-1">
                       <button
-                        onClick={() => { setUserMenuOpen(false); router.push("/tutor/dashboard"); }}
+                        onClick={() => { setUserMenuOpen(false); router.push("/profile"); }}
                         className={`w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs font-bold transition-all duration-150 cursor-pointer ${
-                          activePage === "tutor" 
-                            ? "bg-purple-50 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400 shadow-2xs" 
+                          activePage === "profile" 
+                            ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-2xs" 
                             : "text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-white/5"
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-2xs">
-                            <GraduationCap className="w-4 h-4" />
+                          <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 shadow-2xs">
+                            <User className="w-4 h-4" />
                           </div>
-                          <span className="whitespace-nowrap">لوحة تحكم المعلم</span>
+                          <span className="whitespace-nowrap">الملف الشخصي والإعدادات</span>
                         </div>
                       </button>
-                    )}
 
-                    <button
-                      onClick={() => { setUserMenuOpen(false); router.push("/faq"); }}
-                      className="w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-white/5 transition-all duration-150 cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 shadow-2xs">
-                          <HelpCircle className="w-4 h-4" />
+                      <button
+                        onClick={() => { setUserMenuOpen(false); router.push("/plans"); }}
+                        className={`w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs font-bold transition-all duration-150 cursor-pointer ${
+                          activePage === "plans" 
+                            ? "bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 shadow-2xs" 
+                            : "text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-white/5"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-2xs">
+                            <Crown className="w-4 h-4" />
+                          </div>
+                          <span className="whitespace-nowrap">باقات الاشتراك والرصيد</span>
                         </div>
-                        <span className="whitespace-nowrap">الأسئلة الشائعة والمساعدة</span>
-                      </div>
-                    </button>
-                  </div>
+                        <span className="text-[10px] font-black px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full shadow-2xs shrink-0">ترقية</span>
+                      </button>
 
-                  <div className="border-t border-slate-100 dark:border-slate-800/80 my-2 mx-1"></div>
+                      <button
+                        onClick={() => { setUserMenuOpen(false); router.push("/history"); }}
+                        className={`w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs font-bold transition-all duration-150 cursor-pointer ${
+                          activePage === "history" 
+                            ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-2xs" 
+                            : "text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-white/5"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-2xs">
+                            <History className="w-4 h-4" />
+                          </div>
+                          <span className="whitespace-nowrap">سجل العمليات والمحاضرات</span>
+                        </div>
+                      </button>
 
-                  {/* Sign Out Button */}
-                  <button
-                    onClick={async () => {
-                      setUserMenuOpen(false);
-                      await signOut();
-                      router.replace("/login");
-                    }}
-                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-2xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all duration-150 cursor-pointer"
-                  >
-                    <div className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 shadow-2xs">
-                      <LogOut className="w-4 h-4" />
+                      {isTutor && (
+                        <button
+                          onClick={() => { setUserMenuOpen(false); router.push("/tutor/dashboard"); }}
+                          className={`w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs font-bold transition-all duration-150 cursor-pointer ${
+                            activePage === "tutor" 
+                              ? "bg-purple-50 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400 shadow-2xs" 
+                              : "text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-white/5"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 shadow-2xs">
+                              <GraduationCap className="w-4 h-4" />
+                            </div>
+                            <span className="whitespace-nowrap">لوحة تحكم المعلم</span>
+                          </div>
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => { setUserMenuOpen(false); router.push("/faq"); }}
+                        className="w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-white/5 transition-all duration-150 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 shadow-2xs">
+                            <HelpCircle className="w-4 h-4" />
+                          </div>
+                          <span className="whitespace-nowrap">الأسئلة الشائعة والمساعدة</span>
+                        </div>
+                      </button>
                     </div>
-                    <span>تسجيل الخروج</span>
-                  </button>
 
-                </div>
-              )}
-            </div>
+                    <div className="border-t border-slate-100 dark:border-slate-800/80 my-2 mx-1"></div>
+
+                    {/* Sign Out Button */}
+                    <button
+                      onClick={async () => {
+                        setUserMenuOpen(false);
+                        await signOut();
+                        router.replace("/login");
+                      }}
+                      className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-2xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all duration-150 cursor-pointer"
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 shadow-2xs">
+                        <LogOut className="w-4 h-4" />
+                      </div>
+                      <span>تسجيل الخروج</span>
+                    </button>
+
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => router.push("/login")}
+                className="px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer whitespace-nowrap"
+              >
+                تسجيل الدخول
+              </button>
+            )}
+
 
             {/* Mobile Menu Toggle Button (Visible on screens < lg) */}
             <button

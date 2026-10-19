@@ -23,38 +23,32 @@ export default function KioskHero({
       <div className="absolute -bottom-10 -left-10 w-72 h-72 bg-violet-500/10 dark:bg-violet-600/15 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10 flex flex-col gap-6">
-        {/* Top Meta Row: Badge & Stats */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 text-xs sm:text-sm font-bold shadow-xs">
-            <Store className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            <span>كشك المشاريع الطلابية الجامعية</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+        {/* Top Meta Row */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
+            <Store className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <span>كشك المشاريع</span>
           </div>
 
-          <div className="flex items-center gap-3 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300">
-            <div className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-500/20 font-bold">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>{totalProjects > 0 ? `${totalProjects} مشروع معتمد نشط` : "مشاريع معتمدة"}</span>
-            </div>
-            <div className="hidden sm:flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-              <MapPin className="w-3.5 h-3.5 text-indigo-500" />
-              <span>تسليم يدوي بالحرم الجامعي</span>
-            </div>
-          </div>
+          {totalProjects > 0 && (
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+              {totalProjects} مشروع متاح
+            </span>
+          )}
         </div>
 
         {/* Hero Title & Description with balanced CTA */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="max-w-2xl space-y-2.5">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
-              ادعم مشاريع وإبداعات زملائك بالجامعة..
+              مشاريع وإبداعات الطلبة
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 dark:from-indigo-400 dark:via-indigo-300 dark:to-violet-400 mt-1">
-                واطلب واستلم وين ما كنت بالحرم الجامعي 🎓
+                تصفح واطلب مباشرة من زملائك بالجامعة
               </span>
             </h1>
 
             <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
-              منصة طلابية متكاملة تفتح آفاق التسويق لمشاريع الطلبة (مأكولات وحلويات، أشغال يدوية وهدايا، خدمات طلابية، وطباعة وتصوير). تواصل مع صاحب المشروع واطلب مباشرة عبر واتساب بكل سهولة ودون أي عمولات.
+              منصة طلابية تفتح آفاق التسويق لمشاريع الطلبة (مأكولات، حلويات، أشغال يدوية، خدمات طلابية، وطباعة وتصوير). تواصل مع صاحب المشروع واطلب مباشرة عبر واتساب بكل سهولة ودون أي عمولات.
             </p>
           </div>
 
@@ -62,10 +56,10 @@ export default function KioskHero({
           <div className="shrink-0 flex sm:self-start lg:self-center">
             <button
               onClick={onOpenRegister}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm sm:text-base shadow-md shadow-indigo-600/20 hover:shadow-lg hover:shadow-indigo-600/30 hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm sm:text-base shadow-md shadow-indigo-600/20 hover:shadow-lg hover:shadow-indigo-600/30 active:scale-95 transition-all duration-200 cursor-pointer"
             >
               <PlusCircle className="w-5 h-5" />
-              <span>سجّل مشروعك مجاناً 🚀</span>
+              <span>سجّل مشروعك</span>
             </button>
           </div>
         </div>
