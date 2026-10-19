@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import AppHeader from "@/components/AppHeader";
-import Footer from "@/components/Footer";
 import KioskHero from "@/components/kiosk/KioskHero";
 import TrendingSection from "@/components/kiosk/TrendingSection";
 import KioskCategoryFilter from "@/components/kiosk/KioskCategoryFilter";
@@ -432,8 +431,6 @@ export default function KioskPage() {
         }}
       />
 
-      {/* Platform Footer */}
-      <Footer />
     </div>
   );
 }

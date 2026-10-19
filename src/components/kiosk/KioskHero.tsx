@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Store, PlusCircle, Sparkles, MapPin, Search } from "lucide-react";
+import { PlusCircle, Search } from "lucide-react";
 
 interface KioskHeroProps {
   onOpenRegister: () => void;
@@ -23,19 +23,6 @@ export default function KioskHero({
       <div className="absolute -bottom-10 -left-10 w-72 h-72 bg-violet-500/10 dark:bg-violet-600/15 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10 flex flex-col gap-6">
-        {/* Top Meta Row */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
-            <Store className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-            <span>كشك المشاريع</span>
-          </div>
-
-          {totalProjects > 0 && (
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
-              {totalProjects} مشروع متاح
-            </span>
-          )}
-        </div>
 
         {/* Hero Title & Description with balanced CTA */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
