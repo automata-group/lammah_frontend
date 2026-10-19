@@ -18,7 +18,9 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
-  Maximize2
+  Maximize2,
+  Share2,
+  Check
 } from "lucide-react";
 import { KioskProject, KioskReview } from "@/types/kiosk";
 import { 
@@ -108,6 +110,45 @@ export default function ProjectDetailModal({
       });
     }
   }, [initialProject, isOpen, token]);
+
+  // Body Scroll Lock to prevent background page scroll while modal is active
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
+  const [copiedShare, setCopiedShare] = useState(false);
+
+  const handleShare = async () => {
+    if (!project) return;
+    const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/kiosk?p=${project.id}` : "";
+    const shareTitle = `مشروع ${project.title} | كشك المشاريع بلمّاح`;
+    const shareText = `تصفح واطلب من مشروع "${project.title}" لزملائنا بالجامعة في كشك مشاريع منصة لمّاح!`;
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        // Fallback to clipboard
+      }
+    }
+
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedShare(true);
+      setTimeout(() => setCopiedShare(false), 2500);
+    }
+  };
 
   if (!isOpen || !project) return null;
 
@@ -211,10 +252,10 @@ export default function ProjectDetailModal({
   const categoryLabel = CATEGORY_NAMES_AR[project.category] || project.category;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/70 backdrop-blur-sm animate-fadeIn" dir="rtl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-sm animate-fadeIn overscroll-contain" dir="rtl">
       
       {/* Modal Container */}
-      <div className="relative w-full max-w-4xl bg-white dark:bg-[#0f172a] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col">
+      <div className="relative w-full max-w-4xl bg-white dark:bg-[#0f172a] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col overscroll-contain">
         
         {/* Top Header Bar */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200/90 dark:border-slate-800 shrink-0 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md">
@@ -229,19 +270,34 @@ export default function ProjectDetailModal({
               <Eye className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               <span>{clicksCount} زيارة للمتجر</span>
             </div>
+
+            {/* Share Button */}
+            <button
+              type="button"
+              onClick={handleShare}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                copiedShare
+                  ? "bg-emerald-600 text-white shadow-xs"
+                  : "bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-500/30"
+              }`}
+              title="مشاركة رابط المشروع المباشر"
+            >
+              {copiedShare ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+              <span>{copiedShare ? "تم نسخ الرابط!" : "مشاركة"}</span>
+            </button>
           </div>
 
           <button
             onClick={onClose}
             aria-label="إغلاق"
-            className="p-2 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors"
+            className="p-2 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Scrollable Modal Content */}
-        <div className="overflow-y-auto p-4 sm:p-6 space-y-6">
+        <div className="overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-6 flex-1">
           
           {/* ── 1. GALLERY (UP TO 5 PHOTOS) ── */}
           <div className="space-y-3">

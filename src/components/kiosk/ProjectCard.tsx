@@ -12,7 +12,9 @@ import {
   ChevronRight, 
   Sparkles,
   ExternalLink,
-  GraduationCap
+  GraduationCap,
+  Share2,
+  Check
 } from "lucide-react";
 import { KioskProject } from "@/types/kiosk";
 import { recordProjectClick, toggleProjectLike, formatWhatsAppUrl } from "@/lib/kioskApi";
@@ -67,6 +69,31 @@ export default function ProjectCard({
   const [likesCount, setLikesCount] = useState(project.likes_count || 0);
   const [clicksCount, setClicksCount] = useState(project.clicks_count || 0);
   const [isLiking, setIsLiking] = useState(false);
+  const [copiedShare, setCopiedShare] = useState(false);
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/kiosk?p=${project.id}` : "";
+    const shareTitle = `مشروع ${project.title} | كشك المشاريع بلمّاح`;
+    const shareText = `تصفح واطلب من مشروع "${project.title}" لزملائنا بالجامعة في كشك مشاريع منصة لمّاح!`;
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {}
+    }
+
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedShare(true);
+      setTimeout(() => setCopiedShare(false), 2000);
+    }
+  };
 
   const images = (project.images && project.images.length > 0) ? project.images : [];
   const hasImages = images.length > 0;
@@ -313,6 +340,20 @@ export default function ProjectCard({
                 }`}
               />
               <span>{likesCount}</span>
+            </button>
+
+            {/* Share Button */}
+            <button
+              onClick={handleShare}
+              title="مشاركة رابط المشروع"
+              className={`flex items-center gap-1 text-xs font-bold transition-all p-1 px-1.5 rounded-lg cursor-pointer ${
+                copiedShare
+                  ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40"
+                  : "text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30"
+              }`}
+            >
+              {copiedShare ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+              <span className="text-[10px] hidden sm:inline">{copiedShare ? "تم النسخ" : "مشاركة"}</span>
             </button>
           </div>
 

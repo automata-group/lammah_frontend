@@ -14,7 +14,8 @@ import {
   fetchKioskCategories, 
   fetchKioskProjects, 
   fetchTrendingProjects, 
-  fetchMyKioskProjects 
+  fetchMyKioskProjects,
+  fetchProjectDetails
 } from "@/lib/kioskApi";
 import { 
   Store, 
@@ -26,7 +27,13 @@ import {
   XCircle, 
   SlidersHorizontal, 
   Loader2,
-  RefreshCw
+  RefreshCw,
+  Share2,
+  Check,
+  Eye,
+  Heart,
+  MessageCircle,
+  Star
 } from "lucide-react";
 
 export default function KioskPage() {
@@ -115,6 +122,30 @@ export default function KioskPage() {
       loadMyProjects();
     }
   }, [activeTab, loadProjects, loadMyProjects]);
+
+  // Direct project link (?p=ID) and login redirect (?action=register)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const directProjectId = params.get("p");
+    if (directProjectId) {
+      fetchProjectDetails(directProjectId, token).then((proj) => {
+        if (proj) {
+          setSelectedProject(proj);
+          setIsDetailModalOpen(true);
+        }
+      });
+    }
+
+    const action = params.get("action");
+    if (action === "register") {
+      setIsRegisterModalOpen(true);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("action");
+      const newQuery = url.searchParams.toString();
+      window.history.replaceState({}, "", url.pathname + (newQuery ? `?${newQuery}` : ""));
+    }
+  }, [token]);
 
   // Project Open Handler
   const handleOpenDetails = (proj: KioskProject) => {
@@ -347,7 +378,7 @@ export default function KioskPage() {
                   return (
                     <div
                       key={p.id}
-                      className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3"
+                      className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3.5"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div>
@@ -363,12 +394,13 @@ export default function KioskPage() {
                           </h3>
                         </div>
 
-                        <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded-xl">
-                          {p.clicks_count} زيارة للمتجر
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-500/30 px-3 py-1.5 rounded-xl">
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>{p.clicks_count} زيارة للمتجر</span>
                         </div>
                       </div>
 
-                      <p className="text-xs text-slate-500 line-clamp-2">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
                         {p.description}
                       </p>
 
@@ -380,10 +412,61 @@ export default function KioskPage() {
                         </div>
                       )}
 
-                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400">
-                        <span>تقييم: {p.rating_avg.toFixed(1)} ({p.rating_count})</span>
-                        <span>إعجابات: {p.likes_count}</span>
-                        <span>تعليقات: {p.comments_count}</span>
+                      {/* Interactive Stats Row */}
+                      <div className="grid grid-cols-3 gap-2 p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-center text-xs">
+                        <div>
+                          <span className="text-[10px] text-slate-400 block mb-0.5">التقييم</span>
+                          <span className="font-black text-slate-900 dark:text-white flex items-center justify-center gap-1">
+                            <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                            {p.rating_avg.toFixed(1)} ({p.rating_count})
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 block mb-0.5">الإعجابات</span>
+                          <span className="font-black text-slate-900 dark:text-white flex items-center justify-center gap-1">
+                            <Heart className="w-3 h-3 text-rose-500 fill-rose-500" />
+                            {p.likes_count}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 block mb-0.5">التعليقات</span>
+                          <span className="font-black text-slate-900 dark:text-white flex items-center justify-center gap-1">
+                            <MessageCircle className="w-3 h-3 text-indigo-500" />
+                            {p.comments_count}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons: Preview & Share */}
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenDetails(p)}
+                          className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer"
+                        >
+                          معاينة المشروع
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const url = `${window.location.origin}/kiosk?p=${p.id}`;
+                            if (navigator.share) {
+                              navigator.share({
+                                title: p.title,
+                                text: `تفضل بزيارة مشروعي "${p.title}" على كشك المشاريع بلمّاح!`,
+                                url,
+                              }).catch(() => {});
+                            } else {
+                              navigator.clipboard.writeText(url);
+                              alert("تم نسخ رابط مشروعك المباشر بنجاح! شاركه مع زملائك.");
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-500/30 transition-all cursor-pointer"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                          <span>مشاركة الرابط المخصص</span>
+                        </button>
                       </div>
                     </div>
                   );
