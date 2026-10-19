@@ -146,57 +146,50 @@ export default function PricingSection() {
 
                     {/* Features List */}
                     <div className="space-y-1.5 sm:space-y-2.5 mb-3 sm:mb-6 text-[11px] sm:text-xs font-medium text-slate-700 dark:text-slate-200">
-                      {/* Point 1: Detailed Transparent Capacity Box */}
-                      <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-900/60 p-2 sm:p-3 border border-slate-200/80 dark:border-slate-800 space-y-1 sm:space-y-2 text-right">
-                        <div className="flex items-center justify-between">
+                      {/* Point 1: Ultra-Clean Visual Capacity Box */}
+                      <div className="rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-900/60 p-2.5 sm:p-3 border border-slate-200/80 dark:border-slate-800 space-y-2 text-right">
+                        {/* Header badge */}
+                        <div className="flex items-center justify-between pb-1 border-b border-slate-200/60 dark:border-slate-800/80">
                           <div className="flex items-center gap-1.5 sm:gap-2">
                             <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                               <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                             </div>
-                            <span className="font-black text-[11px] sm:text-xs text-slate-900 dark:text-white">
+                            <span className="font-black text-[12px] sm:text-xs text-slate-900 dark:text-white">
                               {plan.lecture_quota} دقيقة ذكية
                             </span>
                           </div>
-                          <span className="text-[9px] sm:text-[10px] font-bold text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded bg-emerald-500/10">
-                            رصيد استخدام
+                          <span className="text-[9px] sm:text-[10px] font-bold text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                            رصيد استخدام مرن
                           </span>
                         </div>
 
-                        {/* Breakdown 1: Audio / Lecture hours */}
-                        <div className="text-[10px] sm:text-[11px] text-slate-600 dark:text-slate-300 flex items-start gap-1 sm:gap-1.5 pt-1 border-t border-slate-200/60 dark:border-slate-800/80">
-                          <Mic className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-500 shrink-0 mt-0.5" />
-                          <div className="leading-snug sm:leading-relaxed">
-                            <span className="md:hidden">
-                              <strong className="text-slate-800 dark:text-slate-100">تسجيلات:</strong> {isGoldPlan ? "حتى 40 محاضرة طوال الفصل" : isMidPlan ? "15 إلى 18 محاضرة شهرياً" : "تكفي 5 إلى 6 محاضرات"}
-                            </span>
-                            <span className="hidden md:inline">
-                              <span className="font-bold text-slate-800 dark:text-slate-100">إذا رفعت تسجيلات صوتية:</span>{" "}
-                              {isGoldPlan 
-                                ? "تكفي حتى 40 محاضرة كاملة طوال الفصل (محسوبة على أساس ساعة كاملة 60 دقيقة لكل محاضرة)."
-                                : isMidPlan 
-                                  ? "تغطي 15 إلى 18 محاضرة كاملة شهرياً (محسوبة على أساس ساعة كاملة 60 دقيقة لكل محاضرة)."
-                                  : "تكفي 5 إلى 6 محاضرات كاملة (محسوبة على أساس ساعة كاملة 60 دقيقة لكل محاضرة)."
-                              }
-                            </span>
+                        {/* Visual Pill 1: Audio / Lectures */}
+                        <div className="rounded-lg p-2 bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 flex items-start gap-2">
+                          <div className="w-6 h-6 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
+                            <Mic className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="text-[10px] sm:text-[11px] leading-tight">
+                            <div className="font-black text-slate-900 dark:text-white">
+                              {isGoldPlan ? "40 محاضرة كاملة" : isMidPlan ? "16 محاضرة كاملة" : "5 إلى 6 محاضرات كاملة"}
+                            </div>
+                            <div className="text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                              (حتى 60 دقيقة لكل محاضرة)
+                            </div>
                           </div>
                         </div>
 
-                        {/* Breakdown 2: Files / Slides Only */}
-                        <div className="text-[10px] sm:text-[11px] text-slate-600 dark:text-slate-300 flex items-start gap-1 sm:gap-1.5 pt-1 border-t border-slate-200/60 dark:border-slate-800/80">
-                          <FileText className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                          <div className="leading-snug sm:leading-relaxed">
-                            <span className="md:hidden">
-                              <strong className="text-slate-800 dark:text-slate-100">سلايدات:</strong> {isGoldPlan ? "4,800 شريحة (150 ملف)" : isMidPlan ? "1,800 شريحة (60 ملف)" : "600 شريحة (20 ملف)"}
-                            </span>
-                            <span className="hidden md:inline">
-                              <span className="font-bold text-slate-800 dark:text-slate-100">إذا رفعت سلايدات وملفات فقط:</span>{" "}
-                              {isGoldPlan 
-                                ? "تكفي حتى 4,800 شريحة سلايدات (تغطي 120 إلى 150 ملف سلايدات - كافية لكل مواد وشباتر الفصل)."
-                                : isMidPlan 
-                                  ? "تكفي حتى 1,800 شريحة سلايدات شهرياً (تغطي 45 إلى 60 ملف سلايدات أو شابتر كامل)."
-                                  : "تكفي حتى 600 شريحة سلايدات (تغطي 15 إلى 20 ملف سلايدات وشابتر كامل لإنقاذ الامتحان)."
-                              }
-                            </span>
+                        {/* Visual Pill 2: Slides / Files */}
+                        <div className="rounded-lg p-2 bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 flex items-start gap-2">
+                          <div className="w-6 h-6 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                            <FileText className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="text-[10px] sm:text-[11px] leading-tight">
+                            <div className="font-black text-slate-900 dark:text-white">
+                              {isGoldPlan ? "تغطية كافة سلايدات وشباتر الفصل" : isMidPlan ? "حتى 60 شابتر أو ملف سلايدات" : "حتى 20 شابتر أو ملف سلايدات"}
+                            </div>
+                            <div className="text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                              {isGoldPlan ? "(تصل حتى 4,800 شريحة)" : isMidPlan ? "(تصل حتى 1,800 شريحة)" : "(تصل حتى 600 شريحة)"}
+                            </div>
                           </div>
                         </div>
                       </div>
