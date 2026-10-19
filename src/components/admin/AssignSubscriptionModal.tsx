@@ -68,7 +68,7 @@ const CANONICAL_PLANS = [
     price: 100,
     priceNote: "للفصل كاملاً",
     minutes: 2400,
-    durationText: "صلاحية 90 يوم",
+    durationText: "صلاحية شهر (30 يوم)",
     desc: "الباقة الشاملة لأوائل الدفعات! رصيد عملاق للفصل كاملاً مع توليد الدفاتر الجمالية وبيعها بالمتجر للأرباح.",
     lectures: "40 إلى 45 محاضرة طوال الفصل",
     chapters: "تغطية كافة سلايدات وشباتر الفصل",
@@ -91,7 +91,7 @@ const CANONICAL_PLANS = [
     price: 60,
     priceNote: "شهرياً",
     minutes: 900,
-    durationText: "صلاحية 30 يوم",
+    durationText: "صلاحية شهر (30 يوم)",
     desc: "الاشتراك الشهري الأكثر طلباً لتوديع تراكم المحاضرات! رصيد متجدد يغطي كافة مساقاتك بذكاء.",
     lectures: "15 إلى 18 محاضرة شهرياً",
     chapters: "حتى 60 شابتر أو ملف سلايدات",
@@ -114,7 +114,7 @@ const CANONICAL_PLANS = [
     price: 25,
     priceNote: "دفعة واحدة",
     minutes: 300,
-    durationText: "صلاحية 7 يوم",
+    durationText: "صلاحية شهر (30 يوم)",
     desc: "شحنة إنقاذ فورية قبل الكويزات! تفريغ وتلخيص مركز للشابترات الصعبة تكفي 5 إلى 6 محاضرات كاملة.",
     lectures: "5 إلى 6 محاضرات كاملة",
     chapters: "حتى 20 شابتر أو ملف سلايدات",
@@ -601,7 +601,7 @@ export default function AssignSubscriptionModal({
 
             <div className="text-left text-xs font-bold text-slate-700 dark:text-slate-300">
               <p>الباقة: <span className="font-black text-slate-900 dark:text-white">{currentSelectedPlan?.title || "رصيد مخصص"}</span></p>
-              <p>الصلاحية: <span className="font-black text-slate-900 dark:text-white">{currentSelectedPlan?.durationText || "30 يوم"}</span></p>
+              <p>الصلاحية: <span className="font-black text-slate-900 dark:text-white">{currentSelectedPlan?.durationText || "صلاحية شهر (30 يوم)"}</span></p>
             </div>
           </div>
 
