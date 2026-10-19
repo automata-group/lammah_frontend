@@ -17,74 +17,79 @@ export default function KioskHero({
   totalProjects,
 }: KioskHeroProps) {
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border border-amber-500/20 p-5 sm:p-8 mb-6 shadow-sm">
-      {/* Decorative Blur Spheres */}
-      <div className="absolute -top-12 -left-12 w-48 h-48 bg-amber-400/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-orange-500/15 rounded-full blur-3xl pointer-events-none" />
+    <div className="relative overflow-hidden rounded-3xl bg-white/90 dark:bg-[#0c1222]/90 border border-slate-200/80 dark:border-indigo-500/20 p-6 sm:p-9 mb-8 shadow-sm backdrop-blur-xl transition-all">
+      {/* Elegant Radial Gradients - Indigo & Violet Signature Theme */}
+      <div className="absolute top-0 right-1/4 w-80 h-80 bg-indigo-500/10 dark:bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-10 -left-10 w-72 h-72 bg-violet-500/10 dark:bg-violet-600/15 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div className="max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs sm:text-sm font-medium">
-            <Store className="w-3.5 h-3.5" />
+      <div className="relative z-10 flex flex-col gap-6">
+        {/* Top Meta Row: Badge & Stats */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 text-xs sm:text-sm font-bold shadow-xs">
+            <Store className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             <span>كشك المشاريع الطلابية الجامعية</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
           </div>
 
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-snug">
-            ادعم مشاريع زملاءك في الجامعة..
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-amber-700 via-orange-700 to-amber-800 dark:from-amber-400 dark:via-orange-400 dark:to-amber-500">
-              واطلب واستلم وين ما كنت بالجامعة 🎓
-            </span>
-          </h1>
-
-          <p className="text-sm sm:text-base text-slate-800 dark:text-slate-300 leading-relaxed font-medium">
-            منصة مخصصة لعرض إبداعات ومشاريع طلبة الجامعة (مأكولات، حلويات، أشغال يدوية، خدمات، وطباعة).
-            تواصل واطلب مباشرة من صاحب المشروع عبر واتساب بكل سهولة ودون وسطاء.
-          </p>
-
-          <div className="flex flex-wrap items-center gap-4 pt-1 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
-            <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-3 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300">
+            <div className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-500/20 font-bold">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>{totalProjects > 0 ? `${totalProjects} مشروع نشط` : "مشاريع معتمدة"}</span>
+              <span>{totalProjects > 0 ? `${totalProjects} مشروع معتمد نشط` : "مشاريع معتمدة"}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-amber-500" />
-              <span>توصيل وتسليم داخل الحرم الجامعي</span>
+            <div className="hidden sm:flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+              <MapPin className="w-3.5 h-3.5 text-indigo-500" />
+              <span>تسليم يدوي بالحرم الجامعي</span>
             </div>
           </div>
         </div>
 
-        {/* CTA Button */}
-        <div className="w-full md:w-auto shrink-0 flex flex-col sm:flex-row md:flex-col gap-3">
-          <button
-            onClick={onOpenRegister}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-sm sm:text-base shadow-lg shadow-amber-500/25 active:scale-95 transition-all duration-200"
-          >
-            <PlusCircle className="w-5 h-5" />
-            <span>سجّل مشروعك مجاناً 🚀</span>
-          </button>
-        </div>
-      </div>
+        {/* Hero Title & Description with balanced CTA */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="max-w-2xl space-y-2.5">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
+              ادعم مشاريع وإبداعات زملائك بالجامعة..
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 dark:from-indigo-400 dark:via-indigo-300 dark:to-violet-400 mt-1">
+                واطلب واستلم وين ما كنت بالحرم الجامعي 🎓
+              </span>
+            </h1>
 
-      {/* Mobile-First Search Bar */}
-      <div className="relative mt-6">
-        <div className="relative flex items-center">
-          <Search className="absolute right-4 w-5 h-5 text-slate-600 dark:text-slate-400 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="ابحث عن مشروع، منتج، حلويات، خدمة، أو اسم زميل..."
-            className="w-full pr-12 pl-4 py-3.5 bg-white/95 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm sm:text-base text-slate-900 dark:text-white placeholder:text-slate-600 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50 shadow-sm transition-all"
-          />
-          {searchQuery && (
+            <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+              منصة طلابية متكاملة تفتح آفاق التسويق لمشاريع الطلبة (مأكولات وحلويات، أشغال يدوية وهدايا، خدمات طلابية، وطباعة وتصوير). تواصل مع صاحب المشروع واطلب مباشرة عبر واتساب بكل سهولة ودون أي عمولات.
+            </p>
+          </div>
+
+          {/* Action CTA Box */}
+          <div className="shrink-0 flex sm:self-start lg:self-center">
             <button
-              onClick={() => onSearchChange("")}
-              className="absolute left-3 px-2.5 py-1 text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+              onClick={onOpenRegister}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm sm:text-base shadow-md shadow-indigo-600/20 hover:shadow-lg hover:shadow-indigo-600/30 hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer"
             >
-              مسح
+              <PlusCircle className="w-5 h-5" />
+              <span>سجّل مشروعك مجاناً 🚀</span>
             </button>
-          )}
+          </div>
+        </div>
+
+        {/* Integrated Clean Search Bar */}
+        <div className="relative pt-2">
+          <div className="relative flex items-center">
+            <Search className="absolute right-4 w-5 h-5 text-slate-400 dark:text-slate-500 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="ابحث عن مشروع، حلويات، خدمة، اسم الجامعة، أو اسم صاحب المشروع..."
+              className="w-full pr-12 pl-4 py-3.5 bg-slate-50/80 dark:bg-[#070b14]/80 border border-slate-200 dark:border-white/10 rounded-2xl text-sm sm:text-base text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/60 shadow-inner transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => onSearchChange("")}
+                className="absolute left-3 px-2.5 py-1 text-xs rounded-lg bg-slate-200/70 dark:bg-slate-800 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                مسح
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

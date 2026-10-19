@@ -57,14 +57,14 @@ export default function TrendingSection({
           <button
             onClick={() => handleScroll("right")}
             aria-label="تمرير لليمين"
-            className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-amber-500 text-slate-700 dark:text-slate-300 hover:text-amber-500 transition-colors shadow-xs"
+            className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 text-slate-700 dark:text-slate-300 hover:text-indigo-500 transition-colors shadow-xs cursor-pointer"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
           <button
             onClick={() => handleScroll("left")}
             aria-label="تمرير لليسار"
-            className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-amber-500 text-slate-700 dark:text-slate-300 hover:text-amber-500 transition-colors shadow-xs"
+            className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-indigo-500 text-slate-700 dark:text-slate-300 hover:text-indigo-500 transition-colors shadow-xs cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>

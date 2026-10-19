@@ -219,14 +219,14 @@ export default function ProjectDetailModal({
         {/* Top Header Bar */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200/90 dark:border-slate-800 shrink-0 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md">
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20 text-xs font-bold">
+            <span className="px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 text-xs font-bold">
               {categoryLabel}
             </span>
             <div 
               title="عدد زيارات وافتتاح متجر هذا المشروع"
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold"
             >
-              <Eye className="w-3.5 h-3.5 text-amber-500" />
+              <Eye className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               <span>{clicksCount} زيارة للمتجر</span>
             </div>
           </div>
@@ -253,7 +253,7 @@ export default function ProjectDetailModal({
                   className="w-full h-full object-contain sm:object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-amber-500 p-6 text-center">
+                <div className="w-full h-full flex flex-col items-center justify-center text-indigo-500 p-6 text-center">
                   <Sparkles className="w-12 h-12 mb-2 opacity-80" />
                   <span className="text-sm font-bold">مشروع طلابي معتمد</span>
                 </div>
@@ -294,7 +294,7 @@ export default function ProjectDetailModal({
                     onClick={() => setActiveImageIndex(idx)}
                     className={`relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 transition-all ${
                       idx === activeImageIndex
-                        ? "border-amber-500 scale-105 shadow-md shadow-amber-500/20"
+                        ? "border-indigo-600 scale-105 shadow-md shadow-indigo-600/20"
                         : "border-transparent opacity-60 hover:opacity-100"
                     }`}
                   >
@@ -363,16 +363,16 @@ export default function ProjectDetailModal({
 
               {/* Campus Delivery Spots */}
               {project.campus_locations && project.campus_locations.length > 0 && (
-                <div className="p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/30">
-                  <h4 className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5 mb-2.5">
-                    <MapPin className="w-4 h-4 text-amber-500" />
+                <div className="p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200/50 dark:border-indigo-800/30">
+                  <h4 className="text-xs font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5 mb-2.5">
+                    <MapPin className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                     <span>أماكن التوصيل والاستلام داخل الحرم الجامعي:</span>
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {project.campus_locations.map((loc, idx) => (
                       <span
                         key={idx}
-                        className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800/60 text-slate-800 dark:text-slate-200 text-xs font-semibold shadow-xs"
+                        className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800/60 text-slate-800 dark:text-slate-200 text-xs font-semibold shadow-xs"
                       >
                         {loc}
                       </span>
@@ -387,18 +387,18 @@ export default function ProjectDetailModal({
               {/* Owner Info Card */}
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-amber-500/20">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-indigo-600/20">
                     <GraduationCap className="w-6 h-6" />
                   </div>
                   <div>
-                    <span className="text-[11px] text-amber-800 dark:text-amber-400 font-bold block">
+                    <span className="text-[11px] text-indigo-700 dark:text-indigo-400 font-bold block">
                       صاحب المشروع
                     </span>
                     <h4 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">
                       {project.owner_name}
                     </h4>
                     {project.owner_faculty && (
-                      <span className="text-xs text-slate-600 dark:text-slate-400">
+                      <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200/60 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold">
                         {project.owner_faculty}
                       </span>
                     )}
@@ -436,7 +436,7 @@ export default function ProjectDetailModal({
           <div className="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <MessageCircle className="w-5 h-5 text-amber-500" />
+                <MessageCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 <span>تجارب وآراء الزملاء والطلبة ({project.comments_count || 0})</span>
               </h3>
             </div>
@@ -484,7 +484,7 @@ export default function ProjectDetailModal({
                 onChange={(e) => setUserComment(e.target.value)}
                 placeholder="اكتب تجربتك، جودة المنتج، سرعة التوصيل بالجامعة، أو أي نصيحة للطلاب..."
                 rows={3}
-                className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
               />
 
               {reviewSuccessMsg && (
@@ -498,7 +498,7 @@ export default function ProjectDetailModal({
                 <button
                   type="submit"
                   disabled={isSubmittingReview}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-sm hover:shadow-md active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm hover:shadow-md active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>{isSubmittingReview ? "جاري الإرسال..." : "إرسال التقييم"}</span>

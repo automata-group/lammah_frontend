@@ -92,13 +92,13 @@ export default function KioskCategoryFilter({
             <button
               key={key}
               onClick={() => onSelectCategory(key)}
-              className={`shrink-0 flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-200 select-none cursor-pointer border ${
+              className={`shrink-0 flex items-center gap-2 px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all duration-200 select-none cursor-pointer border ${
                 isSelected
-                  ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-md shadow-amber-500/20 scale-[1.02]"
-                  : "bg-white/80 dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/90 dark:border-slate-800 hover:border-amber-500/40"
+                  ? "bg-indigo-600 text-white border-transparent shadow-md shadow-indigo-600/20 scale-[1.02]"
+                  : "bg-white/80 dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/90 dark:border-slate-800 hover:border-indigo-500/40"
               }`}
             >
-              <Icon className={`w-4 h-4 ${isSelected ? "text-white" : "text-amber-500"}`} />
+              <Icon className={`w-4 h-4 ${isSelected ? "text-white" : "text-indigo-600 dark:text-indigo-400"}`} />
               <span>{label}</span>
               {count > 0 && (
                 <span

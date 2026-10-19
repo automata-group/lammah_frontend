@@ -12,7 +12,8 @@ import {
   MapPin, 
   Sparkles,
   AlertCircle,
-  Loader2
+  Loader2,
+  GraduationCap
 } from "lucide-react";
 import { uploadKioskImage, submitKioskProject } from "@/lib/kioskApi";
 
@@ -22,6 +23,24 @@ interface RegisterProjectModalProps {
   token?: string;
   onSuccess: () => void;
 }
+
+const UNIVERSITIES_LIST = [
+  "جامعة النجاح الوطنية",
+  "جامعة بيرزيت",
+  "الجامعة العربية الأمريكية",
+  "جامعة القدس (أبو ديس)",
+  "جامعة بوليتكنك فلسطين",
+  "جامعة الخليل",
+  "جامعة فلسطين التقنية (خضوري)",
+  "جامعة بيت لحم",
+  "الجامعة الإسلامية بغزة",
+  "جامعة الأزهر",
+  "الجامعة الأردنية",
+  "جامعة العلوم والتكنولوجيا الأردنية",
+  "جامعة اليرموك",
+  "الجامعة الهاشمية",
+  "جامعة أخرى (كتابة يدوية)",
+];
 
 const CATEGORIES = [
   { id: "food", label: "أطعمة ومأكولات" },
@@ -36,12 +55,12 @@ const CATEGORIES = [
 
 const SUGGESTED_LOCATIONS = [
   "كل الحرم الجامعي",
-  "مبنى الهندسة والتكنولوجيا",
-  "مبنى العلوم الإنسانية",
-  "مبنى الطب والعلوم الصحية",
   "الكافتيريا المركزية",
+  "المكتبة الجامعية",
   "مجمع الأنشطة الطلابية",
-  "المكتبة المركزية",
+  "كليات الهندسة والعلوم",
+  "كليات الآداب والإنسانيات",
+  "البوابة الرئيسية للجامعة",
 ];
 
 export default function RegisterProjectModal({
@@ -55,6 +74,8 @@ export default function RegisterProjectModal({
   const [description, setDescription] = useState("");
   const [priceRange, setPriceRange] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [university, setUniversity] = useState("جامعة النجاح الوطنية");
+  const [customUniversity, setCustomUniversity] = useState("");
   const [ownerFaculty, setOwnerFaculty] = useState("");
   const [selectedLocations, setSelectedLocations] = useState<string[]>([
     "كل الحرم الجامعي",
@@ -75,6 +96,8 @@ export default function RegisterProjectModal({
       setDescription("");
       setPriceRange("");
       setWhatsappNumber("");
+      setUniversity("جامعة النجاح الوطنية");
+      setCustomUniversity("");
       setOwnerFaculty("");
       setSelectedLocations(["كل الحرم الجامعي"]);
       setCustomLocation("");
@@ -172,6 +195,14 @@ export default function RegisterProjectModal({
     setIsSubmitting(true);
 
     try {
+      const finalUniversity = university === "جامعة أخرى (كتابة يدوية)"
+        ? (customUniversity.trim() || "جامعة أخرى")
+        : university;
+
+      const combinedFaculty = ownerFaculty.trim()
+        ? `${finalUniversity} • ${ownerFaculty.trim()}`
+        : finalUniversity;
+
       await submitKioskProject(
         {
           title: title.trim(),
@@ -181,7 +212,7 @@ export default function RegisterProjectModal({
           whatsapp_number: whatsappNumber.trim(),
           campus_locations: selectedLocations,
           images: uploadedImages,
-          owner_faculty: ownerFaculty.trim(),
+          owner_faculty: combinedFaculty,
         },
         token
       );
@@ -208,7 +239,7 @@ export default function RegisterProjectModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/90 dark:border-slate-800 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
+            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
               <Store className="w-5 h-5" />
             </div>
             <div>
@@ -265,7 +296,7 @@ export default function RegisterProjectModal({
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="مثال: مخبوزات لينة، شاورما الطيب، لمسة حرير..."
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                   />
                 </div>
 
@@ -276,7 +307,7 @@ export default function RegisterProjectModal({
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 cursor-pointer"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer"
                   >
                     {CATEGORIES.map((cat) => (
                       <option key={cat.id} value={cat.id}>
@@ -298,7 +329,7 @@ export default function RegisterProjectModal({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="اشرح ما تقدمه، الأصناف المتوفرة، النكهات أو الخدمات، طريقة التوصيل، وكيف تضمن الجودة..."
-                  className="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                  className="w-full p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                 />
               </div>
 
@@ -313,7 +344,7 @@ export default function RegisterProjectModal({
                     value={priceRange}
                     onChange={(e) => setPriceRange(e.target.value)}
                     placeholder="مثال: 5 - 15 شيكل أو 2 - 5 دنانير"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                   />
                 </div>
 
@@ -329,30 +360,61 @@ export default function RegisterProjectModal({
                       value={whatsappNumber}
                       onChange={(e) => setWhatsappNumber(e.target.value)}
                       placeholder="059xxxxxxx أو 079xxxxxxx"
-                      className="w-full pr-10 pl-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                      className="w-full pr-10 pl-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Faculty */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  كليتك أو تخصصك الجامعي
-                </label>
-                <input
-                  type="text"
-                  value={ownerFaculty}
-                  onChange={(e) => setOwnerFaculty(e.target.value)}
-                  placeholder="مثال: كلية تكنولوجيا المعلومات، كلية الهندسة، التمريض..."
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                />
+              {/* University & Faculty (Any University Support) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <GraduationCap className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>اسم جامعتك *</span>
+                  </label>
+                  <select
+                    value={university}
+                    onChange={(e) => setUniversity(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer"
+                  >
+                    {UNIVERSITIES_LIST.map((u) => (
+                      <option key={u} value={u}>
+                        {u}
+                      </option>
+                    ))}
+                  </select>
+
+                  {university === "جامعة أخرى (كتابة يدوية)" && (
+                    <input
+                      type="text"
+                      required
+                      value={customUniversity}
+                      onChange={(e) => setCustomUniversity(e.target.value)}
+                      placeholder="اكتب اسم جامعتك هنا..."
+                      className="w-full mt-2 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-950 border border-indigo-300 dark:border-indigo-500/40 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                    />
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    الكلية أو التخصص الجامعي
+                  </label>
+                  <input
+                    type="text"
+                    value={ownerFaculty}
+                    onChange={(e) => setOwnerFaculty(e.target.value)}
+                    placeholder="مثال: كلية تكنولوجيا المعلومات، هندسة، تمريض..."
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  />
+                </div>
               </div>
 
               {/* Delivery Locations */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-amber-500" />
+                  <MapPin className="w-3.5 h-3.5 text-indigo-500" />
                   <span>أماكن التوصيل والاستلام داخل الحرم الجامعي *</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -363,10 +425,10 @@ export default function RegisterProjectModal({
                         type="button"
                         key={loc}
                         onClick={() => toggleLocation(loc)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                           isSelected
-                            ? "bg-amber-500 text-white border-amber-500 shadow-xs"
-                            : "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-amber-400"
+                            ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+                            : "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-indigo-400"
                         }`}
                       >
                         {loc}
@@ -381,20 +443,20 @@ export default function RegisterProjectModal({
                     type="text"
                     value={customLocation}
                     onChange={(e) => setCustomLocation(e.target.value)}
-                    placeholder="أضف مبنى أو نقطة تسليم أخرى..."
-                    className="flex-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white"
+                    placeholder="أضف مبنى، بوابة، أو نقطة تسليم محددة..."
+                    className="flex-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                   />
                   <button
                     type="button"
                     onClick={addCustomLocation}
-                    className="px-3.5 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-white text-xs font-bold hover:bg-amber-500 hover:text-white transition-colors"
+                    className="px-3.5 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 text-xs font-bold hover:bg-indigo-600 hover:text-white transition-colors cursor-pointer"
                   >
                     إضافة
                   </button>
                 </div>
               </div>
 
-              {/* ── 5 PHOTOS GALLERY UPLOAD (CRITICAL REQUIREMENT) ── */}
+              {/* ── 5 PHOTOS GALLERY UPLOAD ── */}
               <div className="space-y-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -420,7 +482,7 @@ export default function RegisterProjectModal({
                       <button
                         type="button"
                         onClick={() => removeImage(idx)}
-                        className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                       >
                         <Trash2 className="w-5 h-5 text-rose-400" />
                       </button>
@@ -429,7 +491,7 @@ export default function RegisterProjectModal({
 
                   {/* Add Photo Button */}
                   {uploadedImages.length < 5 && (
-                    <label className="relative aspect-square rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-amber-500 flex flex-col items-center justify-center p-2 text-center cursor-pointer transition-colors group bg-slate-50/50 dark:bg-slate-900/50">
+                    <label className="relative aspect-square rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 flex flex-col items-center justify-center p-2 text-center cursor-pointer transition-colors group bg-slate-50/50 dark:bg-slate-900/50">
                       <input
                         type="file"
                         accept="image/*"
@@ -439,11 +501,11 @@ export default function RegisterProjectModal({
                         className="sr-only"
                       />
                       {isUploadingImage ? (
-                        <Loader2 className="w-6 h-6 text-amber-500 animate-spin" />
+                        <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
                       ) : (
                         <>
-                          <UploadCloud className="w-6 h-6 text-slate-400 group-hover:text-amber-500 mb-1 transition-colors" />
-                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-amber-500">
+                          <UploadCloud className="w-6 h-6 text-slate-400 group-hover:text-indigo-600 mb-1 transition-colors" />
+                          <span className="text-[10px] font-bold text-slate-500 group-hover:text-indigo-600">
                             + صورة
                           </span>
                         </>
@@ -461,14 +523,14 @@ export default function RegisterProjectModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || isUploadingImage}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-amber-500/20 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-indigo-600/20 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>

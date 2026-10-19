@@ -146,7 +146,7 @@ export default function ProjectCard({
   return (
     <div
       onClick={() => onOpenDetails(project)}
-      className="group relative flex flex-col bg-white dark:bg-[#0f172a] rounded-3xl border border-slate-200/90 dark:border-slate-800 hover:border-amber-500/50 dark:hover:border-amber-500/40 shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer active:scale-[0.99]"
+      className="group relative flex flex-col bg-white dark:bg-[#0f172a] rounded-3xl border border-slate-200/90 dark:border-slate-800 hover:border-indigo-500/50 dark:hover:border-indigo-500/40 shadow-xs hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer active:scale-[0.99]"
     >
       {/* ── CARD TOP BADGES & GALLERY ── */}
       <div className="relative aspect-4/3 w-full bg-slate-100 dark:bg-slate-900 overflow-hidden select-none">
@@ -158,7 +158,7 @@ export default function ProjectCard({
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-500/10 to-orange-500/10 text-amber-600 dark:text-amber-400 p-6 text-center">
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-indigo-500/10 to-violet-500/10 text-indigo-600 dark:text-indigo-400 p-6 text-center">
             <Sparkles className="w-10 h-10 mb-2 opacity-80" />
             <span className="text-xs font-bold">مشروع طلابي معتمد</span>
             <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
@@ -177,10 +177,10 @@ export default function ProjectCard({
             {categoryLabel}
           </span>
 
-          {/* STORE CLICKS COUNTER - Prominent Requirement */}
+          {/* STORE CLICKS COUNTER */}
           <div 
             title="عدد مرات زيارة وافتتاح متجر هذا المشروع"
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/90 backdrop-blur-md text-white text-[11px] font-extrabold shadow-sm"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-indigo-600/95 backdrop-blur-md text-white text-[11px] font-extrabold shadow-sm"
           >
             <Eye className="w-3.5 h-3.5" />
             <span>{clicksCount} زيارة للمتجر</span>
@@ -222,7 +222,7 @@ export default function ProjectCard({
                   key={idx}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
                     idx === activeImageIndex
-                      ? "w-4 bg-amber-400"
+                      ? "w-4 bg-indigo-400"
                       : "w-1.5 bg-white/60"
                   }`}
                 />
@@ -237,7 +237,7 @@ export default function ProjectCard({
         {/* Title & Price */}
         <div>
           <div className="flex items-start justify-between gap-2 mb-1.5">
-            <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white line-clamp-1 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+            <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
               {project.title}
             </h3>
             {project.price_range && (
@@ -252,21 +252,21 @@ export default function ProjectCard({
           </p>
         </div>
 
-        {/* Student Owner & Delivery Spots */}
-        <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+        {/* Student Owner, University & Delivery Spots */}
+        <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
           <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200 font-bold">
-            <GraduationCap className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <GraduationCap className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
             <span className="truncate">{project.owner_name}</span>
             {project.owner_faculty && (
-              <span className="text-[11px] text-slate-600 dark:text-slate-400 truncate">
-                • {project.owner_faculty}
+              <span className="text-[11px] px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-semibold truncate border border-indigo-200/50 dark:border-indigo-500/20">
+                {project.owner_faculty}
               </span>
             )}
           </div>
 
           {project.campus_locations && project.campus_locations.length > 0 && (
             <div className="flex items-center gap-1 text-[11px] text-slate-600 dark:text-slate-400">
-              <MapPin className="w-3 h-3 text-orange-500 shrink-0" />
+              <MapPin className="w-3 h-3 text-violet-500 shrink-0" />
               <span className="truncate">
                 {project.campus_locations.slice(0, 3).join("، ")}
                 {project.campus_locations.length > 3 ? " والمزيد..." : ""}
