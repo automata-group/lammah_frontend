@@ -25,9 +25,11 @@ import {
   Mail,
   Copy,
   Check,
-  Download
+  Download,
+  Zap
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import AssignSubscriptionModal from "./AssignSubscriptionModal";
 
 export default function UserManagement({ session }: { session: any }) {
   const [users, setUsers] = useState<any[]>([]);
@@ -37,6 +39,10 @@ export default function UserManagement({ session }: { session: any }) {
   const [processing, setProcessing] = useState<string | null>(null);
   const [copiedEmailId, setCopiedEmailId] = useState<string | null>(null);
   const [exportingExcel, setExportingExcel] = useState(false);
+
+  // Assign Subscription & Minutes Modal State
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedUserEmail, setSelectedUserEmail] = useState("");
 
   // Add Admin Modal State
   const [showAddAdminModal, setShowAddAdminModal] = useState(false);
@@ -246,8 +252,20 @@ export default function UserManagement({ session }: { session: any }) {
           />
         </div>
 
-        {/* Actions: Export Excel, Add Admin & Refresh */}
+        {/* Actions: Assign Subscription, Export Excel, Add Admin & Refresh */}
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => {
+              setSelectedUserEmail("");
+              setShowAssignModal(true);
+            }}
+            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-amber-600 hover:from-indigo-500 hover:to-amber-500 text-white font-black text-xs shadow-lg shadow-indigo-600/20 flex items-center gap-2 transition cursor-pointer"
+            title="تفعيل واشتراك أي عميل عبر بريد جوجل وإيداع الدقائق في حسابه"
+          >
+            <Zap className="w-4 h-4 text-amber-300" />
+            <span>شحن واشتراك عميل بالبريد ⚡</span>
+          </button>
+
           <button
             onClick={handleExportExcel}
             disabled={exportingExcel}
@@ -267,7 +285,7 @@ export default function UserManagement({ session }: { session: any }) {
             className="px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 flex items-center gap-2 transition cursor-pointer"
           >
             <Crown className="w-4 h-4" />
-            <span>إضافة وتعيين مسؤول (Admin) جديد</span>
+            <span>تعيين أدمن جديد</span>
           </button>
 
           <button
@@ -475,6 +493,19 @@ export default function UserManagement({ session }: { session: any }) {
                       <td className="p-4 pl-6 text-center">
                         <div className="flex items-center justify-center gap-2">
                           
+                          {/* Quick Recharge / Assign Plan Button */}
+                          <button
+                            onClick={() => {
+                              setSelectedUserEmail(u.email || "");
+                              setShowAssignModal(true);
+                            }}
+                            className="px-2.5 py-1.5 rounded-xl font-bold text-[11px] transition-all flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 cursor-pointer shrink-0"
+                            title="تفعيل باقة أو شحن دقائق لهذا الحساب"
+                          >
+                            <Zap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                            <span>شحن باقة ⚡</span>
+                          </button>
+
                           {/* Make / Remove Admin Button */}
                           <button
                             onClick={() => toggleAdminRole(u.id, isAdmin)}
@@ -608,6 +639,18 @@ export default function UserManagement({ session }: { session: any }) {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Assign Subscription & Minutes Modal */}
+      <AssignSubscriptionModal
+        isOpen={showAssignModal}
+        onClose={() => {
+          setShowAssignModal(false);
+          setSelectedUserEmail("");
+        }}
+        sessionToken={session?.access_token}
+        initialEmail={selectedUserEmail}
+        onSuccess={fetchUsers}
+      />
 
     </div>
   );

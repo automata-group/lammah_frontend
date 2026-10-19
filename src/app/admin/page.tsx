@@ -49,6 +49,7 @@ import AnnouncementsManager from "@/components/admin/AnnouncementsManager";
 import TutoringManager from "@/components/admin/TutoringManager";
 import UserBehaviorAnalytics from "@/components/admin/UserBehaviorAnalytics";
 import AdminKioskTab from "@/components/admin/AdminKioskTab";
+import AssignSubscriptionModal from "@/components/admin/AssignSubscriptionModal";
 
 // Helper: Arabic relative time
 function getArabicRelativeTime(dateStr: string): { label: string; isOld: boolean } {
@@ -106,6 +107,7 @@ export default function AdminPage() {
   const [bulkProcessing, setBulkProcessing] = useState(false);
   const [subSearchTerm, setSubSearchTerm] = useState("");
   const [copiedFingerprint, setCopiedFingerprint] = useState<string | null>(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
 
   const handleCopyFingerprint = (fp: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -434,6 +436,16 @@ export default function AdminPage() {
         {/* Status, Theme Switcher & Actions */}
         <div className="flex items-center gap-3">
 
+          {/* Quick Assign Subscription Modal Button */}
+          <button
+            onClick={() => setShowAssignModal(true)}
+            className="hidden sm:flex px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 text-white text-xs font-black shadow-md shadow-indigo-600/20 items-center gap-1.5 transition cursor-pointer"
+            title="شحن باقة ودقائق لأي حساب بالبريد الإلكتروني"
+          >
+            <Zap className="w-3.5 h-3.5 text-amber-300" />
+            <span>شحن عميل ⚡</span>
+          </button>
+
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
@@ -658,16 +670,27 @@ export default function AdminPage() {
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">مراجعة وتأكيد اشتراكات الطلاب بأسلوب منظم ومريح للعين.</p>
                   </div>
 
-                  {/* Bulk Select All Checkbox */}
-                  {transactions.length > 0 && (
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2 flex-wrap">
                     <button
-                      onClick={toggleAllTx}
-                      className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:border-slate-300 transition flex items-center gap-2 cursor-pointer shrink-0"
+                      onClick={() => setShowAssignModal(true)}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-amber-600 hover:from-indigo-500 hover:to-amber-500 text-white text-xs font-black shadow-md shadow-indigo-600/20 flex items-center gap-2 transition cursor-pointer shrink-0"
                     >
-                      {allTxSelected ? <CheckSquare className="w-4 h-4 text-indigo-600" /> : <Square className="w-4 h-4 text-slate-400" />}
-                      <span>{allTxSelected ? "إلغاء تحديد الكل" : "تحديد جميع الطلبات"}</span>
+                      <Zap className="w-4 h-4 text-amber-300" />
+                      <span>شحن واشتراك عميل بالبريد ⚡</span>
                     </button>
-                  )}
+
+                    {/* Bulk Select All Checkbox */}
+                    {transactions.length > 0 && (
+                      <button
+                        onClick={toggleAllTx}
+                        className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:border-slate-300 transition flex items-center gap-2 cursor-pointer shrink-0"
+                      >
+                        {allTxSelected ? <CheckSquare className="w-4 h-4 text-indigo-600" /> : <Square className="w-4 h-4 text-slate-400" />}
+                        <span>{allTxSelected ? "إلغاء تحديد الكل" : "تحديد جميع الطلبات"}</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Bulk Actions Floating Bar */}
@@ -1095,6 +1118,14 @@ export default function AdminPage() {
       </div>
 
       </div>
+
+      {/* Assign Subscription & Minutes Modal */}
+      <AssignSubscriptionModal
+        isOpen={showAssignModal}
+        onClose={() => setShowAssignModal(false)}
+        sessionToken={session?.access_token}
+        onSuccess={fetchOverview}
+      />
 
     </main>
   );
