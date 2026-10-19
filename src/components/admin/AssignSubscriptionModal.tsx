@@ -18,7 +18,12 @@ import {
   Gift,
   Coins,
   Calendar,
-  Layers
+  Layers,
+  Star,
+  Check,
+  Flame,
+  ChevronDown,
+  BookOpen
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -52,6 +57,79 @@ interface AssignSubscriptionModalProps {
   onSuccess?: () => void;
 }
 
+// 3 Canonical Lammah Plans matching Landing & Pricing Page
+const CANONICAL_PLANS = [
+  {
+    id: "7e17c4ba-0830-4f91-88da-7d6440d22123",
+    code: "elite",
+    title: "باقة النخبة (Elite)",
+    badge: "باقة النخبة • الفصل الكامل",
+    badgeIcon: "star",
+    price: 100,
+    priceNote: "للفصل كاملاً",
+    minutes: 2400,
+    durationText: "صلاحية 90 يوم",
+    desc: "الباقة الشاملة لأوائل الدفعات! رصيد عملاق للفصل كاملاً مع توليد الدفاتر الجمالية وبيعها بالمتجر للأرباح.",
+    lectures: "40 إلى 45 محاضرة طوال الفصل",
+    chapters: "تغطية كافة سلايدات وشباتر الفصل",
+    specialPerk: "👑 توليد الدفاتر الذكية الشاملة (PDF فخم يغنيك عن المراجعة للطباعة الفورية)",
+    theme: {
+      borderSelected: "border-amber-500 ring-2 ring-amber-500/40 bg-amber-500/[0.04] dark:bg-amber-500/[0.06]",
+      borderDefault: "border-amber-300/80 dark:border-amber-500/30 hover:border-amber-400",
+      badgeBg: "bg-amber-400 text-slate-950",
+      accentText: "text-amber-600 dark:text-amber-400",
+      iconBg: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      quotaBg: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
+    }
+  },
+  {
+    id: "f1f25974-6495-42e2-bb31-70b3b9796a8e",
+    code: "premium",
+    title: "باقة التفوق (Premium)",
+    badge: "الأكثر طلباً • اشتراك شهري",
+    badgeIcon: "zap",
+    price: 60,
+    priceNote: "شهرياً",
+    minutes: 900,
+    durationText: "صلاحية 30 يوم",
+    desc: "الاشتراك الشهري الأكثر طلباً لتوديع تراكم المحاضرات! رصيد متجدد يغطي كافة مساقاتك بذكاء.",
+    lectures: "15 إلى 18 محاضرة شهرياً",
+    chapters: "حتى 60 شابتر أو ملف سلايدات",
+    specialPerk: "تفريغ صوتي + فلاش كاردز مقلوبة + كويزات + شات ذكي (35 سؤال)",
+    theme: {
+      borderSelected: "border-indigo-600 ring-2 ring-indigo-500/40 bg-indigo-500/[0.04] dark:bg-indigo-500/[0.06]",
+      borderDefault: "border-indigo-200 dark:border-indigo-500/30 hover:border-indigo-400",
+      badgeBg: "bg-slate-900 text-white dark:bg-indigo-600",
+      accentText: "text-indigo-600 dark:text-indigo-400",
+      iconBg: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
+      quotaBg: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/20"
+    }
+  },
+  {
+    id: "f5aa8bae-7a95-4902-9167-7d217221627d",
+    code: "essential",
+    title: "باقة إنقاذ الكويزات (Essential)",
+    badge: "شحن سريع للكويزات",
+    badgeIcon: "sparkles",
+    price: 25,
+    priceNote: "دفعة واحدة",
+    minutes: 300,
+    durationText: "صلاحية 7 يوم",
+    desc: "شحنة إنقاذ فورية قبل الكويزات! تفريغ وتلخيص مركز للشابترات الصعبة تكفي 5 إلى 6 محاضرات كاملة.",
+    lectures: "5 إلى 6 محاضرات كاملة",
+    chapters: "حتى 20 شابتر أو ملف سلايدات",
+    specialPerk: "إنقاذ سريع للكويزات + شات ذكي (15 سؤال)",
+    theme: {
+      borderSelected: "border-slate-700 dark:border-slate-300 ring-2 ring-slate-400/40 bg-slate-500/[0.04]",
+      borderDefault: "border-slate-200 dark:border-slate-800 hover:border-slate-300",
+      badgeBg: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300",
+      accentText: "text-slate-700 dark:text-slate-300",
+      iconBg: "bg-slate-500/10 text-slate-600 dark:text-slate-300",
+      quotaBg: "bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/20"
+    }
+  }
+];
+
 export default function AssignSubscriptionModal({
   isOpen,
   onClose,
@@ -60,11 +138,11 @@ export default function AssignSubscriptionModal({
   onSuccess
 }: AssignSubscriptionModalProps) {
   const [email, setEmail] = useState(initialEmail);
-  const [plans, setPlans] = useState<PlanItem[]>([]);
-  const [selectedPlanId, setSelectedPlanId] = useState<string>("");
+  const [selectedPlanId, setSelectedPlanId] = useState<string>("7e17c4ba-0830-4f91-88da-7d6440d22123"); // Default to Elite
   const [customBonusMinutes, setCustomBonusMinutes] = useState<number>(0);
-  const [addToExisting, setAddToExisting] = useState<boolean>(false);
+  const [addToExisting, setAddToExisting] = useState<boolean>(true);
   const [notes, setNotes] = useState<string>("");
+  const [showCustomOption, setShowCustomOption] = useState<boolean>(false);
 
   // Lookup state
   const [lookupLoading, setLookupLoading] = useState(false);
@@ -85,36 +163,11 @@ export default function AssignSubscriptionModal({
     }
   }, [initialEmail, isOpen]);
 
-  // Load plans on open
   useEffect(() => {
     if (isOpen) {
-      fetchPlans();
       setResultMessage(null);
     }
   }, [isOpen]);
-
-  const fetchPlans = async () => {
-    try {
-      const res = await fetch(`${API}/api/v1/admin/subscriptions/plans`, {
-        headers: {
-          Authorization: `Bearer ${sessionToken}`
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPlans(Array.isArray(data) ? data : []);
-        // Default to Gold/Semester plan or first high quota plan
-        const goldPlan = data.find((p: PlanItem) => p.name.includes("الذهبية") || p.lecture_quota >= 2000);
-        if (goldPlan) {
-          setSelectedPlanId(goldPlan.id);
-        } else if (data.length > 0) {
-          setSelectedPlanId(data[0].id);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to load plans:", err);
-    }
-  };
 
   const handleLookup = async (targetEmail?: string) => {
     const emailToQuery = (targetEmail || email).trim().toLowerCase();
@@ -199,39 +252,43 @@ export default function AssignSubscriptionModal({
 
   if (!isOpen) return null;
 
-  const currentSelectedPlan = plans.find(p => p.id === selectedPlanId);
-  const planMinutes = currentSelectedPlan ? currentSelectedPlan.lecture_quota : 0;
-  const totalMinsCalculated = (addToExisting && lookupUser?.quota_remaining ? lookupUser.quota_remaining : 0) + planMinutes + (Number(customBonusMinutes) || 0);
+  const currentSelectedPlan = CANONICAL_PLANS.find(p => p.id === selectedPlanId);
+  const baseMinutes = currentSelectedPlan ? currentSelectedPlan.minutes : 0;
+  const previousQuota = lookupUser?.quota_remaining || 0;
+  const bonusMins = Number(customBonusMinutes) || 0;
+  const totalCalculated = (addToExisting ? previousQuota : 0) + (selectedPlanId === "custom_only" ? 0 : baseMinutes) + bonusMins;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md overflow-y-auto" dir="rtl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/75 backdrop-blur-md overflow-y-auto" dir="rtl">
       <motion.div 
-        initial={{ opacity: 0, scale: 0.96, y: 10 }}
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 10 }}
-        className="relative w-full max-w-2xl bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden my-8"
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+        className="relative w-full max-w-4xl bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden my-6"
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-gradient-to-l from-indigo-50/50 via-transparent to-transparent dark:from-indigo-950/20">
+        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-gradient-to-l from-indigo-50/60 via-amber-50/20 to-transparent dark:from-indigo-950/25">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-amber-500 flex items-center justify-center text-white shadow-md shadow-indigo-600/20">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 via-indigo-600 to-indigo-700 flex items-center justify-center text-white shadow-md shadow-indigo-600/20">
               <Zap className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <span>تفعيل باقة وشحن رصيد لعميل</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-bold">
-                  Google Account
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                  شحن باقة ودقائق لعميل (Google Account)
+                </h2>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">
+                  3 باقات رسمية
                 </span>
-              </h2>
+              </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                أدخل إيميل جوجل الخاص بالعميل واختر الباقة لإيداع الدقائق في حسابه فوراً
+                أدخل إيميل جوجل الخاص بالطالب، اختر الباقة المعتمدة، وسيتم إضافة الدقائق لحسابه فوراً 🚀
               </p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition cursor-pointer"
+            className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -240,7 +297,7 @@ export default function AssignSubscriptionModal({
         {/* Content Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
 
-          {/* Result Alert if available */}
+          {/* Success / Error Notification Banner */}
           {resultMessage && (
             <div className={`p-4 rounded-2xl border flex items-start gap-3 ${
               resultMessage.type === "success"
@@ -253,14 +310,14 @@ export default function AssignSubscriptionModal({
                 <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
               )}
               <div className="flex-1 text-xs">
-                <p className="font-bold text-sm mb-1">{resultMessage.text}</p>
+                <p className="font-black text-sm mb-1">{resultMessage.text}</p>
                 {resultMessage.details && (
-                  <div className="mt-2 p-2.5 rounded-xl bg-white/60 dark:bg-black/30 font-mono text-[11px] space-y-1">
-                    <p>• الحساب: {resultMessage.details.email}</p>
+                  <div className="mt-2 p-3 rounded-xl bg-white/70 dark:bg-black/40 font-mono text-[11px] space-y-1">
+                    <p>• البريد الإلكتروني: {resultMessage.details.email}</p>
                     <p>• الباقة المفعلة: {resultMessage.details.plan_name}</p>
-                    <p>• الرصيد الإجمالي الجديد: {resultMessage.details.total_quota} دقيقة ذكية</p>
+                    <p>• إجمالي الرصيد الجديد: <span className="font-bold text-indigo-600 dark:text-indigo-400">{resultMessage.details.total_quota} دقيقة</span></p>
                     {resultMessage.details.expires_at && (
-                      <p>• الصلاحية حتى: {new Date(resultMessage.details.expires_at).toLocaleDateString("ar-EG")}</p>
+                      <p>• تاريخ الانتهاء: {new Date(resultMessage.details.expires_at).toLocaleDateString("ar-EG")}</p>
                     )}
                   </div>
                 )}
@@ -268,38 +325,36 @@ export default function AssignSubscriptionModal({
             </div>
           )}
 
-          {/* 1. Customer Email Field with Live Check */}
+          {/* Step 1: Customer Google Email & Live Check */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-              <span>بريد جوجل للعميل (Google Email):</span>
-              <span className="text-[10px] text-slate-400">البريد الذي يدخل به الطالب إلى المنصة</span>
+            <label className="text-xs font-black text-slate-800 dark:text-slate-200 flex items-center justify-between">
+              <span>1. بريد جوجل الخاص بالعميل (Google Email):</span>
+              <span className="text-[11px] text-slate-400 font-normal">الحساب الذي يسجل به الطالب في المنصة</span>
             </label>
             <div className="flex gap-2">
-              <div className="relative flex-1">
-                <input 
-                  type="email"
-                  required
-                  placeholder="مثال: student@gmail.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (lookupUser) setLookupUser(null);
-                  }}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-4 text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 transition dir-ltr text-right"
-                />
-              </div>
+              <input 
+                type="email"
+                required
+                placeholder="مثال: student@gmail.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (lookupUser) setLookupUser(null);
+                }}
+                className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl py-3 px-4 text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 transition dir-ltr text-right"
+              />
               <button
                 type="button"
                 onClick={() => handleLookup()}
                 disabled={lookupLoading || !email.trim()}
-                className="px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50 shrink-0"
+                className="px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50 shrink-0 shadow-sm shadow-indigo-600/20"
               >
                 {lookupLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
                 <span>فحص الحساب</span>
               </button>
             </div>
 
-            {/* Lookup result status box */}
+            {/* Error Message */}
             {lookupError && (
               <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1.5 mt-1">
                 <AlertCircle className="w-3.5 h-3.5" />
@@ -307,33 +362,36 @@ export default function AssignSubscriptionModal({
               </p>
             )}
 
+            {/* Lookup Card */}
             {lookupUser && (
-              <div className="mt-2.5 p-3 rounded-2xl border bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
+              <div className="mt-2.5 p-3.5 rounded-2xl border bg-slate-50/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
-                      <User className="w-3.5 h-3.5" />
+                    <div className="w-7 h-7 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+                      <User className="w-4 h-4" />
                     </div>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{lookupUser.full_name || lookupUser.email}</span>
+                    <span className="font-black text-slate-900 dark:text-white">{lookupUser.full_name || lookupUser.email}</span>
                   </div>
                   {lookupUser.exists ? (
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">
-                      مسجل في المنظومة ✅
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-bold text-[10px] flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      <span>حساب مسجل ونشط</span>
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold text-[10px]">
-                      حساب جديد (سيتم تهيئته) 🚀
+                    <span className="px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 font-bold text-[10px] flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" />
+                      <span>حساب جديد (سيتم إنشاؤه وشحنه مسبقاً)</span>
                     </span>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800/60 text-[11px]">
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200/60 dark:border-slate-800/60 text-[11px]">
                   <div>
                     <span className="text-slate-500 dark:text-slate-400">الباقة الحالية: </span>
-                    <span className="font-bold text-slate-700 dark:text-slate-300">{lookupUser.current_plan || "بدون باقة"}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{lookupUser.current_plan || "بدون باقة"}</span>
                   </div>
                   <div>
-                    <span className="text-slate-500 dark:text-slate-400">الرصيد المتبقي: </span>
+                    <span className="text-slate-500 dark:text-slate-400">الرصيد المتبقي له الآن: </span>
                     <span className="font-black text-indigo-600 dark:text-indigo-400">{lookupUser.quota_remaining || 0} دقيقة</span>
                   </div>
                 </div>
@@ -341,107 +399,146 @@ export default function AssignSubscriptionModal({
             )}
           </div>
 
-          {/* 2. Select Subscription Plan */}
-          <div className="space-y-2.5">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-              <span>اختر الباقة المراد تفعيلها:</span>
-              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">
-                {plans.length} باقات متوفرة
-              </span>
-            </label>
+          {/* Step 2: The 3 Canonical Plans Selection Grid */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-black text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <span>2. اختر باقة لمّاح المراد تفعيلها:</span>
+                <span className="text-[10px] text-slate-400 font-normal">(باقات منصة لمّاح المعتمدة الثلاث)</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowCustomOption(!showCustomOption)}
+                className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span>{showCustomOption ? "إخفاء الخيار المخصص" : "+ شحن يدوي مخصص بدون باقة"}</span>
+              </button>
+            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto p-1">
-              {plans.map((p) => {
-                const isSelected = selectedPlanId === p.id;
-                const isGold = p.name.includes("الذهبية") || p.lecture_quota >= 2000;
-                const isMidterm = p.name.includes("الميدتيرم") || p.lecture_quota === 900;
-                
+            {/* 3 Main Plan Cards (Matching Landing & Pricing Page) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+              {CANONICAL_PLANS.map((plan) => {
+                const isSelected = selectedPlanId === plan.id;
+                const isElite = plan.code === "elite";
+                const isPremium = plan.code === "premium";
+
                 return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setSelectedPlanId(p.id)}
-                    className={`p-3.5 rounded-2xl border text-right transition-all cursor-pointer flex flex-col justify-between gap-2 relative ${
+                  <div
+                    key={plan.id}
+                    onClick={() => {
+                      setSelectedPlanId(plan.id);
+                    }}
+                    className={`rounded-3xl border p-4 sm:p-5 flex flex-col justify-between transition-all cursor-pointer relative ${
                       isSelected
-                        ? "bg-indigo-50/80 dark:bg-indigo-950/40 border-indigo-500 ring-2 ring-indigo-500/30"
-                        : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
-                    }`}
+                        ? plan.theme.borderSelected
+                        : `bg-white dark:bg-slate-900 ${plan.theme.borderDefault}`
+                    } shadow-xs hover:shadow-md`}
                   >
-                    {isGold && (
-                      <span className="absolute left-2.5 top-2.5 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[9px] shadow-xs flex items-center gap-1">
-                        <Crown className="w-2.5 h-2.5" />
-                        الأقوى 🌟
+                    {/* Top Pill Badge */}
+                    <div className="mb-3">
+                      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black shadow-xs ${plan.theme.badgeBg}`}>
+                        {plan.badgeIcon === "star" && <Star className="w-3 h-3 fill-current" />}
+                        {plan.badgeIcon === "zap" && <Zap className="w-3 h-3 fill-current" />}
+                        {plan.badgeIcon === "sparkles" && <Sparkles className="w-3 h-3" />}
+                        <span>{plan.badge}</span>
                       </span>
-                    )}
+                    </div>
 
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
-                          isSelected ? "border-indigo-600 bg-indigo-600 text-white" : "border-slate-400"
-                        }`}>
-                          {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    {/* Price Header */}
+                    <div className="mb-3">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                          ₪{plan.price}
                         </span>
-                        <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight">
-                          {p.name}
-                        </h4>
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                          {plan.priceNote}
+                        </span>
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {p.period_type === "weekly" ? "أسبوعية" : (isGold ? "فصل كامل (120 يوم)" : "شهرية (30 يوم)")}
+                      <h3 className={`text-sm font-black mt-1 ${isElite ? "text-amber-600 dark:text-amber-400" : isPremium ? "text-indigo-600 dark:text-indigo-400" : "text-slate-900 dark:text-white"}`}>
+                        {plan.title}
+                      </h3>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">
+                        {plan.desc}
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80">
-                      <span className="font-black text-indigo-600 dark:text-indigo-400 text-xs">
-                        {p.lecture_quota} دقيقة
-                      </span>
-                      <span className="font-bold text-slate-700 dark:text-slate-300 text-xs">
-                        {p.price_ils} شيكل
-                      </span>
+                    {/* Quota & Validity Box */}
+                    <div className={`p-2.5 rounded-2xl border mb-3 flex items-center justify-between text-xs font-black ${plan.theme.quotaBg}`}>
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{plan.minutes} دقيقة ذكية</span>
+                      </div>
+                      <span className="text-[10px] font-bold opacity-80">{plan.durationText}</span>
                     </div>
-                  </button>
+
+                    {/* Features List */}
+                    <div className="space-y-1.5 text-[11px] font-medium text-slate-600 dark:text-slate-300 pt-2 border-t border-slate-100 dark:border-slate-800/80 mb-3">
+                      <div className="flex items-center gap-1.5">
+                        <Check className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                        <span>{plan.lectures}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Check className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                        <span>{plan.chapters}</span>
+                      </div>
+                      {plan.specialPerk && (
+                        <div className={`p-2 rounded-xl text-[10px] font-bold leading-relaxed ${
+                          isElite ? "bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                        }`}>
+                          {plan.specialPerk}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Select Radio / Button indicator */}
+                    <div className="pt-2">
+                      <div className={`w-full py-2 rounded-xl text-xs font-black text-center transition flex items-center justify-center gap-1.5 ${
+                        isSelected 
+                          ? (isElite ? "bg-amber-500 text-slate-950 font-black shadow-sm" : isPremium ? "bg-indigo-600 text-white shadow-sm" : "bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-950")
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                      }`}>
+                        {isSelected && <Check className="w-3.5 h-3.5" />}
+                        <span>{isSelected ? "الباقة المختارة لتفعيلها ✓" : "اختر هذه الباقة"}</span>
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
+            </div>
 
-              {/* Option: Custom minutes only without specific plan */}
-              <button
-                type="button"
+            {/* Custom Minutes Option (Toggleable) */}
+            {showCustomOption && (
+              <div 
                 onClick={() => setSelectedPlanId("custom_only")}
-                className={`p-3.5 rounded-2xl border text-right transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                className={`p-4 rounded-2xl border text-right transition cursor-pointer flex items-center justify-between ${
                   selectedPlanId === "custom_only"
                     ? "bg-indigo-50/80 dark:bg-indigo-950/40 border-indigo-500 ring-2 ring-indigo-500/30"
-                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                    : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300"
                 }`}
               >
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
-                      selectedPlanId === "custom_only" ? "border-indigo-600 bg-indigo-600 text-white" : "border-slate-400"
-                    }`}>
-                      {selectedPlanId === "custom_only" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                    </span>
-                    <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight">
-                      رصيد دقائق مخصص فقط
-                    </h4>
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    شحن يدوي بعدد دقائق تحدده أنت دون ربط بباقة
+                  <h4 className="font-black text-xs text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>شحن رصيد دقائق مخصص فقط (بدون ربط بباقة)</span>
+                    {selectedPlanId === "custom_only" && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-600 text-white font-bold">محدد</span>
+                    )}
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    تعبئة يدوية لأي عدد من الدقائق يحدده الأدمن مباشرة دون تغيير اسم الباقة
                   </p>
                 </div>
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80">
-                  <span className="font-black text-amber-600 dark:text-amber-400 text-xs">
-                    مخصص
-                  </span>
-                  <span className="text-[10px] text-slate-400">بدون تسعيرة ثابتة</span>
-                </div>
-              </button>
-            </div>
+                <span className="text-xs font-black text-indigo-600 dark:text-indigo-400">
+                  تحديد يدوي
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* 3. Bonus Minutes & Calculation */}
+          {/* Step 3: Bonus Minutes & Accumulation Options */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
-                {selectedPlanId === "custom_only" ? "عدد الدقائق المراد شحنها:" : "دقائق إضافية / بونص (اختياري):"}
+              <label className="text-xs font-black text-slate-800 dark:text-slate-200 mb-1.5 block">
+                {selectedPlanId === "custom_only" ? "عدد الدقائق المراد شحنها:" : "دقائق إضافية / بونص تمنحها للعميل:"}
               </label>
               <div className="relative">
                 <input 
@@ -449,29 +546,19 @@ export default function AssignSubscriptionModal({
                   min="0"
                   step="5"
                   value={customBonusMinutes || ""}
-                  placeholder={selectedPlanId === "custom_only" ? "مثال: 500" : "0"}
+                  placeholder={selectedPlanId === "custom_only" ? "مثال: 500" : "0 (اختياري)"}
                   onChange={(e) => setCustomBonusMinutes(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-2.5 px-3 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-2.5 px-3 text-xs font-black text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
                 />
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">دقيقة</span>
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
-                طريقة احتساب الرصيد:
+              <label className="text-xs font-black text-slate-800 dark:text-slate-200 mb-1.5 block">
+                طريقة احتساب الدقائق في حساب الطالب:
               </label>
-              <div className="space-y-1.5 text-xs">
-                <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-700 dark:text-slate-300">
-                  <input 
-                    type="radio"
-                    name="mode"
-                    checked={!addToExisting}
-                    onChange={() => setAddToExisting(false)}
-                    className="accent-indigo-600"
-                  />
-                  <span>ضبط رصيد جديد للباقة</span>
-                </label>
+              <div className="space-y-2 text-xs">
                 <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-700 dark:text-slate-300">
                   <input 
                     type="radio"
@@ -480,29 +567,41 @@ export default function AssignSubscriptionModal({
                     onChange={() => setAddToExisting(true)}
                     className="accent-indigo-600"
                   />
-                  <span>إضافة وتراكم فوق الرصيد الحالي</span>
+                  <span>إضافة وتراكم فوق رصيده الحالي (مستحسن)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-700 dark:text-slate-300">
+                  <input 
+                    type="radio"
+                    name="mode"
+                    checked={!addToExisting}
+                    onChange={() => setAddToExisting(false)}
+                    className="accent-indigo-600"
+                  />
+                  <span>استبدال الرصيد السابق بالرصيد الجديد</span>
                 </label>
               </div>
             </div>
           </div>
 
-          {/* 4. Live Summary Card */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-amber-500/10 border border-indigo-200 dark:border-indigo-500/20 flex flex-wrap items-center justify-between gap-3">
+          {/* Step 4: Summary Card Before Confirmation */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-indigo-600/10 border border-indigo-200 dark:border-indigo-500/30 flex flex-wrap items-center justify-between gap-4">
             <div>
               <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-bold">
-                إجمالي الدقائق بعد الاعتماد والتفعيل:
+                إجمالي رصيد الدقائق في حساب الطالب بعد الاعتماد:
               </span>
-              <span className="text-2xl font-black text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
-                <span>{totalMinsCalculated}</span>
-                <span className="text-xs font-bold text-slate-500">دقيقة ذكية</span>
-              </span>
+              <div className="flex items-baseline gap-2 mt-0.5">
+                <span className="text-3xl font-black text-indigo-700 dark:text-indigo-300">
+                  {totalCalculated}
+                </span>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                  دقيقة ذكية ({addToExisting ? `${previousQuota} رصيد سابق + ${selectedPlanId === "custom_only" ? bonusMins : baseMinutes + bonusMins}` : "رصيد معتمد جديد"})
+                </span>
+              </div>
             </div>
 
-            <div className="text-left text-xs font-bold text-slate-600 dark:text-slate-400">
-              <p>الباقة: <span className="text-slate-900 dark:text-white">{currentSelectedPlan?.name || "رصيد مخصص"}</span></p>
-              <p>الصلاحية: <span className="text-slate-900 dark:text-white">
-                {currentSelectedPlan?.period_type === "weekly" ? "أسبوع كامل" : (currentSelectedPlan?.name.includes("الذهبية") ? "فصل كامل (4 شهور)" : "شهر كامل")}
-              </span></p>
+            <div className="text-left text-xs font-bold text-slate-700 dark:text-slate-300">
+              <p>الباقة: <span className="font-black text-slate-900 dark:text-white">{currentSelectedPlan?.title || "رصيد مخصص"}</span></p>
+              <p>الصلاحية: <span className="font-black text-slate-900 dark:text-white">{currentSelectedPlan?.durationText || "30 يوم"}</span></p>
             </div>
           </div>
 
@@ -519,16 +618,16 @@ export default function AssignSubscriptionModal({
             <button
               type="submit"
               disabled={submitting || !email.trim() || (!selectedPlanId && customBonusMinutes <= 0)}
-              className="px-7 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs font-black shadow-lg shadow-indigo-600/25 flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
+              className="px-7 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-amber-600 hover:from-indigo-500 hover:to-amber-500 text-white text-xs font-black shadow-lg shadow-indigo-600/25 flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
             >
               {submitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>جاري تفعيل الاشتراك والشحن...</span>
+                  <span>جاري تفعيل الاشتراك وشحن الرصيد...</span>
                 </>
               ) : (
                 <>
-                  <Zap className="w-4 h-4" />
+                  <Zap className="w-4 h-4 text-amber-300" />
                   <span>تأكيد وشحن الباقة للعميل فوراً ⚡</span>
                 </>
               )}
