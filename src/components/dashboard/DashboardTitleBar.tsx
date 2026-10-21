@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { BookOpen, Pencil, Check, X, ChevronLeft } from "lucide-react";
 
+import StudyFocusTimer from "@/components/dashboard/StudyFocusTimer";
+
 interface DashboardTitleBarProps {
   lectureTitle: string;
   setLectureTitle: (title: string) => void;
@@ -95,6 +97,8 @@ export default function DashboardTitleBar({
       </div>
 
       <div className="flex items-center gap-2 shrink-0 w-full md:w-auto justify-end">
+        <StudyFocusTimer currentHistoryId={currentHistoryId} lectureTitle={lectureTitle} />
+
         <button
           onClick={onBackToHome}
           className="relative z-10 flex items-center gap-1.5 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white font-bold transition-all bg-slate-100 dark:bg-slate-900/60 hover:bg-slate-200 dark:hover:bg-indigo-600/20 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-sm w-full md:w-auto text-center justify-center text-xs cursor-pointer"
