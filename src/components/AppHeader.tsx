@@ -12,7 +12,6 @@ import {
   Sparkles, CheckCircle2, Shield, HelpCircle, Zap, Clock, Palette, Layers, CheckSquare
 } from "lucide-react";
 import StudentProfileModal from "@/components/StudentProfileModal";
-import StudyFocusTimer from "@/components/dashboard/StudyFocusTimer";
 import { createClient } from "@/lib/supabase";
 
 interface AppHeaderProps {
@@ -516,10 +515,6 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                 <span className="font-bold text-slate-600 dark:text-slate-300 text-[11px] sm:text-xs">دقيقة</span>
               </div>
             )}
-
-
-            {/* Global Study Focus Timer in Header */}
-            <StudyFocusTimer variant="header" />
 
             {/* Theme Toggle Button */}
             <button 
