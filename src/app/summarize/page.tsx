@@ -28,7 +28,6 @@ import {
 import AppHeader from "@/components/AppHeader";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
 import HeroSimulation from "@/components/landing/HeroSimulation";
-import StudyFocusTimer from "@/components/dashboard/StudyFocusTimer";
 import { createClient } from "@/lib/supabase";
 
 function SummarizeContent() {
@@ -732,11 +731,7 @@ function SummarizeContent() {
             </p>
           </div>
 
-          {/* Featured Study Focus Timer in لمّاح بخططلك */}
-          <div className="shrink-0">
-            <StudyFocusTimer variant="pill" />
-          </div>
-        </div>
+                  </div>
 
         {/* Main Processing or Upload Section */}
         <AnimatePresence mode="wait">

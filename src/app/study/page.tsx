@@ -34,6 +34,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
 import dynamic from "next/dynamic";
 import AppHeader from "@/components/AppHeader";
+import StudyFocusTimer from "@/components/dashboard/StudyFocusTimer";
 
 const PDFCanvasViewer = dynamic(
   () => import("@/components/study/PDFCanvasViewer"),
@@ -684,6 +685,7 @@ function StudyPageContent() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <StudyFocusTimer variant="pill" lectureTitle={documentTitle} />
               {/* Vault Library Button */}
               <button
                 type="button"
