@@ -9,9 +9,10 @@ import {
   Package, Store, BookOpen, Download, Crown, 
   History, User, Sun, Moon, LogOut, LayoutDashboard,
   GraduationCap, Video, PenTool, ChevronDown, Menu, X,
-  Sparkles, CheckCircle2, Shield, HelpCircle, Zap, Palette, Layers, CheckSquare
+  Sparkles, CheckCircle2, Shield, HelpCircle, Zap, Clock, Palette, Layers, CheckSquare
 } from "lucide-react";
 import StudentProfileModal from "@/components/StudentProfileModal";
+import StudyFocusTimer from "@/components/dashboard/StudyFocusTimer";
 import { createClient } from "@/lib/supabase";
 
 interface AppHeaderProps {
@@ -462,7 +463,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                       </div>
                       <div className="min-w-0">
                         <div className="font-black">كشك المشاريع</div>
-                        <div className="text-[10px] text-slate-400 font-normal">مشاريع وأفكار تخرج جاهزة</div>
+                        <div className="text-[10px] text-slate-400 font-normal">مشاريع جامعية ملهمة ومتميزة</div>
                       </div>
                     </div>
                     <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 shrink-0">
@@ -516,6 +517,9 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
               </div>
             )}
 
+
+            {/* Global Study Focus Timer in Header */}
+            <StudyFocusTimer variant="header" />
 
             {/* Theme Toggle Button */}
             <button 

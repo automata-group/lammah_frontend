@@ -16,16 +16,18 @@ import {
   X,
   FastForward,
   ChevronRight,
-  Maximize2,
-  Minimize2,
   Sliders,
   CheckCircle2,
-  CloudRain
+  CloudRain,
+  CheckCheck,
+  Award
 } from "lucide-react";
 
 interface StudyFocusTimerProps {
   currentHistoryId?: string | null;
   lectureTitle?: string;
+  variant?: "pill" | "header" | "compact";
+  className?: string;
 }
 
 export type TimerMode = "study" | "break";
@@ -42,7 +44,7 @@ interface PresetConfig {
 const PRESETS: PresetConfig[] = [
   {
     id: "pomodoro",
-    name: "كويز سريع (Pomodoro)",
+    name: "جلسة بومودورو (Pomodoro)",
     studyMins: 25,
     breakMins: 5,
     icon: "⚡",
@@ -66,7 +68,12 @@ const PRESETS: PresetConfig[] = [
   },
 ];
 
-export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: StudyFocusTimerProps) {
+export default function StudyFocusTimer({
+  currentHistoryId,
+  lectureTitle,
+  variant = "pill",
+  className = "",
+}: StudyFocusTimerProps) {
   // Config state
   const [studyMinutes, setStudyMinutes] = useState<number>(25);
   const [breakMinutes, setBreakMinutes] = useState<number>(5);
@@ -78,6 +85,10 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isCustomizing, setIsCustomizing] = useState<boolean>(false);
+
+  // Session summary dialog state
+  const [showSummary, setShowSummary] = useState<boolean>(false);
+  const [lastCompletedSessionMins, setLastCompletedSessionMins] = useState<number>(0);
 
   // Audio settings
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
@@ -100,40 +111,51 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
   }, []);
 
   const lectureKey = useMemo(() => {
-    return currentHistoryId ? `lammah_study_lecture_${currentHistoryId}` : null;
+    if (!currentHistoryId) return null;
+    return `lammah_study_lecture_${currentHistoryId}`;
   }, [currentHistoryId]);
 
-  // Load cumulative stats from localStorage on mount
+  // Global event listener to open study timer from anywhere on the platform
+  useEffect(() => {
+    const handleOpen = () => setIsModalOpen(true);
+    window.addEventListener("open-study-timer", handleOpen);
+    return () => window.removeEventListener("open-study-timer", handleOpen);
+  }, []);
+
+  // Load persisted seconds on mount
   useEffect(() => {
     try {
       const savedToday = localStorage.getItem(todayKey);
-      if (savedToday) setTodayStudySeconds(Number(savedToday) || 0);
+      if (savedToday) setTodayStudySeconds(parseInt(savedToday, 10) || 0);
 
       const savedSessions = localStorage.getItem(`${todayKey}_sessions`);
-      if (savedSessions) setCompletedSessionsCount(Number(savedSessions) || 0);
+      if (savedSessions) setCompletedSessionsCount(parseInt(savedSessions, 10) || 0);
 
       if (lectureKey) {
-        const savedLec = localStorage.getItem(lectureKey);
-        if (savedLec) setLectureStudySeconds(Number(savedLec) || 0);
+        const savedLecture = localStorage.getItem(lectureKey);
+        if (savedLecture) setLectureStudySeconds(parseInt(savedLecture, 10) || 0);
       }
-    } catch {}
+    } catch (e) {
+      console.warn("Could not read study timer from storage:", e);
+    }
   }, [todayKey, lectureKey]);
 
-  // Init Web Audio
+  // Lazy Web Audio Context initializer
   const getAudioContext = useCallback(() => {
-    if (!audioCtxRef.current && typeof window !== "undefined") {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (typeof window === "undefined") return null;
+    if (!audioCtxRef.current) {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (AudioCtx) {
         audioCtxRef.current = new AudioCtx();
       }
     }
     if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
-      audioCtxRef.current.resume().catch(() => {});
+      audioCtxRef.current.resume();
     }
     return audioCtxRef.current;
   }, []);
 
-  // Synthesize crystal bell chimes for notifications
+  // Synthesize pleasant acoustic chime
   const playChime = useCallback(
     (type: "start" | "break" | "complete") => {
       if (!soundEnabled) return;
@@ -142,101 +164,94 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
         if (!ctx) return;
 
         const now = ctx.currentTime;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+        const chords =
+          type === "start"
+            ? [523.25, 659.25, 783.99] // C5 - E5 - G5
+            : type === "break"
+            ? [783.99, 659.25, 523.25, 659.25] // Relaxing descending
+            : [523.25, 659.25, 783.99, 1046.5]; // Victory fan-fare
 
-        osc.connect(gain);
-        gain.connect(ctx.destination);
+        chords.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
 
-        if (type === "start") {
-          // Energetic ascending chime: 523Hz (C5) -> 659Hz (E5)
           osc.type = "sine";
-          osc.frequency.setValueAtTime(523.25, now);
-          osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.15);
-          gain.gain.setValueAtTime(0.001, now);
-          gain.gain.linearRampToValueAtTime(0.2, now + 0.05);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-          osc.start(now);
-          osc.stop(now + 0.85);
-        } else if (type === "break") {
-          // Calm, soothing bell: 440Hz (A4) -> 330Hz (E4)
-          osc.type = "sine";
-          osc.frequency.setValueAtTime(440, now);
-          osc.frequency.exponentialRampToValueAtTime(329.63, now + 0.3);
-          gain.gain.setValueAtTime(0.001, now);
-          gain.gain.linearRampToValueAtTime(0.25, now + 0.08);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-          osc.start(now);
-          osc.stop(now + 1.25);
-        } else {
-          // Triumphant double chord
-          osc.type = "triangle";
-          osc.frequency.setValueAtTime(587.33, now); // D5
-          osc.frequency.setValueAtTime(880, now + 0.2); // A5
-          gain.gain.setValueAtTime(0.001, now);
-          gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
-          osc.start(now);
-          osc.stop(now + 1.55);
-        }
-      } catch {}
+          osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+
+          gain.gain.setValueAtTime(0, now + idx * 0.12);
+          gain.gain.linearRampToValueAtTime(0.18, now + idx * 0.12 + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.9);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(now + idx * 0.12);
+          osc.stop(now + idx * 0.12 + 1.0);
+        });
+      } catch (err) {
+        console.warn("Audio chime error:", err);
+      }
     },
     [soundEnabled, getAudioContext]
   );
 
-  // Soft Ambient Pink Noise Generator (Rain-like sound)
+  // Synthesize gentle pink-noise rain sound
   useEffect(() => {
-    if (!ambientRainEnabled || !isRunning || mode !== "study") {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    if (ambientRainEnabled && isRunning && mode === "study") {
+      try {
+        const bufferSize = ctx.sampleRate * 2;
+        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+
+        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.99886 * b0 + white * 0.0555179;
+          b1 = 0.99332 * b1 + white * 0.0750759;
+          b2 = 0.96900 * b2 + white * 0.1538520;
+          b3 = 0.86650 * b3 + white * 0.3104856;
+          b4 = 0.55000 * b4 + white * 0.5329522;
+          b5 = -0.7616 * b5 - white * 0.0168980;
+          output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.04;
+          b6 = white * 0.115926;
+        }
+
+        const whiteNoise = ctx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(800, ctx.currentTime);
+
+        const gainNode = ctx.createGain();
+        gainNode.gain.setValueAtTime(0.04, ctx.currentTime);
+
+        whiteNoise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        whiteNoise.start();
+        ambientNoiseNodeRef.current = whiteNoise;
+      } catch (e) {
+        console.warn("Pink noise generator error:", e);
+      }
+    } else {
       if (ambientNoiseNodeRef.current) {
         try {
-          (ambientNoiseNodeRef.current as any).stop?.();
-          ambientNoiseNodeRef.current.disconnect();
+          (ambientNoiseNodeRef.current as AudioBufferSourceNode).stop();
         } catch {}
         ambientNoiseNodeRef.current = null;
       }
-      return;
     }
-
-    try {
-      const ctx = getAudioContext();
-      if (!ctx) return;
-
-      const bufferSize = ctx.sampleRate * 2;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      let b0 = 0, b1 = 0, b2 = 0;
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        b0 = 0.99886 * b0 + white * 0.0555179;
-        b1 = 0.99332 * b1 + white * 0.0750759;
-        b2 = 0.96900 * b2 + white * 0.1538520;
-        data[i] = (b0 + b1 + b2) * 0.05; // very gentle volume
-      }
-
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-      noise.loop = true;
-
-      const filter = ctx.createBiquadFilter();
-      filter.type = "lowpass";
-      filter.frequency.setValueAtTime(800, ctx.currentTime);
-
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.08, ctx.currentTime);
-
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-
-      noise.start();
-      ambientNoiseNodeRef.current = noise;
-    } catch {}
 
     return () => {
       if (ambientNoiseNodeRef.current) {
         try {
-          (ambientNoiseNodeRef.current as any).stop?.();
-          ambientNoiseNodeRef.current.disconnect();
+          (ambientNoiseNodeRef.current as AudioBufferSourceNode).stop();
         } catch {}
         ambientNoiseNodeRef.current = null;
       }
@@ -255,8 +270,7 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
         if (prev <= 1) {
           // Timer finished!
           if (mode === "study") {
-            playChime("break");
-            // Increment completed sessions
+            playChime("complete");
             setCompletedSessionsCount((c) => {
               const next = c + 1;
               try {
@@ -264,7 +278,9 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
               } catch {}
               return next;
             });
-            // Switch to break
+            setLastCompletedSessionMins(studyMinutes);
+            setShowSummary(true);
+            setIsRunning(false);
             setMode("break");
             return breakMinutes * 60;
           } else {
@@ -334,6 +350,24 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
     }
   };
 
+  // Explicitly End Session & Calculate Time (Requested by the user)
+  const handleEndSessionAndTally = () => {
+    setIsRunning(false);
+    const studiedSecs = Math.max(0, studyMinutes * 60 - secondsLeft);
+    const sessionMins = Math.max(1, Math.round(studiedSecs / 60));
+    setLastCompletedSessionMins(sessionMins);
+    setCompletedSessionsCount((c) => {
+      const next = c + 1;
+      try {
+        localStorage.setItem(`${todayKey}_sessions`, String(next));
+      } catch {}
+      return next;
+    });
+    playChime("complete");
+    setShowSummary(true);
+    setSecondsLeft(studyMinutes * 60);
+  };
+
   const handleSelectPreset = (preset: PresetConfig) => {
     setSelectedPreset(preset.id);
     setStudyMinutes(preset.studyMins);
@@ -385,47 +419,47 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
 
   return (
     <>
-      {/* 1. Header Trigger Pill (Rendered in DashboardTitleBar or top toolbar) */}
-      <div className="flex items-center gap-2">
+      {/* 1. Header Trigger Pill */}
+      <div className={`flex items-center gap-2 ${className}`}>
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-xs cursor-pointer group active:scale-95 ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full border text-xs font-bold transition-all shadow-xs cursor-pointer group active:scale-95 ${
             isRunning
               ? mode === "study"
                 ? "bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 shadow-amber-500/10"
                 : "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 shadow-emerald-500/10"
-              : "bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20"
+              : "bg-indigo-50/80 dark:bg-indigo-500/10 border-indigo-200/90 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 hover:border-indigo-300"
           }`}
-          title="مؤقت المذاكرة الذكي"
+          title="مؤقت المذاكرة والتركيز الذكي"
         >
           {isRunning ? (
             <>
-              <span className="relative flex h-2.5 w-2.5">
+              <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
                 <span
                   className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
                     mode === "study" ? "bg-amber-500" : "bg-emerald-500"
                   }`}
                 />
                 <span
-                  className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                  className={`relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 ${
                     mode === "study" ? "bg-amber-600" : "bg-emerald-600"
                   }`}
                 />
               </span>
-              <span className="font-mono font-black text-xs sm:text-sm tracking-wider">
+              <span className="font-mono font-black text-xs tracking-wider">
                 {formatTime(secondsLeft)}
               </span>
-              <span className="text-[11px] font-medium hidden sm:inline">
+              <span className="text-[10px] sm:text-[11px] font-medium hidden md:inline">
                 {mode === "study" ? "دراسة 🎯" : "استراحة ☕"}
               </span>
             </>
           ) : (
             <>
               <Clock className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 group-hover:rotate-12 transition-transform" />
-              <span>مؤقت المذاكرة</span>
+              <span className="text-[11px] sm:text-xs">مؤقت المذاكرة</span>
               {todayStudySeconds > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-[10px] text-indigo-600 dark:text-indigo-300 font-black hidden lg:inline">
+                <span className="px-1.5 py-0.2 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-[10px] text-indigo-700 dark:text-indigo-300 font-black hidden lg:inline">
                   {Math.floor(todayStudySeconds / 60)} د
                 </span>
               )}
@@ -441,7 +475,7 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
             initial={{ opacity: 0, y: 30, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.9 }}
-            className="fixed bottom-6 left-6 z-40 bg-white/90 dark:bg-[#0c1222]/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-2xl rounded-2xl p-2.5 flex items-center gap-3 pr-3.5"
+            className="fixed bottom-6 left-6 z-40 bg-white/95 dark:bg-[#0c1222]/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-2xl rounded-2xl p-2.5 flex items-center gap-3 pr-3.5"
             dir="rtl"
           >
             {/* Mode Indicator & Time */}
@@ -458,77 +492,76 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
               >
                 {mode === "study" ? "🎯" : "☕"}
               </div>
-              <div className="flex flex-col">
-                <span className="font-mono font-black text-sm text-slate-900 dark:text-white leading-none">
+              <div className="text-right">
+                <span className="font-mono font-black text-sm text-slate-900 dark:text-white block leading-tight">
                   {formatTime(secondsLeft)}
                 </span>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                  {mode === "study" ? "جلسة تركيز" : "وقت استراحة"}
+                  {mode === "study" ? "جلسة تركيز" : "استراحة راحة"}
                 </span>
               </div>
             </div>
 
-            {/* Controls */}
-            <div className="flex items-center gap-1 border-r border-slate-200 dark:border-slate-800 pr-2">
-              <button
-                type="button"
-                onClick={handleTogglePlay}
-                className="w-7 h-7 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition-transform active:scale-90"
-              >
-                {isRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(true)}
-                className="w-7 h-7 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-all"
-                title="تكبير"
-              >
-                <Maximize2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            {/* Quick Play/Pause */}
+            <button
+              type="button"
+              onClick={handleTogglePlay}
+              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
+            >
+              {isRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+            </button>
+
+            {/* End session quick button */}
+            <button
+              type="button"
+              onClick={handleEndSessionAndTally}
+              className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition cursor-pointer"
+              title="إنهاء الجلسة وحساب الإنجاز"
+            >
+              <CheckCheck className="w-3.5 h-3.5" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 3. Comprehensive Focus Timer Modal */}
+      {/* 3. Primary Full Modal Interface */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" dir="rtl">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white dark:bg-[#0c1222] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col relative"
-              dir="rtl"
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="relative w-full max-w-lg bg-white dark:bg-[#0B0F19] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden"
             >
               {/* Modal Header */}
-              <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-slate-100 dark:border-slate-800/80">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-xs">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                     <Clock className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-1.5">
-                      مؤقت المذاكرة والتركيز
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-bold border border-indigo-200/60 dark:border-indigo-500/20">
-                        لمّاح بخططلك
+                    <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <span>مؤقت المذاكرة والتركيز</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">
+                        الذكاء الدراسي
                       </span>
                     </h3>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                      اضبط أوقات دراستك واستراحتك بدقة وتابع إنجازك
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      حدد مدة الدراسة والاستراحة لتنظيم إنجازك
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1.5">
-                  {/* Sound toggle */}
+                  {/* Sound Toggle */}
                   <button
                     type="button"
                     onClick={() => setSoundEnabled(!soundEnabled)}
                     className={`p-2 rounded-xl border transition-colors cursor-pointer ${
                       soundEnabled
-                        ? "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
-                        : "bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800 text-rose-500"
+                        ? "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
+                        : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 line-through"
                     }`}
                     title={soundEnabled ? "كتم الأصوات" : "تفعيل الأصوات"}
                   >
@@ -600,7 +633,6 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
                 {/* Circular Progress Ring with Countdown */}
                 <div className="relative w-52 h-52 flex items-center justify-center my-2">
                   <svg className="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
-                    {/* Background Track */}
                     <circle
                       cx="100"
                       cy="100"
@@ -610,7 +642,6 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
                       fill="transparent"
                       className="text-slate-100 dark:text-slate-800/80"
                     />
-                    {/* Animated Progress Arc */}
                     <circle
                       cx="100"
                       cy="100"
@@ -629,7 +660,6 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
                     />
                   </svg>
 
-                  {/* Central Text & Counter */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                     <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1">
                       {mode === "study" ? "جلسة تركيز دراسي" : "وقت استراحة مريح"}
@@ -638,7 +668,7 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
                       {formatTime(secondsLeft)}
                     </span>
                     <span
-                      className={`text-[10px] font-black px-2 py-0.5 rounded-full mt-2 ${
+                      className={`text-[10px] font-black px-2.5 py-0.5 rounded-full mt-2 ${
                         isRunning
                           ? mode === "study"
                             ? "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300"
@@ -652,7 +682,7 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
                 </div>
 
                 {/* Primary Action Buttons */}
-                <div className="flex items-center gap-3 mt-6">
+                <div className="flex items-center gap-3 mt-5">
                   <button
                     type="button"
                     onClick={handleReset}
@@ -696,9 +726,21 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
                   </button>
                 </div>
 
+                {/* Explicit "End Session & Tally Time" Button */}
+                {mode === "study" && (studyMinutes * 60 - secondsLeft > 30 || isRunning) && (
+                  <button
+                    type="button"
+                    onClick={handleEndSessionAndTally}
+                    className="mt-3 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center gap-1.5 py-1.5 px-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition cursor-pointer"
+                  >
+                    <CheckCheck className="w-4 h-4" />
+                    <span>إنهاء الجلسة وحساب وقت الدراسة</span>
+                  </button>
+                )}
+
                 {/* Preset Selector & Custom Mode Drawer */}
-                <div className="w-full mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/80">
-                  <div className="flex items-center justify-between mb-3">
+                <div className="w-full mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                  <div className="flex items-center justify-between mb-2.5">
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                       <Sliders className="w-3.5 h-3.5 text-indigo-500" />
                       <span>أنماط الدراسة المقترحة</span>
@@ -749,7 +791,7 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
                         <input
                           type="range"
                           min="5"
-                          max="90"
+                          max="120"
                           step="5"
                           value={studyMinutes}
                           onChange={(e) => handleApplyCustom(Number(e.target.value), breakMinutes)}
@@ -764,7 +806,7 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
                         <input
                           type="range"
                           min="1"
-                          max="30"
+                          max="45"
                           step="1"
                           value={breakMinutes}
                           onChange={(e) => handleApplyCustom(studyMinutes, Number(e.target.value))}
@@ -810,6 +852,75 @@ export default function StudyFocusTimer({ currentHistoryId, lectureTitle }: Stud
                     <span>أحسنت! اشرب ماء، تحرك قليلاً، وريّح عينيك من الشاشة قبل الجلسة القادمة.</span>
                   </div>
                 )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 4. Session Completed Celebration Modal (Requested: لما أخلص يحسبلي قديش خلصت) */}
+      <AnimatePresence>
+        {showSummary && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" dir="rtl">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-sm bg-white dark:bg-[#0B0F19] border border-emerald-300 dark:border-emerald-500/40 rounded-3xl p-6 text-center shadow-2xl"
+            >
+              <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/25 mb-4 ring-4 ring-emerald-50 dark:ring-emerald-950/40">
+                🎉
+              </div>
+
+              <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1">
+                أحسنت يا بطل! أنهيت جلستك
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
+                تم تسجيل إنجازك بنجاح وإضافته إلى إحصائيات دراستك
+              </p>
+
+              <div className="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 space-y-2.5 mb-5 text-right">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500 dark:text-slate-400">إنجاز هذه الجلسة:</span>
+                  <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
+                    {lastCompletedSessionMins} دقيقة تركيز
+                  </span>
+                </div>
+                <div className="border-t border-slate-200/60 dark:border-slate-800" />
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500 dark:text-slate-400">إجمالي دراستك اليوم:</span>
+                  <span className="font-black text-slate-900 dark:text-white text-sm">
+                    {formatTotalTime(todayStudySeconds)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500 dark:text-slate-400">عدد الجلسات المكتملة:</span>
+                  <span className="font-black text-indigo-600 dark:text-indigo-400">
+                    {completedSessionsCount} جلسة 🔥
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSummary(false);
+                    setMode("break");
+                    setSecondsLeft(breakMinutes * 60);
+                    setIsRunning(true);
+                  }}
+                  className="py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition cursor-pointer shadow-xs"
+                >
+                  أخذ استراحة ({breakMinutes} د) ☕
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSummary(false)}
+                  className="py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-black text-xs transition cursor-pointer"
+                >
+                  متابعة المهام 👍
+                </button>
               </div>
             </motion.div>
           </div>
