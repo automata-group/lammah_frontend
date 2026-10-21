@@ -367,6 +367,23 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
               {studyMenuOpen && (
                 <div className="absolute right-0 mt-2.5 w-60 bg-white/95 dark:bg-[#0c111d]/95 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-900/10 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
                   <button
+                    onClick={() => { setStudyMenuOpen(false); router.push("/history"); }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer text-right ${
+                      activePage === "history"
+                        ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"
+                        : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5"
+                    }`}
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-black">سجل المحاضرات</div>
+                      <div className="text-[10px] text-slate-400 font-normal">أرشيف وتلخيصات جميع محاضراتك</div>
+                    </div>
+                  </button>
+
+                  <button
                     onClick={() => { setStudyMenuOpen(false); router.push("/notebook"); }}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer text-right ${
                       activePage === "notebook"

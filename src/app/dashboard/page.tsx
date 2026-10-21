@@ -686,108 +686,115 @@ function DashboardContent() {
     }
   }, [user, loading, session, router]);
 
-  // Fetch History on history_id param
-  useEffect(() => {
-    const fetchHistory = async () => {
-      if (typeof window !== "undefined" && session) {
-        const params = new URLSearchParams(window.location.search);
-        const historyId = params.get("history_id");
+  // Unified Instant Lecture Loader (Direct Handoff & SWR Cache)
+  const loadLectureById = useCallback(async (historyId: string, preloadedMeta?: any) => {
+    if (!historyId) return;
+    setCurrentHistoryId(historyId);
 
-        if (historyId) {
-          window.history.replaceState({}, document.title, window.location.pathname);
-          setCurrentHistoryId(historyId);
+    // 1. Check instant cache or preloaded data for 0ms rendering
+    let hasRenderedInstantly = false;
+    let cachedMeta = preloadedMeta;
 
-          // World-Class SWR Instant Cache: Check client cache first for 0ms rendering
-          let hasInstantCache = false;
-          try {
-            const cached = sessionStorage.getItem("lammah_instant_lecture_" + historyId);
-            if (cached) {
-              const parsed = JSON.parse(cached);
-              const meta = parsed.metadata || parsed;
-              if (meta?.annotations) {
-                hasInstantCache = true;
-                setLectureTitle(meta.title || "محاضرة بدون عنوان");
-                const hasPdf = meta.has_pdf !== undefined ? meta.has_pdf : meta.annotations?.slide_explanations?.length > 0;
-                selectInitialTab(meta.annotations, !!hasPdf);
-                setResult({
-                  transcript: meta.transcript || "",
-                  downloadUrl: parsed.downloadUrl || (hasPdf ? `/api/v1/summarize/download/${meta.job_id}.pdf` : null),
-                  annotations: meta.annotations,
-                  isDocumentOnly: !meta.transcript?.trim(),
-                });
-                setIsProcessing(false);
-                setProgressStep("");
-              }
-            }
-          } catch {}
+    if (!cachedMeta && typeof window !== "undefined") {
+      try {
+        const cachedStr = sessionStorage.getItem("lammah_instant_lecture_" + historyId);
+        if (cachedStr) {
+          const parsed = JSON.parse(cachedStr);
+          cachedMeta = parsed.metadata || parsed;
+        }
+      } catch {}
+    }
 
-          if (!hasInstantCache) {
-            setIsProcessing(true);
-            setProgressStep("جاري استرجاع المحاضرة والتظليلات من الأرشيف...");
+    if (cachedMeta?.annotations) {
+      hasRenderedInstantly = true;
+      setLectureTitle(cachedMeta.title || "محاضرة جامعية");
+      const hasPdf = cachedMeta.has_pdf !== undefined
+        ? cachedMeta.has_pdf
+        : cachedMeta.annotations?.slide_explanations?.length > 0;
+      selectInitialTab(cachedMeta.annotations, !!hasPdf);
+      setResult({
+        transcript: cachedMeta.transcript || "",
+        downloadUrl: hasPdf ? `/api/v1/summarize/download/${cachedMeta.job_id || historyId}.pdf` : null,
+        annotations: cachedMeta.annotations,
+        isDocumentOnly: !cachedMeta.transcript?.trim(),
+      });
+      setIsProcessing(false);
+      setProgressStep("");
+    }
+
+    if (!hasRenderedInstantly) {
+      setIsProcessing(true);
+      setProgressStep("جاري استرجاع المحاضرة والتظليلات من الأرشيف...");
+    }
+
+    // 2. Fetch fresh revalidated data from server
+    try {
+      const fp = await getFingerprint();
+      const meta = await getDeviceMetadata();
+      const token = session?.access_token;
+      if (token) {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/history/${historyId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "X-Fingerprint": fp,
+              "X-Device-Metadata": meta,
+            },
           }
-
-          const fp = await getFingerprint();
-          const meta = await getDeviceMetadata();
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/history/${historyId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${session.access_token}`,
-                "X-Fingerprint": fp,
-                "X-Device-Metadata": meta,
-              },
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.metadata?.job_id) {
+            if (data.metadata?.is_notebook || data.metadata.job_id.startsWith("notebook_")) {
+              const jId = data.metadata.job_id;
+              const t = data.metadata.title || "دفتر دراسي";
+              const sName = data.metadata.student_name || "طالب متميز";
+              router.replace(`/notebook?job_id=${jId}&title=${encodeURIComponent(t)}&student_name=${encodeURIComponent(sName)}&history_id=${historyId}`);
+              return;
             }
-          )
-            .then(async (r) => {
-              if (!r.ok) throw new Error("التلخيص غير موجود أو محذوف");
-              const data = await r.json();
-              if (data?.metadata?.job_id) {
-                if (data.metadata?.is_notebook || data.metadata.job_id.startsWith("notebook_")) {
-                  const jId = data.metadata.job_id;
-                  const t = data.metadata.title || "دفتر دراسي";
-                  const sName = data.metadata.student_name || "طالب متميز";
-                  router.replace(`/notebook?job_id=${jId}&title=${encodeURIComponent(t)}&student_name=${encodeURIComponent(sName)}&history_id=${historyId}`);
-                  return;
-                }
 
-                setChatCount(data.total_chat_count !== undefined ? data.total_chat_count : data.chat_count || 0);
-                setLectureTitle(data.metadata.title || "محاضرة بدون عنوان");
-                const hasPdf =
-                  data.metadata.has_pdf !== undefined
-                    ? data.metadata.has_pdf
-                    : data.metadata.annotations?.slide_explanations?.length > 0;
+            setChatCount(data.total_chat_count !== undefined ? data.total_chat_count : data.chat_count || 0);
+            setLectureTitle(data.metadata.title || "محاضرة بدون عنوان");
+            const hasPdf = data.metadata.has_pdf !== undefined
+              ? data.metadata.has_pdf
+              : data.metadata.annotations?.slide_explanations?.length > 0;
 
-                selectInitialTab(data.metadata.annotations, !!hasPdf);
+            selectInitialTab(data.metadata.annotations, !!hasPdf);
+            const isDocOnly = data.metadata.is_prep !== undefined
+              ? !!data.metadata.is_prep
+              : (data.metadata.has_audio !== undefined ? !data.metadata.has_audio : !data.metadata.transcript?.trim());
 
-                const isDocOnly = data.metadata.is_prep !== undefined
-                  ? !!data.metadata.is_prep
-                  : (data.metadata.has_audio !== undefined ? !data.metadata.has_audio : !data.metadata.transcript?.trim());
-
-                setResult({
-                  transcript: data.metadata.transcript || "",
-                  downloadUrl: hasPdf ? `/api/v1/summarize/download/${data.metadata.job_id}.pdf` : null,
-                  annotations: data.metadata.annotations,
-                  isDocumentOnly: isDocOnly,
-                });
-
-                // Update instant cache for future zero-latency opens
-                try {
-                  sessionStorage.setItem("lammah_instant_lecture_" + historyId, JSON.stringify(data));
-                } catch {}
-              } else {
-                throw new Error("هذا التلخيص قديم جداً ولا يحتوي على أرشيف محفوظ.");
-              }
-            })
-            .catch((err) => setError(err.message))
-            .finally(() => {
-              setIsProcessing(false);
-              setProgressStep("");
+            setResult({
+              transcript: data.metadata.transcript || "",
+              downloadUrl: hasPdf ? `/api/v1/summarize/download/${data.metadata.job_id}.pdf` : null,
+              annotations: data.metadata.annotations,
+              isDocumentOnly: isDocOnly,
             });
+
+            try {
+              sessionStorage.setItem("lammah_instant_lecture_" + historyId, JSON.stringify(data));
+            } catch {}
+          }
         }
       }
-    };
-    fetchHistory();
-  }, [session, searchParams, router, selectInitialTab]);
+    } catch (err: any) {
+      if (!hasRenderedInstantly) {
+        setError(err.message || "فشل استرجاع المحاضرة");
+      }
+    } finally {
+      setIsProcessing(false);
+      setProgressStep("");
+    }
+  }, [session, router, selectInitialTab]);
+
+  // Load lecture when history_id search param is present
+  useEffect(() => {
+    const historyId = searchParams.get("history_id");
+    if (historyId) {
+      loadLectureById(historyId);
+    }
+  }, [searchParams, loadLectureById]);
 
   // Load Recent Lectures
   useEffect(() => {
@@ -1268,6 +1275,7 @@ function DashboardContent() {
               <RecentLecturesSection
                 recentLogs={recentLogs}
                 loadingRecentLogs={loadingRecentLogs}
+                onSelectLecture={(log) => loadLectureById(log.id, log.metadata)}
               />
             </motion.div>
           ) : (

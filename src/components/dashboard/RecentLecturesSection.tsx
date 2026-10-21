@@ -15,11 +15,13 @@ import { RecentLectureLog } from "@/types/dashboard";
 interface RecentLecturesSectionProps {
   recentLogs: RecentLectureLog[];
   loadingRecentLogs: boolean;
+  onSelectLecture?: (log: RecentLectureLog) => void;
 }
 
 export default function RecentLecturesSection({
   recentLogs,
   loadingRecentLogs,
+  onSelectLecture,
 }: RecentLecturesSectionProps) {
   const router = useRouter();
 
@@ -34,7 +36,11 @@ export default function RecentLecturesSection({
         router.push(`/notebook?history_id=${log.id}`);
       }
     } else {
-      router.push(`/dashboard?history_id=${log.id}`);
+      if (onSelectLecture) {
+        onSelectLecture(log);
+      } else {
+        router.push(`/dashboard?history_id=${log.id}`);
+      }
     }
   };
 
