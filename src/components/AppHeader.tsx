@@ -319,7 +319,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
               </button>
             )}
 
-            {/* 3. مسار الهايلايتر (New Aesthetic Tasks Feature) */}
+            {/* 3. مهام المذاكرة (Study Tasks & Highlighter Feature) */}
             <button
               onClick={() => router.push("/tasks")}
               className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
@@ -329,7 +329,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
               }`}
             >
               <Palette className={`w-3.5 h-3.5 ${activePage === "tasks" ? "text-amber-500" : "text-pink-500"}`} />
-              <span>مسار الهايلايتر</span>
+              <span>مهام المذاكرة</span>
               <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-gradient-to-r from-amber-400 to-pink-500 text-white shadow-2xs">
                 جديد 🎨
               </span>
@@ -440,17 +440,6 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                     <div className="min-w-0">
                       <div>سوق الملخصات</div>
                       <div className="text-[10px] text-slate-400 font-normal">متجر بيع وشراء الدوسيات</div>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => { setServicesMenuOpen(false); router.push("/tutors"); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition cursor-pointer mt-1 text-right"
-                  >
-                    <GraduationCap className="w-4 h-4 text-purple-500 shrink-0" />
-                    <div className="min-w-0">
-                      <div>المعلمون الخصوصيون</div>
-                      <div className="text-[10px] text-slate-400 font-normal">حصص ومساعدة من نخبة المعلمين</div>
                     </div>
                   </button>
                 </div>
@@ -723,7 +712,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                     }`}
                   >
                     <Palette className="w-4 h-4 text-amber-500" />
-                    <span className="text-[11px] font-bold">الهايلايتر 🎨</span>
+                    <span className="text-[11px] font-bold">مهام المذاكرة 📝</span>
                   </button>
                 </div>
               </div>
@@ -771,7 +760,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                 <span className="text-[10px] font-black text-slate-400 px-2 uppercase tracking-wider">
                   خدمات الجامعة
                 </span>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => { setMobileMenuOpen(false); router.push("/kiosk"); }}
                     className={`p-2 rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer ${
@@ -797,14 +786,6 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                   >
                     <Package className="w-4 h-4 text-indigo-500" />
                     <span className="text-[11px] font-bold">متجر الملخصات</span>
-                  </button>
-
-                  <button
-                    onClick={() => { setMobileMenuOpen(false); router.push("/tutors"); }}
-                    className="p-2 rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer bg-slate-50 dark:bg-white/5 text-slate-700 dark:text-slate-300"
-                  >
-                    <GraduationCap className="w-4 h-4 text-purple-500" />
-                    <span className="text-[11px] font-bold">المعلمون</span>
                   </button>
                 </div>
               </div>

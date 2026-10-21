@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
+import StudyFocusTimer from "@/components/dashboard/StudyFocusTimer";
 import { createClient } from "@/lib/supabase";
 
 function NotebookSkeleton() {
@@ -764,6 +765,8 @@ function NotebookCreatorContent() {
                 </div>
 
                 <div className="flex items-center gap-2 self-start sm:self-center flex-wrap">
+                  <StudyFocusTimer currentHistoryId={historyId} lectureTitle={result.title || lectureTitle} />
+
                   <button
                     onClick={() => {
                       setResult(null);

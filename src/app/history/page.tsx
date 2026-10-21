@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
+import StudyFocusTimer from "@/components/dashboard/StudyFocusTimer";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
 
@@ -231,8 +232,9 @@ export default function HistoryPage() {
               </div>
             </div>
 
-            {/* Quick Stat Chips */}
+            {/* Quick Stat Chips & Study Focus Timer */}
             <div className="flex items-center gap-2 self-start lg:self-center flex-wrap">
+              <StudyFocusTimer />
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/50 text-xs font-bold text-slate-700 dark:text-slate-300">
                 <span className="w-2 h-2 rounded-full bg-indigo-500" />
                 <span>محاضرات:</span>

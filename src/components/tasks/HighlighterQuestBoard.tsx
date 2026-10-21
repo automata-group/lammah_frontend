@@ -420,13 +420,13 @@ export default function HighlighterQuestBoard() {
               </span>
               <div>
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                  <span>مسار الهايلايتر الذكي</span>
+                  <span>مهام المذاكرة الذكية</span>
                   <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-pink-500 text-white shadow-2xs">
-                    إنجاز متسلسل 🔒
+                    إنجاز متسلسل بالهايلايتر 🎨
                   </span>
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                  لا تشتيت! المهام مقفلة بالترتيب؛ أنجز المهمة الحالية ولوّنها بالهايلايتر لتفتح لك التالية.
+                  لا تشتيت! رتّب مهماتك ولونها بالهايلايتر خطوة بخطوة؛ أنجز المهمة الحالية لتفتح لك التالية.
                 </p>
               </div>
             </div>
@@ -809,7 +809,7 @@ export default function HighlighterQuestBoard() {
             >
               <h3 className="text-base font-black text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                 <Plus className="w-5 h-5 text-indigo-500" />
-                <span>إضافة مهمة جديدة لمسار الهايلايتر</span>
+                <span>إضافة مهمة دراسية جديدة</span>
               </h3>
 
               <form onSubmit={handleAddTask} className="space-y-3.5">
@@ -901,7 +901,7 @@ export default function HighlighterQuestBoard() {
               </div>
 
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
-                اختر قالباً جاهزاً ليتم إعداده في مسار الهايلايتر فوراً بضغطة زر واحدة:
+                اختر قالباً جاهزاً ليتم إعداده في قائمة مهام المذاكرة فوراً بضغطة زر واحدة:
               </p>
 
               <div className="space-y-3">

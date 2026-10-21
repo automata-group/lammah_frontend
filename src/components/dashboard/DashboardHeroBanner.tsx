@@ -120,14 +120,14 @@ export default function DashboardHeroBanner({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <h4 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors truncate">
-                  مسار الهايلايتر
+                  مهام المذاكرة الذكية
                 </h4>
                 <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 shrink-0">
                   جديد 🎨
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
-                إنجاز متسلسل وتلوين بالباستيل
+                رتّب مهماتك ولونها بالهايلايتر
               </p>
             </div>
           </div>
