@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { GraduationCap, Sparkles, BookOpen, Layers, ArrowLeft } from "lucide-react";
+import { GraduationCap, BookOpen, Layers, ArrowLeft, Palette } from "lucide-react";
 import { StudentProfileData } from "@/types/dashboard";
 
 interface DashboardHeroBannerProps {
@@ -106,30 +106,56 @@ export default function DashboardHeroBanner({
         )}
       </div>
 
-      {/* Bento Grid Row 2: Equal Twin Companion Modules (50% / 50%) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        {/* Cell 3: Interactive Study Space (50% width) */}
+      {/* Bento Grid Row 2: 3 Clean Academic Companion Modules */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        {/* Cell 1: مسار الهايلايتر الذكي (New) */}
+        <div
+          onClick={() => router.push("/tasks")}
+          className="rounded-3xl bg-white dark:bg-[#0c111d] border border-amber-200/80 dark:border-amber-500/30 p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-amber-400 dark:hover:border-amber-400 shadow-xs hover:shadow-md transition-all group relative overflow-hidden"
+        >
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform shrink-0">
+              <Palette className="w-5 h-5 text-amber-500" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <h4 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors truncate">
+                  مسار الهايلايتر
+                </h4>
+                <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 shrink-0">
+                  جديد 🎨
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
+                إنجاز متسلسل وتلوين بالباستيل
+              </p>
+            </div>
+          </div>
+          <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 group-hover:-translate-x-1 transition-all shrink-0 mr-1" />
+        </div>
+
+        {/* Cell 2: Interactive Study Space */}
         <div
           onClick={() => router.push("/study")}
           className="rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-purple-200 dark:hover:border-purple-500/30 shadow-xs hover:shadow-sm transition-all group"
         >
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-500/10 border border-purple-100 dark:border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:purple-500/10 border border-purple-100 dark:border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform shrink-0">
               <BookOpen className="w-5 h-5" />
             </div>
             <div className="min-w-0">
               <h4 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors truncate">
                 مساحة المذاكرة
               </h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
                 ملاحظات ومراجعة دراسية ذكية
               </p>
             </div>
           </div>
-          <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 group-hover:-translate-x-1 transition-all shrink-0 mr-2" />
+          <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 group-hover:-translate-x-1 transition-all shrink-0 mr-1" />
         </div>
 
-        {/* Cell 4: Notebook / Saved Collections (50% width) */}
+        {/* Cell 3: Notebook / Saved Collections */}
         <div
           onClick={() => router.push("/notebook")}
           className="rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-indigo-200 dark:hover:border-indigo-500/30 shadow-xs hover:shadow-sm transition-all group"
@@ -142,12 +168,12 @@ export default function DashboardHeroBanner({
               <h4 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
                 دفاتر المحاضرات
               </h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
-                تصفح جميع محاضراتك ودفاترك الدراسية
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
+                تصفح جميع محاضراتك ودفاترك
               </p>
             </div>
           </div>
-          <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:-translate-x-1 transition-all shrink-0 mr-2" />
+          <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:-translate-x-1 transition-all shrink-0 mr-1" />
         </div>
       </div>
     </div>
