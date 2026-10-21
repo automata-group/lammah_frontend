@@ -138,61 +138,64 @@ export default function SmartChatTabContent({
           </p>
         </div>
 
-        <div
-          ref={messagesContainerRef}
-          onScroll={handleScroll}
-          className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 custom-scrollbar bg-transparent relative overscroll-contain"
-          style={{ overflowAnchor: "none" }}
-        >
-          {chatMessages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 space-y-4 opacity-70">
-              <BrainCircuit className="w-12 h-12 sm:w-16 sm:h-16 text-slate-400 dark:text-slate-600" />
-              <p className="text-base sm:text-lg text-center font-bold">
-                {isDocumentOnly
-                  ? "اطرح سؤالاً يخص جزئية معينة من السلايدات وسيجيبك النظام فوراً!"
-                  : "اطرح سؤالاً يخص جزئية معينة من المحاضرة وسيجيبك النظام فوراً!"}
-              </p>
-            </div>
-          )}
-          {chatMessages.map((msg, idx) => {
-            const isLatestUserMessage =
-              msg.role === "user" &&
-              (idx === chatMessages.length - 1 ||
-                (idx === chatMessages.length - 2 && chatMessages[chatMessages.length - 1]?.role === "assistant"));
+        {/* Messages Viewport Container with its own relative scope */}
+        <div className="relative flex-1 min-h-0 flex flex-col">
+          <div
+            ref={messagesContainerRef}
+            onScroll={handleScroll}
+            className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 custom-scrollbar bg-transparent relative overscroll-contain"
+            style={{ overflowAnchor: "none" }}
+          >
+            {chatMessages.length === 0 && (
+              <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 space-y-4 opacity-70">
+                <BrainCircuit className="w-12 h-12 sm:w-16 sm:h-16 text-slate-400 dark:text-slate-600" />
+                <p className="text-base sm:text-lg text-center font-bold">
+                  {isDocumentOnly
+                    ? "اطرح سؤالاً يخص جزئية معينة من السلايدات وسيجيبك النظام فوراً!"
+                    : "اطرح سؤالاً يخص جزئية معينة من المحاضرة وسيجيبك النظام فوراً!"}
+                </p>
+              </div>
+            )}
+            {chatMessages.map((msg, idx) => {
+              const isLatestUserMessage =
+                msg.role === "user" &&
+                (idx === chatMessages.length - 1 ||
+                  (idx === chatMessages.length - 2 && chatMessages[chatMessages.length - 1]?.role === "assistant"));
 
-            return (
-              <div
-                key={idx}
-                ref={isLatestUserMessage ? latestUserMsgRef : undefined}
-                className="w-full"
-              >
-                <ChatMessageItem msg={msg} />
+              return (
+                <div
+                  key={idx}
+                  ref={isLatestUserMessage ? latestUserMsgRef : undefined}
+                  className="w-full"
+                >
+                  <ChatMessageItem msg={msg} />
+                </div>
+              );
+            })}
+            {isChatLoading && (
+              <div className="flex justify-start w-full">
+                <div className="max-w-[75%] p-3.5 sm:p-5 rounded-2xl sm:rounded-[1.5rem] bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-400 rounded-tr-xs flex items-center gap-2 shadow-inner">
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-blue-600 dark:text-blue-400 shrink-0" />
+                  <span className="text-xs sm:text-sm font-bold">
+                    {isDocumentOnly ? "يقرأ محتوى الشرائح..." : "يقرأ الشرائح والصوت..."}
+                  </span>
+                </div>
               </div>
-            );
-          })}
-          {isChatLoading && (
-            <div className="flex justify-start w-full">
-              <div className="max-w-[75%] p-3.5 sm:p-5 rounded-2xl sm:rounded-[1.5rem] bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-400 rounded-tr-xs flex items-center gap-2 shadow-inner">
-                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-blue-600 dark:text-blue-400 shrink-0" />
-                <span className="text-xs sm:text-sm font-bold">
-                  {isDocumentOnly ? "يقرأ محتوى الشرائح..." : "يقرأ الشرائح والصوت..."}
-                </span>
-              </div>
-            </div>
+            )}
+          </div>
+
+          {/* Floating Scroll to Bottom Button - isolated safely inside the messages viewport */}
+          {isUserScrolledUp && (
+            <button
+              type="button"
+              onClick={() => scrollToBottom(true)}
+              className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-blue-600/95 hover:bg-blue-600 text-white text-xs sm:text-sm font-bold py-2 px-4 rounded-full shadow-xl border border-blue-400/40 flex items-center gap-2 transition-all transform hover:scale-105 active:scale-95 z-20 cursor-pointer backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-200"
+            >
+              <ArrowDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-bounce" />
+              <span>النزول للأسفل</span>
+            </button>
           )}
         </div>
-
-        {/* Floating Scroll to Bottom Button */}
-        {isUserScrolledUp && (
-          <button
-            type="button"
-            onClick={() => scrollToBottom(true)}
-            className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-blue-600/95 hover:bg-blue-600 text-white text-xs sm:text-sm font-bold py-2 px-4 rounded-full shadow-lg border border-blue-400/30 flex items-center gap-2 transition-all transform hover:scale-105 z-20 cursor-pointer backdrop-blur-md"
-          >
-            <ArrowDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span>النزول للأسفل</span>
-          </button>
-        )}
 
         <div className="p-3.5 sm:p-6 bg-slate-50 dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-800">
           {/* Chat Usage Indicator */}
