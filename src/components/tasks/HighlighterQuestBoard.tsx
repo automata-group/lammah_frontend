@@ -131,6 +131,8 @@ export default function HighlighterQuestBoard() {
 
   // Locked feedback animation
   const [lockedNoticeTaskId, setLockedNoticeTaskId] = useState<string | null>(null);
+  // Active color picker task ID (for click-to-open and pin)
+  const [activeColorPickerTaskId, setActiveColorPickerTaskId] = useState<string | null>(null);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -180,6 +182,19 @@ export default function HighlighterQuestBoard() {
       editInputRef.current.focus();
     }
   }, [editingId]);
+
+  // Close color picker when clicking outside
+  useEffect(() => {
+    if (!activeColorPickerTaskId) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-color-picker]')) {
+        setActiveColorPickerTaskId(null);
+      }
+    };
+    window.addEventListener('mousedown', handleClickOutside);
+    return () => window.removeEventListener('mousedown', handleClickOutside);
+  }, [activeColorPickerTaskId]);
 
   // Today formatted in Arabic
   const todayFormatted = useMemo(() => {
@@ -719,25 +734,54 @@ export default function HighlighterQuestBoard() {
 
                         {/* Reorder & Actions */}
                         <div className="flex items-center gap-1 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity">
-                          {/* Color Dot (Click to cycle or pick color) */}
-                          <div className="relative group/color">
+                          {/* Color Dot (Click or Hover to pick color) */}
+                          <div
+                            className="relative group/color"
+                            data-color-picker
+                          >
                             <button
                               type="button"
-                              className="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 cursor-pointer shadow-2xs hover:scale-110 transition-transform"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveColorPickerTaskId((prev) => (prev === task.id ? null : task.id));
+                              }}
+                              className="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 cursor-pointer shadow-2xs hover:scale-125 transition-transform focus:outline-hidden"
                               style={{ backgroundColor: pen.hex }}
-                              title="تغيير لون قلم الهايلايتر"
+                              title="تغيير لون قلم الهايلايتر (انقر للتثبيت أو مرر الفأرة)"
+                              aria-label="تغيير لون قلم الهايلايتر"
                             />
-                            <div className="hidden group-hover/color:flex absolute bottom-full left-1/2 -translate-x-1/2 mb-1 p-1 bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 gap-1 z-30">
-                              {HIGHLIGHTERS.map((h) => (
-                                <button
-                                  key={h.id}
-                                  type="button"
-                                  onClick={() => handleChangeTaskColor(task.id, h.id)}
-                                  className="w-3.5 h-3.5 rounded-full cursor-pointer hover:scale-125 transition-transform"
-                                  style={{ backgroundColor: h.hex }}
-                                  title={h.name}
-                                />
-                              ))}
+
+                            {/* Color Palette Menu with continuous hit area bridge (pb-2 eliminates mouseleave gap) */}
+                            <div
+                              className={`absolute bottom-full left-1/2 -translate-x-1/2 pb-2 z-40 transition-all duration-150 ${
+                                activeColorPickerTaskId === task.id
+                                  ? "flex opacity-100 pointer-events-auto"
+                                  : "hidden group-hover/color:flex opacity-100 pointer-events-auto"
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5 p-1.5 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200/90 dark:border-slate-700 backdrop-blur-xs">
+                                {HIGHLIGHTERS.map((h) => {
+                                  const isCurrent = h.id === task.highlighterId;
+                                  return (
+                                    <button
+                                      key={h.id}
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleChangeTaskColor(task.id, h.id);
+                                        setActiveColorPickerTaskId(null);
+                                      }}
+                                      className={`w-4 h-4 rounded-full cursor-pointer hover:scale-130 transition-transform flex items-center justify-center ${
+                                        isCurrent ? "ring-2 ring-slate-900 dark:ring-white ring-offset-1" : "border border-black/10"
+                                      }`}
+                                      style={{ backgroundColor: h.hex }}
+                                      title={h.name}
+                                    >
+                                      {isCurrent && <Check className="w-2.5 h-2.5 text-slate-900 stroke-[3]" />}
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </div>
 
