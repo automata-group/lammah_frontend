@@ -12,12 +12,12 @@ import AppHeader from "@/components/AppHeader";
 import { createClient } from "@/lib/supabase";
 
 const DEFAULT_PLANS = {
-  weekly: [
-    { id: "1", name: "باقة الإنقاذ", price_ils: 25, duration_days: 7, minutes: 300, lecture_quota: 300 },
-    { id: "2", name: "باقة الميدتيرم", price_ils: 60, duration_days: 30, minutes: 900, lecture_quota: 900 },
-    { id: "3", name: "الباقة الذهبية", price_ils: 100, duration_days: 90, minutes: 2400, lecture_quota: 2400 }
-  ],
-  monthly: []
+  weekly: [],
+  monthly: [
+    { id: "f5aa8bae-7a95-4902-9167-7d217221627d", name: "باقة إنقاذ الكويزات (Essential)", price_ils: 25, duration_days: 30, minutes: 800, lecture_quota: 800 },
+    { id: "f1f25974-6495-42e2-bb31-70b3b9796a8e", name: "باقة التفوق (Premium)", price_ils: 60, duration_days: 30, minutes: 2200, lecture_quota: 2200 },
+    { id: "7e17c4ba-0830-4f91-88da-7d6440d22123", name: "باقة النخبة (Elite)", price_ils: 100, duration_days: 30, minutes: 4500, lecture_quota: 4500 }
+  ]
 };
 
 export default function PlansPage() {
@@ -182,21 +182,21 @@ export default function PlansPage() {
         ) : (
           <div className="flex md:grid md:grid-cols-3 gap-5 lg:gap-6 items-stretch max-w-6xl mx-auto overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-6 pt-2 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0">
             {activePlans.map((plan: any) => {
-              const isGoldPlan = plan.price_ils === 100 || plan.name.includes("الذهبية");
-              const isMidPlan = plan.price_ils === 60 || plan.name.includes("الميدتيرم");
-              const isRescuePlan = plan.price_ils === 25 || plan.name.includes("الإنقاذ");
+              const isGoldPlan = plan.price_ils === 100 || plan.name.includes("الذهبية") || plan.name.includes("النخبة") || plan.name.includes("Elite");
+              const isMidPlan = plan.price_ils === 60 || plan.name.includes("الميدتيرم") || plan.name.includes("التفوق") || plan.name.includes("Premium");
+              const isRescuePlan = plan.price_ils === 25 || plan.name.includes("الإنقاذ") || plan.name.includes("إنقاذ") || plan.name.includes("Essential");
 
               let subtitle = "لتصفح المتجر والمذاكرة السريعة.";
               if (isGoldPlan) {
-                subtitle = "الباقة الشاملة لأوائل الدفعات! رصيد عملاق للفصل كاملاً مع توليد الدفاتر الجمالية وبيعها بالمتجر للأرباح.";
+                subtitle = "الباقة الشاملة لأوائل الدفعات! رصيد عملاق (75 ساعة / 4,500 دقيقة) يكفي كل مساقات الفصل مع توليد الدفاتر الجمالية وبيعها بالمتجر للأرباح.";
               } else if (isMidPlan) {
-                subtitle = "الاشتراك الشهري الأكثر طلباً لتوديع تراكم المحاضرات! رصيد متجدد يغطي كافة مساقاتك بذكاء.";
+                subtitle = "الاشتراك الشهري الأكثر طلباً لتوديع التراكم! رصيد ضخم (37 ساعة / 2,200 دقيقة) يغطي 3 إلى 4 مساقات شهرياً براحة تامة.";
               } else if (isRescuePlan) {
-                subtitle = "شحنة إنقاذ فورية قبل الكويزات! تفريغ وتلخيص مركز للشابترات الصعبة تكفي 5 إلى 6 محاضرات كاملة.";
+                subtitle = "شحنة إنقاذ قوية للكويزات والميدتيرم! رصيد (13.5 ساعة / 800 دقيقة) يكفي 7 إلى 14 محاضرة كاملة لتلخيص الشابترات الصعبة.";
               }
 
               const Icon = isGoldPlan ? Crown : isMidPlan ? Zap : Sparkles;
-              const periodText = isMidPlan ? "شهرياً" : isGoldPlan ? "للفصل كاملاً" : "دفعة واحدة";
+              const periodText = "شهرياً";
               const isActive = isUserSubscribedToPlan(userPlanName, plan);
 
               return (
@@ -219,15 +219,15 @@ export default function PlansPage() {
                     </div>
                   ) : isGoldPlan ? (
                     <div className="absolute top-0 right-4 sm:right-6 -translate-y-1/2 bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 text-slate-950 text-[9px] sm:text-[10px] font-black px-2.5 sm:px-3.5 py-0.5 sm:py-1 rounded-full shadow-md shadow-amber-500/25 flex items-center gap-1 sm:gap-1.5 whitespace-nowrap uppercase tracking-wider border border-amber-200">
-                      <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-slate-950" /> باقة النخبة • الفصل الكامل
+                      <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-slate-950" /> باقة النخبة • رصيد 75 ساعة
                     </div>
                   ) : isMidPlan ? (
                     <div className="absolute top-0 right-4 sm:right-6 -translate-y-1/2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[9px] sm:text-[10px] font-black px-2.5 sm:px-3.5 py-0.5 sm:py-1 rounded-full shadow-md flex items-center gap-1 sm:gap-1.5 whitespace-nowrap uppercase tracking-wider border border-slate-700 dark:border-white/20">
-                      <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current" /> الأكثر طلباً • اشتراك شهري
+                      <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current" /> الأكثر طلباً • رصيد 37 ساعة
                     </div>
                   ) : isRescuePlan ? (
                     <div className="absolute top-0 right-4 sm:right-6 -translate-y-1/2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[9px] sm:text-[10px] font-bold px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                      شحن سريع للكويزات
+                      شحن سريع للكويزات • 13.5 ساعة
                     </div>
                   ) : null}
 
@@ -266,40 +266,64 @@ export default function PlansPage() {
                               <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                             </div>
                             <span className="font-black text-[12px] sm:text-xs text-slate-900 dark:text-white">
-                              {plan.lecture_quota} دقيقة ذكية
+                              {plan.lecture_quota} دقيقة ذكية ({isGoldPlan ? "75 ساعة" : isMidPlan ? "37 ساعة" : "13.5 ساعة"})
                             </span>
                           </div>
                           <span className="text-[9px] sm:text-[10px] font-bold text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20">
-                            صلاحية {plan.duration_days} يوم
+                            صلاحية {plan.duration_days || 30} يوم
                           </span>
                         </div>
 
-                        {/* Visual Pill 1: Audio / Lectures */}
-                        <div className="rounded-lg p-2 bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 flex items-start gap-2">
-                          <div className="w-6 h-6 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
-                            <Mic className="w-3.5 h-3.5" />
-                          </div>
-                          <div className="text-[10px] sm:text-[11px] leading-tight">
-                            <div className="font-black text-slate-900 dark:text-white">
-                              {isGoldPlan ? "40 إلى 45 محاضرة طوال الفصل" : isMidPlan ? "15 إلى 18 محاضرة شهرياً" : "5 إلى 6 محاضرات كاملة"}
+                        {/* Visual Pill 1: Audio / Lectures Breakdown */}
+                        <div className="rounded-lg p-2.5 bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-5 h-5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                                <Mic className="w-3 h-3" />
+                              </div>
+                              <span className="font-black text-slate-900 dark:text-white text-[11px] sm:text-xs">
+                                كم محاضرة تكفيك؟
+                              </span>
                             </div>
-                            <div className="text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                              {isGoldPlan ? "تفريغ وتخطيط متواصل طوال 90 يوم" : isMidPlan ? "تجدد شهري لتغطية كافة المواد" : "إنقاذ سريع للكويزات الصعبة"}
+                            <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">
+                              {isGoldPlan ? "حتى 100 محاضرة" : isMidPlan ? "حتى 50 محاضرة" : "حتى 18 محاضرة"}
+                            </span>
+                          </div>
+
+                          {/* Lectures breakdown grid */}
+                          <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                            <div className="bg-white/90 dark:bg-slate-900/90 p-1.5 rounded-md border border-indigo-100/70 dark:border-indigo-950 flex flex-col justify-center">
+                              <span className="text-slate-500 dark:text-slate-400 text-[9px]">لو المحاضرة ساعتان:</span>
+                              <span className="font-black text-slate-900 dark:text-white text-[11px]">
+                                {isGoldPlan ? "37 إلى 38 محاضرة" : isMidPlan ? "18 إلى 19 محاضرة" : "7 إلى 8 محاضرات"}
+                              </span>
+                            </div>
+                            <div className="bg-white/90 dark:bg-slate-900/90 p-1.5 rounded-md border border-indigo-100/70 dark:border-indigo-950 flex flex-col justify-center">
+                              <span className="text-slate-500 dark:text-slate-400 text-[9px]">لو المحاضرة ساعة:</span>
+                              <span className="font-black text-slate-900 dark:text-white text-[11px]">
+                                {isGoldPlan ? "75 محاضرة كاملة" : isMidPlan ? "36 إلى 37 محاضرة" : "13 إلى 14 محاضرة"}
+                              </span>
+                            </div>
+                            <div className="bg-white/90 dark:bg-slate-900/90 p-1.5 rounded-md border border-indigo-100/70 dark:border-indigo-950 col-span-2 flex items-center justify-between">
+                              <span className="text-slate-500 dark:text-slate-400 text-[9px]">لو المحاضرة 45 دقيقة:</span>
+                              <span className="font-black text-emerald-600 dark:text-emerald-400 text-[11px]">
+                                {isGoldPlan ? "100 محاضرة كاملة" : isMidPlan ? "48 إلى 50 محاضرة" : "17 إلى 18 محاضرة"}
+                              </span>
                             </div>
                           </div>
                         </div>
 
                         {/* Visual Pill 2: Slides / Files */}
                         <div className="rounded-lg p-2 bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 flex items-start gap-2">
-                          <div className="w-6 h-6 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
-                            <FileText className="w-3.5 h-3.5" />
+                          <div className="w-5 h-5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                            <FileText className="w-3 h-3" />
                           </div>
                           <div className="text-[10px] sm:text-[11px] leading-tight">
                             <div className="font-black text-slate-900 dark:text-white">
-                              {isGoldPlan ? "تغطية كافة سلايدات وشباتر الفصل" : isMidPlan ? "حتى 60 شابتر أو ملف سلايدات" : "حتى 20 شابتر أو ملف سلايدات"}
+                              {isGoldPlan ? "حتى 300 ملف سلايدات PDF بدون صوت" : isMidPlan ? "حتى 150 ملف سلايدات PDF بدون صوت" : "حتى 50 ملف سلايدات PDF بدون صوت"}
                             </div>
                             <div className="text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                              بملف ريكورد أو برفع السلايدات فقط
+                              أو دمج وتوزيع حر بين الصوت والسلايدات طوال الشهر
                             </div>
                           </div>
                         </div>
@@ -383,7 +407,7 @@ export default function PlansPage() {
                               <Lock className="w-2.5 h-2.5 text-slate-500" />
                             </div>
                             <span className="leading-snug sm:leading-relaxed">
-                              توليد الدفاتر الذكية الشاملة <strong className="text-slate-500 dark:text-slate-400 font-bold">(خاصة بالباقة الذهبية 100 ₪)</strong>
+                              توليد الدفاتر الذكية الشاملة <strong className="text-slate-500 dark:text-slate-400 font-bold">(خاصة بباقة النخبة 100 ₪)</strong>
                             </span>
                           </div>
 
@@ -392,7 +416,7 @@ export default function PlansPage() {
                               <Lock className="w-2.5 h-2.5 text-slate-500" />
                             </div>
                             <span className="leading-snug sm:leading-relaxed">
-                              رخصة بائع وبيع الدفاتر بالمتجر <strong className="text-slate-500 dark:text-slate-400 font-bold">(خاصة بالباقة الذهبية 100 ₪)</strong>
+                              رخصة بائع وبيع الدفاتر بالمتجر <strong className="text-slate-500 dark:text-slate-400 font-bold">(خاصة بباقة النخبة 100 ₪)</strong>
                             </span>
                           </div>
                         </>
@@ -420,7 +444,7 @@ export default function PlansPage() {
                       <span>باقتك الحالية المفعلة ✅</span>
                     ) : (
                       <>
-                        <span>{isGoldPlan ? "اشترك في باقة النخبة (الفصل كاملاً)" : isMidPlan ? "اشترك في باقة التفوق الشهري" : "شحن باقة الإنقاذ (25 ₪)"}</span>
+                        <span>{isGoldPlan ? "اشترك في باقة النخبة (100 ₪)" : isMidPlan ? "اشترك في باقة التفوق (60 ₪)" : "شحن باقة الإنقاذ (25 ₪)"}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     )}
@@ -448,28 +472,46 @@ export default function PlansPage() {
                 <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50">
                   <th className="p-3.5 sm:p-4 font-black text-slate-800 dark:text-slate-200">الميزة / القدرة الأكاديمية</th>
                   <th className="p-3.5 sm:p-4 font-black text-center text-slate-800 dark:text-slate-200">باقة الإنقاذ (25 ₪)</th>
-                  <th className="p-3.5 sm:p-4 font-black text-center text-indigo-600 dark:text-indigo-400">باقة الميدتيرم (60 ₪)</th>
+                  <th className="p-3.5 sm:p-4 font-black text-center text-indigo-600 dark:text-indigo-400">باقة التفوق (60 ₪)</th>
                   <th className="p-3.5 sm:p-4 font-black text-center text-amber-600 dark:text-amber-400">باقة النخبة (100 ₪) ⭐</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                 <tr>
                   <td className="p-3.5 sm:p-4 font-bold">صلاحية الباقة</td>
-                  <td className="p-3.5 sm:p-4 text-center font-bold">7 أيام (إنقاذ سريع)</td>
                   <td className="p-3.5 sm:p-4 text-center font-bold">30 يوماً (شهرياً)</td>
-                  <td className="p-3.5 sm:p-4 text-center font-bold text-amber-600 dark:text-amber-400">90 يوماً (الفصل كاملاً)</td>
+                  <td className="p-3.5 sm:p-4 text-center font-bold">30 يوماً (شهرياً)</td>
+                  <td className="p-3.5 sm:p-4 text-center font-bold text-amber-600 dark:text-amber-400">30 يوماً (شهرياً)</td>
                 </tr>
                 <tr>
                   <td className="p-3.5 sm:p-4 font-bold">رصيد الدقائق الذكي</td>
-                  <td className="p-3.5 sm:p-4 text-center">300 دقيقة</td>
-                  <td className="p-3.5 sm:p-4 text-center">900 دقيقة</td>
-                  <td className="p-3.5 sm:p-4 text-center font-black text-amber-600 dark:text-amber-400">2,400 دقيقة عملاقة</td>
+                  <td className="p-3.5 sm:p-4 text-center font-bold">800 دقيقة (~13.5 ساعة)</td>
+                  <td className="p-3.5 sm:p-4 text-center font-bold">2,200 دقيقة (~37 ساعة)</td>
+                  <td className="p-3.5 sm:p-4 text-center font-black text-amber-600 dark:text-amber-400">4,500 دقيقة (75 ساعة كاملة)</td>
                 </tr>
                 <tr>
-                  <td className="p-3.5 sm:p-4 font-bold">تغطية المحاضرات والسلايدات</td>
-                  <td className="p-3.5 sm:p-4 text-center">5-6 محاضرات / 20 شابتر</td>
-                  <td className="p-3.5 sm:p-4 text-center">15-18 محاضرة / 60 شابتر</td>
-                  <td className="p-3.5 sm:p-4 text-center font-black">40-45 محاضرة (كافة المساقات)</td>
+                  <td className="p-3.5 sm:p-4 font-bold">تغطية المحاضرات (إذا ساعتان)</td>
+                  <td className="p-3.5 sm:p-4 text-center font-bold text-indigo-600 dark:text-indigo-400">7 إلى 8 محاضرات كاملة</td>
+                  <td className="p-3.5 sm:p-4 text-center font-bold text-indigo-600 dark:text-indigo-400">18 إلى 19 محاضرة كاملة</td>
+                  <td className="p-3.5 sm:p-4 text-center font-black text-amber-600 dark:text-amber-400">37 إلى 38 محاضرة كاملة</td>
+                </tr>
+                <tr>
+                  <td className="p-3.5 sm:p-4 font-bold">تغطية المحاضرات (إذا ساعة واحدة)</td>
+                  <td className="p-3.5 sm:p-4 text-center font-bold text-indigo-600 dark:text-indigo-400">13 إلى 14 محاضرة كاملة</td>
+                  <td className="p-3.5 sm:p-4 text-center font-bold text-indigo-600 dark:text-indigo-400">36 إلى 37 محاضرة (تغطي 3-4 مواد)</td>
+                  <td className="p-3.5 sm:p-4 text-center font-black text-amber-600 dark:text-amber-400">75 محاضرة (تغطية شاملة لكل موادك)</td>
+                </tr>
+                <tr>
+                  <td className="p-3.5 sm:p-4 font-bold">تغطية المحاضرات (إذا 45 دقيقة)</td>
+                  <td className="p-3.5 sm:p-4 text-center font-bold text-emerald-600 dark:text-emerald-400">17 إلى 18 محاضرة</td>
+                  <td className="p-3.5 sm:p-4 text-center font-bold text-emerald-600 dark:text-emerald-400">48 إلى 50 محاضرة</td>
+                  <td className="p-3.5 sm:p-4 text-center font-black text-emerald-600 dark:text-emerald-400">100 محاضرة كاملة</td>
+                </tr>
+                <tr>
+                  <td className="p-3.5 sm:p-4 font-bold">ملفات سلايدات PDF بدون صوت</td>
+                  <td className="p-3.5 sm:p-4 text-center">حتى 50 ملف سلايدات</td>
+                  <td className="p-3.5 sm:p-4 text-center">حتى 150 ملف سلايدات</td>
+                  <td className="p-3.5 sm:p-4 text-center font-black text-amber-600 dark:text-amber-400">حتى 300 ملف سلايدات</td>
                 </tr>
                 <tr>
                   <td className="p-3.5 sm:p-4 font-bold">تخطيط وتظليل السلايدات (بريكورد أو ملف فقط)</td>
