@@ -28,6 +28,7 @@ import {
 import AppHeader from "@/components/AppHeader";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
 import HeroSimulation from "@/components/landing/HeroSimulation";
+import StudyFocusTimer from "@/components/dashboard/StudyFocusTimer";
 import { createClient } from "@/lib/supabase";
 
 function SummarizeContent() {
@@ -729,6 +730,11 @@ function SummarizeContent() {
                 ? "يلزم وجود اشتراك نشط لمعالجة المحاضرات"
                 : "ارفع التسجيل الصوتي أو السلايدات لتجهيز ملفك وشرحك التفاعلي فوراً"}
             </p>
+          </div>
+
+          {/* Featured Study Focus Timer in لمّاح بخططلك */}
+          <div className="shrink-0">
+            <StudyFocusTimer variant="pill" />
           </div>
         </div>
 

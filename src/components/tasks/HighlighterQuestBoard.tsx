@@ -8,23 +8,15 @@ import {
   Check,
   Plus,
   Trash2,
-  Play,
-  RotateCcw,
   Sparkles,
-  Flame,
-  Clock,
   ArrowUp,
   ArrowDown,
   Pencil,
-  CheckSquare,
-  Square,
-  AlertCircle,
   Tag,
-  CheckCheck,
-  Palette,
-  Layers,
-  ChevronDown,
-  BookOpen
+  Clock,
+  BookOpen,
+  Calendar,
+  AlertCircle
 } from "lucide-react";
 
 export interface StudyTask {
@@ -38,7 +30,7 @@ export interface StudyTask {
   createdAt: string;
 }
 
-// 6 Authentic Academic Highlighters
+// 6 Curated Authentic Highlighters
 export const HIGHLIGHTERS = [
   {
     id: "yellow",
@@ -49,8 +41,6 @@ export const HIGHLIGHTERS = [
     strokeBg: "bg-yellow-200/90 dark:bg-yellow-400/25",
     markerBorder: "border-yellow-400/80 dark:border-yellow-400/40",
     textClass: "text-amber-950 dark:text-yellow-100",
-    dotClass: "bg-yellow-400",
-    badgeClass: "bg-yellow-100 dark:bg-yellow-950/60 text-yellow-800 dark:text-yellow-300 border-yellow-300/80 dark:border-yellow-500/30",
   },
   {
     id: "mint",
@@ -61,8 +51,6 @@ export const HIGHLIGHTERS = [
     strokeBg: "bg-emerald-200/90 dark:bg-emerald-400/25",
     markerBorder: "border-emerald-400/80 dark:border-emerald-400/40",
     textClass: "text-emerald-950 dark:text-emerald-100",
-    dotClass: "bg-emerald-400",
-    badgeClass: "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300/80 dark:border-emerald-500/30",
   },
   {
     id: "violet",
@@ -73,8 +61,6 @@ export const HIGHLIGHTERS = [
     strokeBg: "bg-purple-200/90 dark:bg-purple-400/25",
     markerBorder: "border-purple-400/80 dark:border-purple-400/40",
     textClass: "text-purple-950 dark:text-purple-100",
-    dotClass: "bg-purple-400",
-    badgeClass: "bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border-purple-300/80 dark:border-purple-500/30",
   },
   {
     id: "sky",
@@ -85,8 +71,6 @@ export const HIGHLIGHTERS = [
     strokeBg: "bg-sky-200/90 dark:bg-sky-400/25",
     markerBorder: "border-sky-400/80 dark:border-sky-400/40",
     textClass: "text-sky-950 dark:text-sky-100",
-    dotClass: "bg-sky-400",
-    badgeClass: "bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border-sky-300/80 dark:border-sky-500/30",
   },
   {
     id: "peach",
@@ -97,8 +81,6 @@ export const HIGHLIGHTERS = [
     strokeBg: "bg-orange-200/90 dark:bg-orange-400/25",
     markerBorder: "border-orange-400/80 dark:border-orange-400/40",
     textClass: "text-orange-950 dark:text-orange-100",
-    dotClass: "bg-orange-400",
-    badgeClass: "bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300 border-orange-300/80 dark:border-orange-500/30",
   },
   {
     id: "pink",
@@ -109,8 +91,6 @@ export const HIGHLIGHTERS = [
     strokeBg: "bg-pink-200/90 dark:bg-pink-400/25",
     markerBorder: "border-pink-400/80 dark:border-pink-400/40",
     textClass: "text-pink-950 dark:text-pink-100",
-    dotClass: "bg-pink-400",
-    badgeClass: "bg-pink-100 dark:bg-pink-950/60 text-pink-800 dark:text-pink-300 border-pink-300/80 dark:border-pink-500/30",
   },
 ];
 
@@ -123,10 +103,10 @@ const SUBJECT_TAGS = [
   "حل مسائل",
   "حفظ ومراجعة",
   "كويز وامتحان",
-  "واجب منزلي",
+  "واجب",
 ];
 
-const ESTIMATED_TIMES = [15, 30, 45, 60, 90];
+const ESTIMATED_TIMES = [15, 30, 45, 60];
 
 export default function HighlighterQuestBoard() {
   const [tasks, setTasks] = useState<StudyTask[]>([]);
@@ -149,11 +129,8 @@ export default function HighlighterQuestBoard() {
   const [editingTitle, setEditingTitle] = useState("");
   const editInputRef = useRef<HTMLInputElement>(null);
 
-  // Locked notice feedback state (when user tries to click a locked task in sequential mode)
+  // Locked feedback animation
   const [lockedNoticeTaskId, setLockedNoticeTaskId] = useState<string | null>(null);
-
-  // Today study time from localStorage
-  const [todayStudySeconds, setTodayStudySeconds] = useState<number>(0);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -169,13 +146,6 @@ export default function HighlighterQuestBoard() {
       const savedMode = localStorage.getItem(MODE_STORAGE_KEY);
       if (savedMode !== null) {
         setIsSequential(savedMode === "true");
-      }
-
-      const d = new Date();
-      const todayKey = `lammah_study_seconds_${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-      const savedTodaySecs = localStorage.getItem(todayKey);
-      if (savedTodaySecs) {
-        setTodayStudySeconds(parseInt(savedTodaySecs, 10) || 0);
       }
     } catch (e) {
       console.warn("Error loading tasks:", e);
@@ -194,7 +164,7 @@ export default function HighlighterQuestBoard() {
     }
   }, [tasks, isLoaded]);
 
-  // Save sequential mode to localStorage
+  // Save mode to localStorage
   useEffect(() => {
     if (!isLoaded) return;
     try {
@@ -225,19 +195,10 @@ export default function HighlighterQuestBoard() {
     }
   }, []);
 
-  // Compute Active Index for Sequential Mode (First task that is NOT completed)
+  // Compute Active Index for Sequential Mode
   const activeSequentialIndex = useMemo(() => {
     return tasks.findIndex((t) => !t.completed);
   }, [tasks]);
-
-  // Helper formatting for cumulative hours & minutes
-  const formatTotalTime = (totalSeconds: number) => {
-    const hours = Math.floor(totalSeconds / 3600);
-    const mins = Math.floor((totalSeconds % 3600) / 60);
-    if (hours > 0) return `${hours} ساعة و ${mins} دقيقة`;
-    if (mins > 0) return `${mins} دقيقة`;
-    return "0 دقيقة";
-  };
 
   // Add task handler
   const handleAddTask = (e?: React.FormEvent) => {
@@ -262,17 +223,14 @@ export default function HighlighterQuestBoard() {
 
   // Toggle task completion with Sequential Check
   const handleToggleTask = (task: StudyTask, index: number) => {
-    // If sequential mode is enabled, check if task is locked
     if (isSequential) {
       if (!task.completed && activeSequentialIndex !== -1 && index !== activeSequentialIndex) {
-        // Locked! Show feedback notice
         setLockedNoticeTaskId(task.id);
         setTimeout(() => setLockedNoticeTaskId(null), 2500);
         return;
       }
     }
 
-    // Toggle completion state
     setTasks((prev) =>
       prev.map((t) => {
         if (t.id === task.id) {
@@ -295,7 +253,7 @@ export default function HighlighterQuestBoard() {
     );
   };
 
-  // Move task up (reorder)
+  // Move task up
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
     setTasks((prev) => {
@@ -307,7 +265,7 @@ export default function HighlighterQuestBoard() {
     });
   };
 
-  // Move task down (reorder)
+  // Move task down
   const handleMoveDown = (index: number) => {
     if (index >= tasks.length - 1) return;
     setTasks((prev) => {
@@ -334,24 +292,17 @@ export default function HighlighterQuestBoard() {
   // Delete task
   const handleDeleteTask = (taskId: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
-    if (editingId === taskId) {
-      setEditingId(null);
-    }
+    if (editingId === taskId) setEditingId(null);
   };
 
-  // Clear completed tasks
+  // Clear completed
   const handleClearCompleted = () => {
-    if (confirm("هل ترغب في مسح جميع المهام المنجزة من الدفتر؟")) {
+    if (confirm("هل ترغب في مسح المهام المنجزة من الدفتر؟")) {
       setTasks((prev) => prev.filter((t) => !t.completed));
     }
   };
 
-  // Open global study timer
-  const handleOpenTimer = () => {
-    window.dispatchEvent(new CustomEvent("open-study-timer"));
-  };
-
-  // Statistics calculation
+  // Stats
   const totalCount = tasks.length;
   const completedCount = tasks.filter((t) => t.completed).length;
   const remainingCount = totalCount - completedCount;
@@ -365,182 +316,137 @@ export default function HighlighterQuestBoard() {
   }, [tasks, filter]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col gap-6" dir="rtl">
+    <div className="w-full max-w-3xl mx-auto flex flex-col items-center" dir="rtl">
       
-      {/* ── TOP TOOLBAR: Mode Switch & Study Timer Card ── */}
-      <div className="bg-white/90 dark:bg-[#0B0F19]/90 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-        
-        {/* Sequential Mode Toggle (الترتيب vs إنجاز حر) */}
-        <div className="flex flex-col gap-1.5 w-full sm:w-auto">
-          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-indigo-500" />
-            <span>نظام إنجاز المهام:</span>
-          </span>
-          <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200/70 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={() => setIsSequential(true)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                isSequential
-                  ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-xs border border-indigo-200/60 dark:border-indigo-800"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              <Lock className="w-3.5 h-3.5 text-indigo-500" />
-              <span>إنجاز بالترتيب (تتابع ملزم)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsSequential(false)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
-                !isSequential
-                  ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-300 shadow-xs border border-emerald-200/60 dark:border-emerald-800"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              <Unlock className="w-3.5 h-3.5 text-emerald-500" />
-              <span>إنجاز حر (بدون ترتيب)</span>
-            </button>
+      {/* ── METALLIC SPIRAL BINDER RINGS (حلقات السلك الأكاديمي) ── */}
+      <div className="w-full px-8 -mb-3 z-20 flex justify-around pointer-events-none select-none">
+        {[...Array(12)].map((_, i) => (
+          <div key={i} className="flex flex-col items-center">
+            <span className="w-2.5 h-6 rounded-full bg-gradient-to-r from-slate-400 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-400 dark:to-slate-600 shadow-md border border-slate-400/50" />
+            <span className="w-2 h-2 -mt-1 rounded-full bg-slate-300 dark:bg-slate-700 shadow-inner" />
           </div>
-        </div>
-
-        {/* Global Study Timer Launcher & Today Summary */}
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-          <div className="text-right">
-            <span className="text-[10px] font-bold text-slate-400 block">دراستك اليوم:</span>
-            <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
-              <Flame className="w-3.5 h-3.5 text-amber-500" />
-              {formatTotalTime(todayStudySeconds)}
-            </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleOpenTimer}
-            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-black shadow-md shadow-indigo-600/20 active:scale-95 transition-all cursor-pointer"
-          >
-            <Clock className="w-4 h-4" />
-            <span>مؤقت المذاكرة والتركيز</span>
-          </button>
-        </div>
+        ))}
       </div>
 
-      {/* ── HIGHLIGHTER PENS TRAY (حامل أقلام الهايلايتر) ── */}
-      <div className="bg-white/80 dark:bg-[#0B0F19]/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-3xl p-4 shadow-2xs">
-        <div className="flex items-center justify-between mb-2 px-1">
-          <span className="text-xs font-black text-slate-800 dark:text-slate-200 flex items-center gap-2">
-            <Palette className="w-4 h-4 text-indigo-500" />
-            <span>اختر قلم الهايلايتر لتلوين وتخطيط مهامك:</span>
-          </span>
-          <span className="text-[11px] text-slate-400 hidden sm:inline">
-            القلم المحدد: <strong className="text-slate-700 dark:text-slate-300">{HIGHLIGHTERS.find(h => h.id === activePenId)?.name}</strong>
-          </span>
-        </div>
-
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 pt-1">
-          {HIGHLIGHTERS.map((pen) => {
-            const isSelected = activePenId === pen.id;
-            return (
-              <button
-                key={pen.id}
-                type="button"
-                onClick={() => setActivePenId(pen.id)}
-                className={`relative p-2.5 rounded-2xl border transition-all flex flex-col items-center gap-1.5 cursor-pointer ${
-                  isSelected
-                    ? "bg-white dark:bg-slate-800/90 shadow-md scale-102 ring-2 ring-indigo-500/30"
-                    : "bg-slate-50/70 dark:bg-white/[0.02] border-slate-200/60 dark:border-slate-800 hover:bg-slate-100/80 hover:scale-101"
-                }`}
-                style={{
-                  borderColor: isSelected ? pen.hex : undefined,
-                }}
-              >
-                {/* Visual Highlighter Pen Tip */}
-                <div className="flex items-center gap-1">
-                  <div
-                    className="w-4 h-5 rounded-t-sm rounded-b-xs shadow-xs transition-transform"
-                    style={{ backgroundColor: pen.hex }}
-                  />
-                  <div className="w-3 h-4 bg-slate-300 dark:bg-slate-600 rounded-b-sm" />
-                </div>
-
-                <span className="text-[11px] font-black text-slate-700 dark:text-slate-200">
-                  {pen.name}
-                </span>
-
-                {isSelected && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[9px] font-bold shadow-xs">
-                    ✓
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── THE ACADEMIC NOTEBOOK SHEET (ورقة الدفتر الأكاديمي المسطرة) ── */}
-      <div className="relative rounded-3xl bg-white dark:bg-[#0c1222] border-2 border-slate-300/80 dark:border-slate-700/80 shadow-xl overflow-hidden">
+      {/* ── THE ELEGANT UNIFIED ACADEMIC NOTEBOOK ── */}
+      <div className="w-full relative rounded-3xl bg-[#FAF8F5] dark:bg-[#0E1526] border border-slate-300/80 dark:border-slate-800 shadow-2xl overflow-hidden transition-all duration-300">
         
-        {/* Notebook Top Ring Holes (خروق دفتر السلك الأكاديمي) */}
-        <div className="bg-slate-100 dark:bg-[#080d19] border-b border-slate-200 dark:border-slate-800 px-6 py-2.5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700 border border-slate-400 dark:border-slate-600 inline-block shadow-inner" />
-              <span className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700 border border-slate-400 dark:border-slate-600 inline-block shadow-inner" />
-              <span className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700 border border-slate-400 dark:border-slate-600 inline-block shadow-inner" />
+        {/* Notebook Leather/Linen Header Strip */}
+        <div className="bg-gradient-to-r from-slate-100 via-white to-slate-100 dark:from-slate-900 dark:via-[#111A30] dark:to-slate-900 border-b border-slate-200 dark:border-slate-800/80 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          
+          {/* Title & Date */}
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm">
+              <BookOpen className="w-4 h-4" />
             </div>
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <span className="text-xs font-black text-slate-800 dark:text-slate-200">
-                دفتر مهام المذاكرة الأكاديمي
+            <div>
+              <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                <span>دفتر مهام المذاكرة</span>
+              </h2>
+              <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1 mt-0.5">
+                <Calendar className="w-3 h-3 text-slate-400" />
+                <span>{todayFormatted}</span>
               </span>
             </div>
           </div>
 
-          <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
-            <span>📅</span>
-            <span>{todayFormatted}</span>
+          {/* Mode Switch (🔒 بالترتيب vs 🔓 إنجاز حر) */}
+          <div className="flex items-center gap-1 bg-slate-200/70 dark:bg-slate-800/80 p-1 rounded-full border border-slate-300/60 dark:border-slate-700/60 text-xs shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setIsSequential(true)}
+              className={`px-3 py-1 rounded-full font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                isSequential
+                  ? "bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-xs"
+                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+              }`}
+            >
+              <Lock className="w-3 h-3 text-indigo-500 dark:text-white" />
+              <span>إنجاز بالترتيب</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsSequential(false)}
+              className={`px-3 py-1 rounded-full font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                !isSequential
+                  ? "bg-white dark:bg-emerald-600 text-emerald-700 dark:text-white shadow-xs"
+                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+              }`}
+            >
+              <Unlock className="w-3 h-3 text-emerald-500 dark:text-white" />
+              <span>إنجاز حر</span>
+            </button>
           </div>
         </div>
 
-        {/* Notebook Paper Body with Ruled Lines & Red Margin Line */}
+        {/* Compact, Slim Highlighter Pens Rack (حامل أقلام الهايلايتر الأكاديمي) */}
+        <div className="bg-slate-100/60 dark:bg-white/[0.02] border-b border-slate-200/60 dark:border-slate-800/60 px-6 py-2.5 flex items-center justify-between gap-2 overflow-x-auto">
+          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 shrink-0">
+            قلم الهايلايتر:
+          </span>
+          <div className="flex items-center gap-2">
+            {HIGHLIGHTERS.map((pen) => {
+              const isSelected = activePenId === pen.id;
+              return (
+                <button
+                  key={pen.id}
+                  type="button"
+                  onClick={() => setActivePenId(pen.id)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-white dark:bg-slate-800 border-slate-400 dark:border-slate-600 shadow-xs scale-105 ring-1 ring-black/5 dark:ring-white/10"
+                      : "bg-transparent border-transparent hover:bg-white/60 dark:hover:bg-white/5 opacity-70 hover:opacity-100"
+                  }`}
+                  title={pen.name}
+                >
+                  <span
+                    className="w-3 h-3 rounded-full shadow-2xs shrink-0"
+                    style={{ backgroundColor: pen.hex }}
+                  />
+                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                    {pen.name.split(" ")[0]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── NOTEBOOK LINED PAPER (ورقة الدفتر المسطرة) ── */}
         <div
-          className="relative p-6 sm:p-8 min-h-[500px]"
+          className="relative p-6 sm:p-8 min-h-[460px]"
           style={{
-            backgroundImage: `repeating-linear-gradient(transparent, transparent 43px, rgba(99, 102, 241, 0.08) 43px, rgba(99, 102, 241, 0.08) 44px)`,
+            backgroundImage: `repeating-linear-gradient(transparent, transparent 41px, rgba(99, 102, 241, 0.08) 41px, rgba(99, 102, 241, 0.08) 42px)`,
           }}
         >
-          {/* Vertical Pink Margin Line (RTL: right side) */}
-          <div className="absolute top-0 bottom-0 right-14 sm:right-20 w-[2px] bg-rose-400/40 dark:bg-rose-500/20 pointer-events-none" />
+          {/* Subtle Vertical Pink Margin Line (RTL Right side) */}
+          <div className="absolute top-0 bottom-0 right-10 sm:right-14 w-[1px] bg-rose-400/40 dark:bg-rose-500/25 pointer-events-none" />
 
-          {/* New Task Input Line inside the notepad */}
+          {/* New Task Row (Seamlessly styled onto the paper) */}
           <form onSubmit={handleAddTask} className="mb-6 relative z-10">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-slate-50/90 dark:bg-slate-900/90 p-2 sm:p-2.5 rounded-2xl border border-indigo-200/80 dark:border-indigo-500/30 shadow-xs">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white/95 dark:bg-slate-900/90 p-2 rounded-2xl border border-slate-200/90 dark:border-slate-700/80 shadow-xs">
               
-              {/* Task Title Input */}
-              <div className="flex-1 flex items-center gap-2 px-2">
-                <div
-                  className="w-3 h-3 rounded-full shrink-0 shadow-xs"
+              <div className="flex-1 flex items-center gap-2 px-2.5">
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs"
                   style={{ backgroundColor: HIGHLIGHTERS.find((h) => h.id === activePenId)?.hex }}
-                  title="لون الهايلايتر المختار"
                 />
                 <input
                   type="text"
                   value={newTaskTitle}
                   onChange={(e) => setNewTaskTitle(e.target.value)}
-                  placeholder="اكتب مهمتك الدراسية هنا (مثال: دراسة شابتر 3، حل أسئلة الكويز)..."
+                  placeholder="اكتب مهمتك هنا... (مثال: تلخيص شابتر 3، حل مسائل الشيت)..."
                   className="w-full bg-transparent border-none text-xs sm:text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden"
                 />
               </div>
 
               {/* Tag Selector */}
-              <div className="flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shrink-0">
+              <div className="flex items-center gap-1 px-2 py-1 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700 shrink-0">
                 <Tag className="w-3 h-3 text-slate-400" />
                 <select
                   value={selectedTag}
                   onChange={(e) => setSelectedTag(e.target.value)}
-                  className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-hidden cursor-pointer"
+                  className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-hidden cursor-pointer"
                 >
                   {SUBJECT_TAGS.map((t) => (
                     <option key={t} value={t} className="bg-white dark:bg-slate-800">
@@ -550,17 +456,17 @@ export default function HighlighterQuestBoard() {
                 </select>
               </div>
 
-              {/* Estimated Time Selector */}
-              <div className="flex items-center gap-1.5 px-2 py-1 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shrink-0">
+              {/* Time Selector */}
+              <div className="flex items-center gap-1 px-2 py-1 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700 shrink-0">
                 <Clock className="w-3 h-3 text-slate-400" />
                 <select
                   value={selectedMinutes}
                   onChange={(e) => setSelectedMinutes(Number(e.target.value))}
-                  className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-hidden cursor-pointer"
+                  className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-hidden cursor-pointer"
                 >
                   {ESTIMATED_TIMES.map((m) => (
                     <option key={m} value={m} className="bg-white dark:bg-slate-800">
-                      {m} دقيقة
+                      {m} د
                     </option>
                   ))}
                 </select>
@@ -570,40 +476,39 @@ export default function HighlighterQuestBoard() {
               <button
                 type="submit"
                 disabled={!newTaskTitle.trim()}
-                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer shrink-0"
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer shrink-0"
               >
-                <Plus className="w-4 h-4" />
-                <span>إضافة للدفتر</span>
+                <Plus className="w-3.5 h-3.5" />
+                <span>إضافة</span>
               </button>
             </div>
           </form>
 
-          {/* Progress Bar & Filter Tabs */}
+          {/* Progress & Filters Strip */}
           {totalCount > 0 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-6 pb-4 border-b border-indigo-100/60 dark:border-slate-800">
-              
-              {/* Progress Bar */}
-              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <div className="w-32 bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-200/60 dark:border-slate-800/60">
+              {/* Progress counter */}
+              <div className="flex items-center gap-2.5">
+                <div className="w-24 bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500"
+                    className="bg-emerald-500 h-full rounded-full transition-all duration-300"
                     style={{ width: `${completionPercentage}%` }}
                   />
                 </div>
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
                   {completedCount} من {totalCount} مكتملة ({completionPercentage}%)
                 </span>
               </div>
 
               {/* Filter Tabs */}
-              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl">
+              <div className="flex items-center gap-1 text-xs">
                 <button
                   type="button"
                   onClick={() => setFilter("all")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  className={`px-2.5 py-0.5 rounded-lg font-bold transition cursor-pointer ${
                     filter === "all"
-                      ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-2xs"
-                      : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                      ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white"
+                      : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
                   }`}
                 >
                   الكل ({totalCount})
@@ -611,10 +516,10 @@ export default function HighlighterQuestBoard() {
                 <button
                   type="button"
                   onClick={() => setFilter("active")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  className={`px-2.5 py-0.5 rounded-lg font-bold transition cursor-pointer ${
                     filter === "active"
-                      ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-2xs"
-                      : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                      ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white"
+                      : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
                   }`}
                 >
                   قيد الإنجاز ({remainingCount})
@@ -622,50 +527,46 @@ export default function HighlighterQuestBoard() {
                 <button
                   type="button"
                   onClick={() => setFilter("completed")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  className={`px-2.5 py-0.5 rounded-lg font-bold transition cursor-pointer ${
                     filter === "completed"
-                      ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-300 shadow-2xs"
-                      : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                      ? "bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white"
+                      : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
                   }`}
                 >
                   المكتملة ({completedCount})
                 </button>
-              </div>
 
-              {/* Clear Completed */}
-              {completedCount > 0 && (
-                <button
-                  type="button"
-                  onClick={handleClearCompleted}
-                  className="text-[11px] font-bold text-slate-400 hover:text-rose-500 transition cursor-pointer"
-                >
-                  مسح المنجز 🗑️
-                </button>
-              )}
+                {completedCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearCompleted}
+                    className="text-[10px] text-slate-400 hover:text-rose-500 mr-2 transition cursor-pointer"
+                  >
+                    مسح المنجز
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
-          {/* Sequential Mode Notification Banner */}
+          {/* Sequential Order Guidance Pill */}
           {isSequential && remainingCount > 1 && (
-            <div className="mb-4 p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40 flex items-center justify-between text-xs text-indigo-800 dark:text-indigo-300">
-              <div className="flex items-center gap-2">
-                <Lock className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                <span>
-                  <strong>وضع التتابع مُفعّل:</strong> يجب إنجاز المهمة الحالية لفتح المهمة التي تليها!
-                </span>
-              </div>
-              <span className="text-[10px] font-normal text-slate-500">
-                (يمكنك استخدام الأسهم ⬆️ ⬇️ لترتيب أولوياتك)
+            <div className="mb-4 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Lock className="w-3 h-3 text-indigo-500" />
+                <span>إنجاز المهام بالترتيب: المهمة التالية تفتح تلقائياً عند إنهاء الحالية</span>
+              </span>
+              <span className="text-[10px] text-slate-400">
+                (استخدم الأسهم ⬆️ ⬇️ لتحديد الترتيب)
               </span>
             </div>
           )}
 
-          {/* ── TASKS LIST ── */}
-          <div className="space-y-3 relative z-10">
+          {/* ── TASKS ROWS ON RULED PAPER ── */}
+          <div className="space-y-2.5 relative z-10">
             <AnimatePresence mode="popLayout">
               {filteredTasks.length > 0 ? (
-                filteredTasks.map((task, idx) => {
-                  // Find original index in full tasks array
+                filteredTasks.map((task) => {
                   const originalIndex = tasks.findIndex((t) => t.id === task.id);
                   const isLocked =
                     isSequential &&
@@ -687,68 +588,60 @@ export default function HighlighterQuestBoard() {
                     <motion.div
                       key={task.id}
                       layout
-                      initial={{ opacity: 0, y: 10 }}
+                      initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className={`relative group rounded-2xl p-3 sm:p-4 border transition-all duration-200 ${
+                      className={`relative group rounded-xl px-3.5 py-2.5 border transition-all duration-200 ${
                         task.completed
-                          ? "bg-slate-100/70 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800/60 opacity-70"
+                          ? "bg-slate-50/70 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800/40 opacity-70"
                           : isLocked
-                          ? "bg-slate-50/60 dark:bg-slate-900/30 border-slate-200/50 dark:border-slate-800/40 opacity-75"
+                          ? "bg-white/40 dark:bg-slate-900/20 border-slate-200/50 dark:border-slate-800/40 opacity-65"
                           : isCurrentActive
-                          ? "bg-white dark:bg-[#10172a] border-indigo-400 dark:border-indigo-500/80 shadow-md ring-2 ring-indigo-500/15"
-                          : "bg-white dark:bg-[#0e1424] border-slate-200 dark:border-slate-800 shadow-2xs hover:shadow-xs"
+                          ? "bg-white dark:bg-[#121B2F] border-indigo-400 dark:border-indigo-500/80 shadow-xs ring-1 ring-indigo-500/20"
+                          : "bg-white/90 dark:bg-[#101726] border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-xs"
                       }`}
                     >
-                      {/* Locked Notice Popup (Shake feedback) */}
+                      {/* Locked Notice Shake */}
                       {isNoticeOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          className="absolute -top-3 right-8 z-30 px-3 py-1 rounded-full bg-rose-600 text-white text-[11px] font-black shadow-lg flex items-center gap-1.5"
-                        >
+                        <div className="absolute -top-3 right-8 z-30 px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black shadow-md flex items-center gap-1 animate-bounce">
                           <AlertCircle className="w-3 h-3" />
                           <span>يجب إنجاز المهمة السابقة أولاً!</span>
-                        </motion.div>
+                        </div>
                       )}
 
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center justify-between gap-2.5">
                         
-                        {/* Checkbox / Lock Icon */}
-                        <div className="flex items-center gap-3 shrink-0">
-                          
-                          {/* Sequential Order Number */}
-                          <span className="w-5 text-center text-xs font-black text-slate-400">
+                        {/* Checkbox & Order Number */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="w-4 text-center text-xs font-black text-slate-400">
                             {originalIndex + 1}.
                           </span>
 
                           <button
                             type="button"
                             onClick={() => handleToggleTask(task, originalIndex)}
-                            className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+                            className={`w-5 h-5 rounded-md flex items-center justify-center transition cursor-pointer ${
                               task.completed
-                                ? "bg-emerald-600 text-white shadow-xs"
+                                ? "bg-emerald-600 text-white shadow-2xs"
                                 : isLocked
                                 ? "bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed"
                                 : isCurrentActive
-                                ? "border-2 border-indigo-600 dark:border-indigo-400 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/60"
+                                ? "border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50"
                                 : "border-2 border-slate-300 dark:border-slate-600 hover:border-slate-400"
                             }`}
-                            title={isLocked ? "مهمة مقفلة - أنجز السابقة أولاً" : "تحديد كمكتمل"}
                           >
                             {task.completed ? (
-                              <Check className="w-4 h-4 stroke-[3]" />
+                              <Check className="w-3.5 h-3.5 stroke-[3]" />
                             ) : isLocked ? (
-                              <Lock className="w-3.5 h-3.5" />
+                              <Lock className="w-3 h-3" />
                             ) : null}
                           </button>
                         </div>
 
-                        {/* Task Content with Authentic Highlighter Stroke */}
+                        {/* Task Title with Authentic Highlighter Marker Stroke */}
                         <div className="flex-1 min-w-0">
                           {editingId === task.id ? (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
                               <input
                                 ref={editInputRef}
                                 type="text"
@@ -758,19 +651,20 @@ export default function HighlighterQuestBoard() {
                                   if (e.key === "Enter") handleSaveEdit(task.id);
                                   if (e.key === "Escape") setEditingId(null);
                                 }}
-                                className="w-full text-xs sm:text-sm font-bold bg-white dark:bg-slate-800 border border-indigo-400 rounded-lg px-2 py-1 text-slate-900 dark:text-white focus:outline-hidden"
+                                className="w-full text-xs font-bold bg-white dark:bg-slate-800 border border-indigo-400 rounded px-2 py-0.5 text-slate-900 dark:text-white focus:outline-hidden"
                               />
                               <button
                                 type="button"
                                 onClick={() => handleSaveEdit(task.id)}
-                                className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold"
+                                className="px-2 py-0.5 rounded bg-indigo-600 text-white text-[11px] font-bold"
                               >
                                 حفظ
                               </button>
                             </div>
                           ) : (
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
-                              {/* Title with Highlighter effect */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                              
+                              {/* Title with highlighter marker ink effect */}
                               <div className="relative inline-block max-w-full">
                                 <span
                                   className={`relative z-10 text-xs sm:text-sm font-black transition-all ${
@@ -784,38 +678,36 @@ export default function HighlighterQuestBoard() {
                                   {task.title}
                                 </span>
 
-                                {/* Realistic Highlighter Ink Underlay */}
                                 {!task.completed && (
                                   <span
-                                    className={`absolute inset-0 -inset-x-1.5 my-0.5 rounded-sm opacity-85 pointer-events-none transition-colors ${pen.strokeBg}`}
+                                    className={`absolute inset-0 -inset-x-1.5 my-0.5 rounded-xs opacity-80 pointer-events-none ${pen.strokeBg}`}
                                     style={{ zIndex: 0 }}
                                   />
                                 )}
                               </div>
 
-                              {/* Task Badges & Status */}
-                              <div className="flex items-center gap-2 shrink-0">
+                              {/* Badges */}
+                              <div className="flex items-center gap-1.5 shrink-0">
                                 {task.subject && (
-                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                                     {task.subject}
                                   </span>
                                 )}
 
                                 {task.estimatedMinutes && (
-                                  <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
-                                    <Clock className="w-3 h-3" />
-                                    {task.estimatedMinutes} د
+                                  <span className="text-[10px] text-slate-400 font-medium">
+                                    {task.estimatedMinutes}د
                                   </span>
                                 )}
 
                                 {isCurrentActive && (
-                                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 animate-pulse">
-                                    المهمة الحالية ⚡
+                                  <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">
+                                    قيد الإنجاز ⚡
                                   </span>
                                 )}
 
                                 {isLocked && (
-                                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 flex items-center gap-1">
+                                  <span className="text-[9px] text-slate-400 flex items-center gap-0.5">
                                     <Lock className="w-2.5 h-2.5" />
                                     مقفلة
                                   </span>
@@ -825,25 +717,23 @@ export default function HighlighterQuestBoard() {
                           )}
                         </div>
 
-                        {/* Actions (Change Color, Reorder ⬆️ ⬇️, Edit, Delete) */}
-                        <div className="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
-                          
-                          {/* Highlighter color dot picker for this task */}
+                        {/* Reorder & Actions */}
+                        <div className="flex items-center gap-1 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity">
+                          {/* Color Dot (Click to cycle or pick color) */}
                           <div className="relative group/color">
                             <button
                               type="button"
-                              className="w-5 h-5 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center cursor-pointer shadow-2xs hover:scale-110 transition-transform"
+                              className="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 cursor-pointer shadow-2xs hover:scale-110 transition-transform"
                               style={{ backgroundColor: pen.hex }}
-                              title="تغيير لون قلم الهايلايتر لهذه المهمة"
+                              title="تغيير لون قلم الهايلايتر"
                             />
-                            {/* Color Picker Flyout on hover */}
-                            <div className="hidden group-hover/color:flex absolute bottom-full left-1/2 -translate-x-1/2 mb-1 p-1 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 gap-1 z-30">
+                            <div className="hidden group-hover/color:flex absolute bottom-full left-1/2 -translate-x-1/2 mb-1 p-1 bg-white dark:bg-slate-800 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 gap-1 z-30">
                               {HIGHLIGHTERS.map((h) => (
                                 <button
                                   key={h.id}
                                   type="button"
                                   onClick={() => handleChangeTaskColor(task.id, h.id)}
-                                  className="w-4 h-4 rounded-full cursor-pointer hover:scale-125 transition-transform"
+                                  className="w-3.5 h-3.5 rounded-full cursor-pointer hover:scale-125 transition-transform"
                                   style={{ backgroundColor: h.hex }}
                                   title={h.name}
                                 />
@@ -851,7 +741,6 @@ export default function HighlighterQuestBoard() {
                             </div>
                           </div>
 
-                          {/* Reorder Buttons (Move Up / Down) */}
                           <button
                             type="button"
                             onClick={() => handleMoveUp(originalIndex)}
@@ -859,7 +748,7 @@ export default function HighlighterQuestBoard() {
                             className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-20 cursor-pointer"
                             title="تقديم المهمة للأعلى"
                           >
-                            <ArrowUp className="w-3.5 h-3.5" />
+                            <ArrowUp className="w-3 h-3" />
                           </button>
                           <button
                             type="button"
@@ -868,10 +757,9 @@ export default function HighlighterQuestBoard() {
                             className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-20 cursor-pointer"
                             title="تأخير المهمة للأسفل"
                           >
-                            <ArrowDown className="w-3.5 h-3.5" />
+                            <ArrowDown className="w-3 h-3" />
                           </button>
 
-                          {/* Edit inline */}
                           <button
                             type="button"
                             onClick={() => {
@@ -879,19 +767,18 @@ export default function HighlighterQuestBoard() {
                               setEditingTitle(task.title);
                             }}
                             className="p-1 text-slate-400 hover:text-indigo-600 transition cursor-pointer"
-                            title="تعديل اسم المهمة"
+                            title="تعديل المهمة"
                           >
-                            <Pencil className="w-3.5 h-3.5" />
+                            <Pencil className="w-3 h-3" />
                           </button>
 
-                          {/* Delete */}
                           <button
                             type="button"
                             onClick={() => handleDeleteTask(task.id)}
                             className="p-1 text-slate-400 hover:text-rose-500 transition cursor-pointer"
                             title="حذف المهمة"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
                       </div>
@@ -899,16 +786,16 @@ export default function HighlighterQuestBoard() {
                   );
                 })
               ) : (
-                /* Empty Notepad State (Clean, Academic, Inviting) */
-                <div className="py-16 px-4 text-center flex flex-col items-center justify-center">
-                  <div className="w-16 h-16 rounded-3xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 flex items-center justify-center mb-3 shadow-inner">
-                    <BookOpen className="w-8 h-8 opacity-70" />
+                /* Clean Empty State */
+                <div className="py-14 text-center flex flex-col items-center justify-center">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 flex items-center justify-center mb-2.5">
+                    <BookOpen className="w-6 h-6 opacity-60" />
                   </div>
-                  <h4 className="text-sm font-black text-slate-800 dark:text-slate-200 mb-1">
+                  <h4 className="text-xs font-black text-slate-700 dark:text-slate-300 mb-1">
                     دفتر مهامك فارغ ومستعد لمذاكرتك
                   </h4>
-                  <p className="text-xs text-slate-400 max-w-sm mb-4">
-                    اختر قلم الهايلايتر المفضل لديك من الأعلى واكتب مهمتك الدراسية لتنظيم يومك الأكاديمي.
+                  <p className="text-[11px] text-slate-400 max-w-xs">
+                    اكتب مهمتك الدراسية في السطر أعلاه لتنظيم يومك الأكاديمي.
                   </p>
                 </div>
               )}
