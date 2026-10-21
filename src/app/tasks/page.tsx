@@ -11,11 +11,10 @@ export default function TasksPage() {
       className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col relative transition-colors duration-300 selection:bg-yellow-500/20 selection:text-yellow-900 dark:selection:text-yellow-100"
       dir="rtl"
     >
-      {/* Ambient Pastel Background Auras */}
+      {/* Ambient Background Auras */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-amber-400/10 via-pink-400/5 to-transparent blur-3xl rounded-full dark:from-amber-500/10 dark:via-pink-500/5 pointer-events-none" />
-        <div className="absolute top-1/3 -right-40 w-[600px] h-[600px] bg-emerald-400/5 blur-3xl rounded-full pointer-events-none dark:bg-emerald-500/5" />
-        <div className="absolute bottom-10 -left-40 w-[600px] h-[600px] bg-indigo-500/5 blur-3xl rounded-full pointer-events-none dark:bg-indigo-500/5" />
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-indigo-500/10 via-purple-500/5 to-transparent blur-3xl rounded-full pointer-events-none" />
+        <div className="absolute bottom-10 -left-40 w-[600px] h-[600px] bg-indigo-500/5 blur-3xl rounded-full pointer-events-none" />
       </div>
 
       {/* Top Floating App Header */}

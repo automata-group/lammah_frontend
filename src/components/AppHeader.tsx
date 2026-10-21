@@ -9,7 +9,7 @@ import {
   Package, Store, BookOpen, Download, Crown, 
   History, User, Sun, Moon, LogOut, LayoutDashboard,
   GraduationCap, Video, PenTool, ChevronDown, Menu, X,
-  Sparkles, CheckCircle2, Shield, HelpCircle, Zap, Palette, Layers
+  Sparkles, CheckCircle2, Shield, HelpCircle, Zap, Palette, Layers, CheckSquare
 } from "lucide-react";
 import StudentProfileModal from "@/components/StudentProfileModal";
 import { createClient } from "@/lib/supabase";
@@ -319,20 +319,17 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
               </button>
             )}
 
-            {/* 3. مهام المذاكرة (Study Tasks & Highlighter Feature) */}
+            {/* 3. مهام المذاكرة */}
             <button
               onClick={() => router.push("/tasks")}
               className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
                 activePage === "tasks"
-                  ? "bg-gradient-to-r from-amber-400/20 to-pink-400/20 text-slate-900 dark:text-white border border-amber-400/50 dark:border-pink-500/40 shadow-xs font-black"
+                  ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-xs border border-slate-200/60 dark:border-slate-700"
                   : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/10"
               }`}
             >
-              <Palette className={`w-3.5 h-3.5 ${activePage === "tasks" ? "text-amber-500" : "text-pink-500"}`} />
+              <CheckSquare className="w-3.5 h-3.5 text-indigo-500" />
               <span>مهام المذاكرة</span>
-              <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-gradient-to-r from-amber-400 to-pink-500 text-white shadow-2xs">
-                جديد 🎨
-              </span>
             </button>
 
             {/* 4. Dropdown: استوديو الدراسة (الدفاتر + الملاحظات) */}
@@ -707,12 +704,12 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                     onClick={() => { setMobileMenuOpen(false); router.push("/tasks"); }}
                     className={`p-2 rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer ${
                       activePage === "tasks"
-                        ? "bg-amber-100/90 dark:bg-amber-950/70 text-amber-800 dark:text-amber-200 font-black border border-amber-300"
-                        : "bg-amber-50/70 dark:bg-white/5 text-amber-700 dark:text-amber-300"
+                        ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-black border border-indigo-200 dark:border-indigo-800"
+                        : "bg-slate-50 dark:bg-white/5 text-slate-700 dark:text-slate-300"
                     }`}
                   >
-                    <Palette className="w-4 h-4 text-amber-500" />
-                    <span className="text-[11px] font-bold">مهام المذاكرة 📝</span>
+                    <CheckSquare className="w-4 h-4 text-indigo-500" />
+                    <span className="text-[11px] font-bold">مهام المذاكرة</span>
                   </button>
                 </div>
               </div>
