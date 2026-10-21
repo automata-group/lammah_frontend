@@ -601,6 +601,21 @@ function SummarizeContent() {
                   setIsStreaming(false);
                   setIsProcessing(false);
                   if (p.history_id && typeof p.history_id === "string") {
+                    // World-Class Instant Handoff Cache (0ms navigation)
+                    try {
+                      const instantPayload = {
+                        metadata: {
+                          job_id: p.job_id || p.history_id,
+                          title: p.title || activeFileName || "محاضرة جامعية",
+                          transcript: p.transcript || "",
+                          annotations: p.annotations,
+                          has_pdf: !!p.download_url,
+                        },
+                        downloadUrl: p.download_url || null,
+                        cachedAt: Date.now(),
+                      };
+                      sessionStorage.setItem("lammah_instant_lecture_" + p.history_id, JSON.stringify(instantPayload));
+                    } catch {}
                     router.push(`/dashboard?history_id=${p.history_id}`);
                   } else {
                     router.push(`/dashboard`);

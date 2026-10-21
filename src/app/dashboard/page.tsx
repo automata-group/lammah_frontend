@@ -694,10 +694,37 @@ function DashboardContent() {
         const historyId = params.get("history_id");
 
         if (historyId) {
-          setIsProcessing(true);
-          setProgressStep("جاري استرجاع المحاضرة والتظليلات من الأرشيف...");
           window.history.replaceState({}, document.title, window.location.pathname);
           setCurrentHistoryId(historyId);
+
+          // World-Class SWR Instant Cache: Check client cache first for 0ms rendering
+          let hasInstantCache = false;
+          try {
+            const cached = sessionStorage.getItem("lammah_instant_lecture_" + historyId);
+            if (cached) {
+              const parsed = JSON.parse(cached);
+              const meta = parsed.metadata || parsed;
+              if (meta?.annotations) {
+                hasInstantCache = true;
+                setLectureTitle(meta.title || "محاضرة بدون عنوان");
+                const hasPdf = meta.has_pdf !== undefined ? meta.has_pdf : meta.annotations?.slide_explanations?.length > 0;
+                selectInitialTab(meta.annotations, !!hasPdf);
+                setResult({
+                  transcript: meta.transcript || "",
+                  downloadUrl: parsed.downloadUrl || (hasPdf ? `/api/v1/summarize/download/${meta.job_id}.pdf` : null),
+                  annotations: meta.annotations,
+                  isDocumentOnly: !meta.transcript?.trim(),
+                });
+                setIsProcessing(false);
+                setProgressStep("");
+              }
+            }
+          } catch {}
+
+          if (!hasInstantCache) {
+            setIsProcessing(true);
+            setProgressStep("جاري استرجاع المحاضرة والتظليلات من الأرشيف...");
+          }
 
           const fp = await getFingerprint();
           const meta = await getDeviceMetadata();
@@ -742,6 +769,11 @@ function DashboardContent() {
                   annotations: data.metadata.annotations,
                   isDocumentOnly: isDocOnly,
                 });
+
+                // Update instant cache for future zero-latency opens
+                try {
+                  sessionStorage.setItem("lammah_instant_lecture_" + historyId, JSON.stringify(data));
+                } catch {}
               } else {
                 throw new Error("هذا التلخيص قديم جداً ولا يحتوي على أرشيف محفوظ.");
               }

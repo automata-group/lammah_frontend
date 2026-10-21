@@ -633,6 +633,15 @@ export default function HistoryPage() {
                                   router.push(`/notebook?history_id=${log.id}`);
                                 }
                               } else {
+                                // Prime instant cache for 0ms dashboard load
+                                try {
+                                  if (log.metadata) {
+                                    sessionStorage.setItem("lammah_instant_lecture_" + log.id, JSON.stringify({
+                                      metadata: log.metadata,
+                                      downloadUrl: log.metadata?.has_pdf ? `/api/v1/summarize/download/${log.metadata.job_id}.pdf` : null
+                                    }));
+                                  }
+                                } catch {}
                                 router.push(`/dashboard?history_id=${log.id}`);
                               }
                             }}
