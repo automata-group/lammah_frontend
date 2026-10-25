@@ -150,7 +150,7 @@ export default function StudyFocusTimer({
       }
     }
     if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
-      audioCtxRef.current.resume();
+      audioCtxRef.current.resume().catch(() => {});
     }
     return audioCtxRef.current;
   }, []);
@@ -197,11 +197,20 @@ export default function StudyFocusTimer({
 
   // Synthesize gentle pink-noise rain sound
   useEffect(() => {
+    if (!ambientRainEnabled || !isRunning || mode !== "study") {
+      if (ambientNoiseNodeRef.current) {
+        try {
+          (ambientNoiseNodeRef.current as AudioBufferSourceNode).stop();
+        } catch {}
+        ambientNoiseNodeRef.current = null;
+      }
+      return;
+    }
+
     const ctx = getAudioContext();
     if (!ctx) return;
 
-    if (ambientRainEnabled && isRunning && mode === "study") {
-      try {
+    try {
         const bufferSize = ctx.sampleRate * 2;
         const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const output = noiseBuffer.getChannelData(0);
