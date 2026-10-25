@@ -215,13 +215,14 @@ export default function HistoryPage() {
 
           {/* Top Bar: Back Action */}
           <div className="flex items-center justify-end mb-4 relative z-10">
-            <button 
-              onClick={() => router.push("/dashboard")} 
+            <Link 
+              href="/dashboard" 
+              prefetch={true}
               className="group flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 text-slate-700 dark:text-slate-200 text-xs font-black transition-all shadow-2xs cursor-pointer"
             >
               <ArrowRight className="w-4 h-4 text-slate-500 group-hover:-translate-x-0.5 transition-transform" />
               <span>العودة للرئيسية</span>
-            </button>
+            </Link>
           </div>
 
           {/* Center Info Row: Title + Stats */}
@@ -511,30 +512,28 @@ export default function HistoryPage() {
                       })()}
                       
                       {isPublished ? (
-                        <button
-                          onClick={() => router.push(`/marketplace`)}
+                        <Link
+                          href="/marketplace"
+                          prefetch={true}
                           className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-black bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 transition-all text-center cursor-pointer"
                         >
                           <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           <span>معروضة في المتجر ✅ (معاينة)</span>
-                        </button>
+                        </Link>
                       ) : (
-                        <button
-                          onClick={() => {
-                            if (!jobId) return;
-                            const params = new URLSearchParams({
-                              pdfUrl: downloadPath,
-                              previewUrl: `/api/v1/notebook/download/preview_${jobId.replace("notebook_", "")}.pdf`,
-                              title: title,
-                              studentName: studentName
-                            });
-                            router.push(`/marketplace/publish?${params.toString()}`);
-                          }}
+                        <Link
+                          href={jobId ? `/marketplace/publish?${new URLSearchParams({
+                            pdfUrl: downloadPath,
+                            previewUrl: `/api/v1/notebook/download/preview_${jobId.replace("notebook_", "")}.pdf`,
+                            title: title,
+                            studentName: studentName
+                          }).toString()}` : "#"}
+                          prefetch={true}
                           className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-black bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-600/20 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 transition-all text-center cursor-pointer"
                         >
                           <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
                           نشر في المتجر 🛒
-                        </button>
+                        </Link>
                       )}
                     </div>
                   </motion.div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { BookOpen, Lock, Download, Sparkles, AlertCircle, RefreshCw } from "lucide-react";
 
 interface DashboardPdfViewerProps {
@@ -91,12 +92,13 @@ export default function DashboardPdfViewer({
         </div>
 
         {isBasicPlan ? (
-          <button
-            onClick={() => router.push("/plans")}
+          <Link
+            href="/plans"
+            prefetch={true}
             className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-950/80 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-300 px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center shadow-xs hover:shadow-sm w-full sm:w-auto text-center justify-center text-xs cursor-pointer"
           >
             <Lock className="w-3.5 h-3.5 ml-1.5 text-amber-500" /> تنزيل الملف المخطط (للمشتركين)
-          </button>
+          </Link>
         ) : (
           <div className="flex flex-wrap items-center gap-2">
             <a
@@ -134,13 +136,13 @@ export default function DashboardPdfViewer({
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>إعادة المحاولة</span>
               </button>
-              <button
-                type="button"
-                onClick={() => router.push("/summarize")}
+              <Link
+                href="/summarize"
+                prefetch={true}
                 className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
               >
                 <span>إعادة تلخيص المحاضرة</span>
-              </button>
+              </Link>
             </div>
           </div>
         ) : (

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { 
   Store, BookOpen, Search, Loader2, Eye, ShoppingCart, 
@@ -811,22 +812,22 @@ export default function MarketplacePage() {
             </div>
 
             <div className="pt-3 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => router.push("/notebook")}
+              <Link
+                href="/notebook"
+                prefetch={true}
                 className="flex-1 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition active:scale-95 shadow-2xs text-center cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>نشر دفتر جديد</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push("/dashboard")}
+              </Link>
+              <Link
+                href="/dashboard"
+                prefetch={true}
                 className="py-2 px-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-750 transition cursor-pointer flex items-center gap-1"
                 title="العودة للوحة المذاكرة"
               >
                 <span className="text-xs font-bold">لوحة المذاكرة</span>
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -921,14 +922,14 @@ export default function MarketplacePage() {
             </div>
 
             {/* Desktop Publish Action CTA */}
-            <button
-              type="button"
-              onClick={() => router.push("/notebook")}
+            <Link
+              href="/notebook"
+              prefetch={true}
               className="hidden lg:flex items-center gap-1.5 py-2 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-2xs active:scale-95 transition cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>نشر دفتر ₪</span>
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -940,14 +941,14 @@ export default function MarketplacePage() {
               {/* Clean Typography-Led Category Tabs (No visual icon clutter) */}
               <div className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-slate-200 dark:border-slate-800">
                 {/* Publish Notebook Button (Mobile Only) */}
-                <button
-                  type="button"
-                  onClick={() => router.push("/notebook")}
+                <Link
+                  href="/notebook"
+                  prefetch={true}
                   className="lg:hidden px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 transition flex items-center gap-1.5 cursor-pointer bg-indigo-600 text-white shadow-2xs active:scale-95"
                 >
                   <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                   <span>نشر دفتر ₪</span>
-                </button>
+                </Link>
 
                 <button
                   type="button"
@@ -1085,12 +1086,13 @@ export default function MarketplacePage() {
                     : "تأكد من كتابة الكلمات المفتاحية بشكل صحيح أو تصفح باقي الدفاتر."}
                 </p>
                 {filterMineOnly && (
-                  <button
-                    onClick={() => router.push("/notebook")}
-                    className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition cursor-pointer"
+                  <Link
+                    href="/notebook"
+                    prefetch={true}
+                    className="inline-block px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition cursor-pointer"
                   >
                     أنشئ دفترك الآن
-                  </button>
+                  </Link>
                 )}
               </div>
             ) : selectedCategory === "my_notebooks" ? (

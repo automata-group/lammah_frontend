@@ -654,20 +654,22 @@ function NotebookCreatorContent() {
             </div>
 
             <div className="space-y-2.5 max-w-xs sm:max-w-sm mx-auto pt-1">
-              <button 
-                onClick={() => router.push("/auth?redirect=/notebook")}
+              <Link 
+                href="/auth?redirect=/notebook"
+                prefetch={true}
                 className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm py-3 px-6 rounded-xl shadow-md shadow-indigo-600/20 transition hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>تسجيل الدخول للاشتراك</span>
                 <ArrowLeft className="w-4 h-4 ml-1" />
-              </button>
+              </Link>
               
-              <button 
-                onClick={() => router.push("/#pricing")}
+              <Link 
+                href="/plans"
+                prefetch={true}
                 className="w-full bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold py-2.5 px-6 rounded-xl transition border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
               >
                 <span>استعراض الباقات والأسعار</span>
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -712,20 +714,22 @@ function NotebookCreatorContent() {
 
             {/* Action Buttons */}
             <div className="space-y-3 pt-2">
-              <button 
-                onClick={() => router.push("/plans")}
+              <Link 
+                href="/plans"
+                prefetch={true}
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm py-3 px-6 rounded-xl shadow-md shadow-indigo-600/20 transition cursor-pointer flex items-center justify-center gap-2"
               >
                 <span>الترقية إلى باقة النخبة (100 ₪)</span>
                 <ArrowLeft className="w-4 h-4" />
-              </button>
+              </Link>
               
-              <button 
-                onClick={() => router.push("/plans")}
+              <Link 
+                href="/plans"
+                prefetch={true}
                 className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold py-2.5 px-6 rounded-xl transition border border-slate-200/80 dark:border-slate-700 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
               >
                 <span>استعراض الباقات والأسعار</span>
-              </button>
+              </Link>
             </div>
 
           </div>
@@ -778,13 +782,14 @@ function NotebookCreatorContent() {
                     <span>إنشاء دفتر جديد</span>
                   </button>
 
-                  <button
-                    onClick={() => router.push("/history")}
+                  <Link
+                    href="/history"
+                    prefetch={true}
                     className="h-9 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200/80 dark:border-white/10 cursor-pointer"
                   >
                     <History className="w-3.5 h-3.5" />
                     <span>سجل الدفاتر</span>
-                  </button>
+                  </Link>
                 </div>
               </div>
 

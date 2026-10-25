@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Clock,
   ArrowLeft,
@@ -61,6 +62,18 @@ export default function RecentLecturesSection({
     )
     .slice(0, 4);
 
+  const getLectureHref = (log: RecentLectureLog) => {
+    if (log.metadata?.is_notebook || log.metadata?.job_id?.startsWith("notebook_")) {
+      const jobId = log.metadata?.job_id;
+      const title = log.metadata?.title || log.feature_name || "دفتر دراسي";
+      const studentName = log.metadata?.student_name || "طالب متميز";
+      return jobId
+        ? `/notebook?job_id=${jobId}&title=${encodeURIComponent(title)}&student_name=${encodeURIComponent(studentName)}&history_id=${log.id}`
+        : `/notebook?history_id=${log.id}`;
+    }
+    return `/dashboard?history_id=${log.id}`;
+  };
+
   return (
     <div className="space-y-3.5 w-full">
       {/* Section Header */}
@@ -71,13 +84,14 @@ export default function RecentLecturesSection({
             محاضراتي الأخيرة
           </h3>
         </div>
-        <button
-          onClick={() => router.push("/history")}
+        <Link
+          href="/history"
+          prefetch={true}
           className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1 cursor-pointer transition-colors"
         >
           <span>عرض كل السجل</span>
           <ArrowLeft className="w-3.5 h-3.5" />
-        </button>
+        </Link>
       </div>
 
       {loadingRecentLogs && recentLogs.length === 0 ? (
@@ -115,6 +129,7 @@ export default function RecentLecturesSection({
               <div
                 key={log.id}
                 onClick={() => handleOpenLecture(log)}
+                onMouseEnter={() => router.prefetch(getLectureHref(log))}
                 className="min-w-[260px] max-w-[285px] sm:min-w-0 sm:max-w-none shrink-0 snap-start rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex flex-col justify-between hover:border-indigo-300 dark:hover:border-indigo-500/40 shadow-xs hover:shadow-sm transition-all cursor-pointer group"
               >
                 <div className="space-y-2">
@@ -201,13 +216,14 @@ export default function RecentLecturesSection({
             </p>
           </div>
           <div className="flex justify-center pt-2">
-            <SmartGenerateButton
-              onClick={() => router.push("/summarize")}
-              text="ابدأ تلخيص أول محاضرة"
-              variant="pill"
-              size="sm"
-              fullWidth={false}
-            />
+            <Link href="/summarize" prefetch={true}>
+              <SmartGenerateButton
+                text="ابدأ تلخيص أول محاضرة"
+                variant="pill"
+                size="sm"
+                fullWidth={false}
+              />
+            </Link>
           </div>
         </div>
       )}

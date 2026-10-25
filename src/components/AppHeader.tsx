@@ -297,9 +297,10 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
         <div className="flex items-center justify-between gap-1.5 sm:gap-4 w-full">
           
           {/* ── ZONE 1: Logo & Brand ── */}
-          <div 
+          <Link 
+            href={isTutor ? "/tutor/dashboard" : "/dashboard"}
+            prefetch={true}
             className="flex items-center cursor-pointer group shrink-0 gap-1.5 sm:gap-2.5" 
-            onClick={() => router.push(isTutor ? "/tutor/dashboard" : "/dashboard")} 
             title={isTutor ? "لوحة المعلم" : "العودة للوحة التحكم"}
           >
             <div className="relative shrink-0">
@@ -313,17 +314,18 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
               <span className="font-black text-base sm:text-xl text-slate-900 dark:text-white tracking-tight">لمّاح</span>
               <span className="text-[9px] sm:text-[10px] font-black uppercase px-1.5 sm:px-2 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white tracking-wider shadow-2xs">AI</span>
             </div>
-          </div>
+          </Link>
 
           {/* ── ZONE 2: Re-engineered Clean Navigation Tabs (Desktop & Laptop) ── */}
           <div className="hidden lg:flex items-center gap-1.5 bg-slate-100/80 dark:bg-white/5 p-1 rounded-full border border-slate-200/60 dark:border-white/10 shadow-2xs">
             
             {/* 1. الرئيسية */}
-            <button
+            <Link
+              href={isTutor ? "/tutor/dashboard" : "/dashboard"}
+              prefetch={true}
               onClick={() => {
                 setStudyMenuOpen(false);
                 setServicesMenuOpen(false);
-                router.push(isTutor ? "/tutor/dashboard" : "/dashboard");
               }}
               className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
                 activePage === "dashboard"
@@ -333,15 +335,16 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
             >
               <LayoutDashboard className={`w-3.5 h-3.5 ${activePage === "dashboard" ? "text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400"}`} />
               <span>الرئيسية</span>
-            </button>
+            </Link>
 
             {/* 2. لمّاح بخططلك (Hero Action) */}
             {!isTutor && (
-              <button
+              <Link
+                href="/summarize"
+                prefetch={true}
                 onClick={() => {
                   setStudyMenuOpen(false);
                   setServicesMenuOpen(false);
-                  router.push("/summarize");
                 }}
                 className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
                   activePage === "summarize"
@@ -351,15 +354,16 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
               >
                 <Sparkles className={`w-3.5 h-3.5 ${activePage === "summarize" ? "text-white" : "text-indigo-500"}`} />
                 <span>لمّاح بخططلك</span>
-              </button>
+              </Link>
             )}
 
             {/* 3. كتابة الملاحظات (Featured Direct Study Workspace) */}
-            <button
+            <Link
+              href="/study"
+              prefetch={true}
               onClick={() => {
                 setStudyMenuOpen(false);
                 setServicesMenuOpen(false);
-                router.push("/study");
               }}
               className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
                 activePage === "study"
@@ -370,7 +374,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
             >
               <PenTool className={`w-3.5 h-3.5 ${activePage === "study" ? "text-purple-600 dark:text-purple-400" : "text-purple-500"}`} />
               <span>كتابة الملاحظات</span>
-            </button>
+            </Link>
 
             {/* 4. Dropdown: المذاكرة (الدفاتر + المهام) */}
             <div className="relative" ref={studyMenuRef}>
@@ -534,14 +538,15 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
             
             {/* Quota Badge (Always Visible for logged-in users on all screen sizes) */}
             {user && (
-              <div 
+              <Link 
+                href="/plans"
+                prefetch={true}
                 suppressHydrationWarning
                 className={`border rounded-full px-2 sm:px-3.5 py-1 sm:py-1.5 text-xs flex items-center gap-1 sm:gap-1.5 shadow-xs cursor-pointer transition-all duration-200 shrink-0 ${
                   (effectiveQuota ?? 0) > 0
                     ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-300 hover:border-emerald-400 dark:hover:border-emerald-400 hover:shadow-emerald-500/10"
                     : "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-300 hover:border-amber-300"
                 }`}
-                onClick={() => router.push("/plans")}
                 title="رصيد الدقائق المشحونة - اضغط لعرض الباقات والشحن"
               >
                 <Zap className={`w-3.5 h-3.5 shrink-0 fill-current ${(effectiveQuota ?? 0) > 0 ? "text-amber-500 animate-pulse" : "text-amber-500"}`} />
@@ -550,7 +555,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                   {effectiveQuota !== null ? effectiveQuota.toLocaleString("en-US") : "..."}
                 </span>
                 <span className="font-bold text-slate-600 dark:text-slate-300 text-[11px] sm:text-xs hidden sm:inline">دقيقة</span>
-              </div>
+              </Link>
             )}
 
             {/* Theme Toggle Button */}
@@ -736,12 +741,13 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                 )}
               </div>
             ) : (
-              <button
-                onClick={() => router.push("/login")}
+              <Link
+                href="/login"
+                prefetch={true}
                 className="px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer whitespace-nowrap"
               >
                 تسجيل الدخول
-              </button>
+              </Link>
             )}
 
 
@@ -773,8 +779,10 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                   الروابط السريعة
                 </span>
                 <div className="grid grid-cols-3 gap-1.5">
-                  <button
-                    onClick={() => { setMobileMenuOpen(false); router.push(isTutor ? "/tutor/dashboard" : "/dashboard"); }}
+                  <Link
+                    href={isTutor ? "/tutor/dashboard" : "/dashboard"}
+                    prefetch={true}
+                    onClick={() => setMobileMenuOpen(false)}
                     className={`p-2 rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer ${
                       activePage === "dashboard"
                         ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-black border border-indigo-200 dark:border-indigo-800"
@@ -783,10 +791,12 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                   >
                     <LayoutDashboard className="w-4 h-4 text-indigo-500" />
                     <span className="text-[11px] font-bold">الرئيسية</span>
-                  </button>
+                  </Link>
 
-                  <button
-                    onClick={() => { setMobileMenuOpen(false); router.push("/summarize"); }}
+                  <Link
+                    href="/summarize"
+                    prefetch={true}
+                    onClick={() => setMobileMenuOpen(false)}
                     className={`p-2 rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer ${
                       activePage === "summarize"
                         ? "bg-indigo-600 text-white font-black shadow-xs"
@@ -795,10 +805,12 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                   >
                     <Sparkles className="w-4 h-4 text-amber-500" />
                     <span className="text-[11px] font-bold">لمّاح بخططلك</span>
-                  </button>
+                  </Link>
 
-                  <button
-                    onClick={() => { setMobileMenuOpen(false); router.push("/study"); }}
+                  <Link
+                    href="/study"
+                    prefetch={true}
+                    onClick={() => setMobileMenuOpen(false)}
                     className={`p-2 rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer ${
                       activePage === "study"
                         ? "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-black border border-purple-200 dark:border-purple-800"
@@ -807,7 +819,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                   >
                     <PenTool className="w-4 h-4 text-purple-500" />
                     <span className="text-[11px] font-bold">كتابة الملاحظات</span>
-                  </button>
+                  </Link>
                 </div>
               </div>
 
@@ -817,8 +829,10 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                   أدوات المذاكرة
                 </span>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => { setMobileMenuOpen(false); router.push("/notebook"); }}
+                  <Link
+                    href="/notebook"
+                    prefetch={true}
+                    onClick={() => setMobileMenuOpen(false)}
                     className={`p-2.5 rounded-xl flex items-center gap-2.5 text-right transition cursor-pointer ${
                       activePage === "notebook"
                         ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-black border border-indigo-200 dark:border-indigo-800"
@@ -830,10 +844,12 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                       <div className="text-xs font-bold truncate">دفاتر المحاضرات</div>
                       <div className="text-[10px] text-slate-400 truncate">محاضراتك وملخصاتك</div>
                     </div>
-                  </button>
+                  </Link>
 
-                  <button
-                    onClick={() => { setMobileMenuOpen(false); router.push("/tasks"); }}
+                  <Link
+                    href="/tasks"
+                    prefetch={true}
+                    onClick={() => setMobileMenuOpen(false)}
                     className={`p-2.5 rounded-xl flex items-center gap-2.5 text-right transition cursor-pointer ${
                       activePage === "tasks"
                         ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-black border border-indigo-200 dark:border-indigo-800"
@@ -845,7 +861,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                       <div className="text-xs font-bold truncate">مهام المذاكرة</div>
                       <div className="text-[10px] text-slate-400 truncate">جدول إنجاز المهام</div>
                     </div>
-                  </button>
+                  </Link>
                 </div>
               </div>
 
@@ -855,8 +871,10 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                   خدمات الجامعة
                 </span>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => { setMobileMenuOpen(false); router.push("/kiosk"); }}
+                  <Link
+                    href="/kiosk"
+                    prefetch={true}
+                    onClick={() => setMobileMenuOpen(false)}
                     className={`p-2 rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer ${
                       activePage === "kiosk"
                         ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-black border border-emerald-200"
@@ -868,10 +886,12 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                     <span className="text-[8px] font-black px-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
                       جديد
                     </span>
-                  </button>
+                  </Link>
 
-                  <button
-                    onClick={() => { setMobileMenuOpen(false); router.push("/marketplace"); }}
+                  <Link
+                    href="/marketplace"
+                    prefetch={true}
+                    onClick={() => setMobileMenuOpen(false)}
                     className={`p-2 rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer ${
                       activePage === "marketplace"
                         ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-black border border-indigo-200"
@@ -880,7 +900,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                   >
                     <Package className="w-4 h-4 text-indigo-500" />
                     <span className="text-[11px] font-bold">متجر الملخصات</span>
-                  </button>
+                  </Link>
                 </div>
               </div>
 
@@ -890,17 +910,15 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                   <Zap className="w-3.5 h-3.5 fill-current text-amber-500" />
                   <span>الرصيد المشحون: <strong className="text-emerald-600 dark:text-emerald-400 font-black">{effectiveQuota ?? 0} دقيقة</strong></span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    router.push("/profile");
-                  }}
+                <Link
+                  href="/profile"
+                  prefetch={true}
+                  onClick={() => setMobileMenuOpen(false)}
                   className="text-indigo-600 dark:text-indigo-400 font-bold text-[11px] hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <span>الملف الشخصي</span>
                   <span>←</span>
-                </button>
+                </Link>
               </div>
             </motion.div>
           )}

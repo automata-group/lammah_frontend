@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   BrainCircuit,
   Shuffle,
@@ -113,12 +114,13 @@ export default function QuizTabContent({
               اشترك الآن لتفجير طاقتك الدراسية بأقوى أدوات الاسترجاع المتباعد!
             </span>
           </p>
-          <button
-            onClick={() => router.push("/plans")}
+          <Link
+            href="/plans"
+            prefetch={true}
             className="bg-gradient-to-l from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black px-6 py-3 sm:px-10 sm:py-4 rounded-xl sm:rounded-2xl shadow-md shadow-emerald-500/20 transition-all flex items-center text-base sm:text-lg transform hover:-translate-y-1 cursor-pointer"
           >
             <Crown className="w-5 h-5 sm:w-6 sm:h-6 ml-2" /> ترقية الباقة الآن لفك القفل
-          </button>
+          </Link>
         </div>
       )}
 

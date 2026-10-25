@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { MessageCircle, BrainCircuit, Loader2, Send, Lock, Crown, ArrowDown } from "lucide-react";
 import { ChatMessage } from "@/types/dashboard";
 import ChatMessageItem from "@/components/dashboard/ChatMessageItem";
@@ -113,12 +114,13 @@ export default function SmartChatTabContent({
               اشترك في إحدى باقات لمّاح لفتح حتى 100 سؤال لكل محاضرة ومناقشة كل تفصيلة في السلايدات!
             </span>
           </p>
-          <button
-            onClick={() => router.push("/plans")}
+          <Link
+            href="/plans"
+            prefetch={true}
             className="bg-gradient-to-l from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-black px-6 py-3 sm:px-10 sm:py-4 rounded-xl sm:rounded-2xl shadow-md shadow-blue-500/20 transition-all flex items-center text-base sm:text-lg transform hover:-translate-y-1 cursor-pointer"
           >
             <Crown className="w-5 h-5 sm:w-6 sm:h-6 ml-2" /> ترقية الباقة الآن لفتح الأسئلة
-          </button>
+          </Link>
         </div>
       )}
 

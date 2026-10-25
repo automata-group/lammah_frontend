@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useMemo, Suspense } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { getFingerprint as getThumbmark } from "@thumbmarkjs/thumbmarkjs";
 import {
@@ -725,14 +726,15 @@ function SummarizeContent() {
         
         {/* Navigation / Header Bar */}
         <div className="w-full max-w-3xl mb-5 sm:mb-6 flex items-center justify-between gap-3">
-          <button
-            onClick={() => router.push("/dashboard")}
+          <Link
+            href="/dashboard"
+            prefetch={true}
             className="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 text-[11px] sm:text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0 whitespace-nowrap active:scale-95"
             title="العودة للرئيسية"
           >
             <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400" />
             <span>العودة للرئيسية</span>
-          </button>
+          </Link>
 
           <div className="text-right flex-1 min-w-0">
             <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2">
@@ -798,25 +800,26 @@ function SummarizeContent() {
                       بإمكانك فتح ملفات السلايدات وتخطيطها وتظليلها يدوياً بحرية تامة دون اشتراك.
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => router.push("/study")}
+                  <Link
+                    href="/study"
+                    prefetch={true}
                     className="w-full sm:w-auto shrink-0 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <span>فتح دوّن ملاحظاتك</span>
                     <ArrowLeft className="w-3.5 h-3.5" />
-                  </button>
+                  </Link>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-1">
-                  <button
-                    onClick={() => router.push("/plans")}
+                  <Link
+                    href="/plans"
+                    prefetch={true}
                     className="w-full sm:w-auto flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-3 rounded-xl shadow-md shadow-indigo-600/20 transition cursor-pointer flex items-center justify-center gap-2 text-xs sm:text-sm"
                   >
                     <CreditCard className="w-4 h-4" />
                     <span>عرض الباقات والاشتراك</span>
-                  </button>
+                  </Link>
                   <a
                     href="https://wa.me/972598298930?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D8%A7%D8%B4%D8%AA%D8%B1%D8%A7%D9%83%D9%8A%20%D9%81%D9%8A%20%D9%84%D9%85%D9%91%D8%A7%D8%AD"
                     target="_blank"
@@ -1142,12 +1145,13 @@ function SummarizeContent() {
                     <p className="text-xs font-bold text-rose-900 dark:text-rose-200">
                       🚫 رصيدك صفر دقيقة — يرجى شحن الرصيد للمتابعة.
                     </p>
-                    <button
-                      onClick={() => router.push("/plans")}
+                    <Link
+                      href="/plans"
+                      prefetch={true}
                       className="mt-2.5 inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs px-3.5 py-1.5 rounded-xl cursor-pointer"
                     >
                       <CreditCard className="w-3.5 h-3.5" /> شحن الرصيد الآن
-                    </button>
+                    </Link>
                   </div>
                 )}
 

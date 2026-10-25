@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useMemo, Suspense, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, FileText, BrainCircuit, Lightbulb, Sparkles, FileAudio, Target } from "lucide-react";
 
@@ -237,20 +238,24 @@ function DashboardContent() {
     }
   }, []);
 
-  // Synchronize activeTab when PDF is present
+  // Synchronize activeTab once when a new PDF result is loaded
+  const initialTabSelectedForUrlRef = useRef<string | null>(null);
   useEffect(() => {
-    if (result?.downloadUrl && activeTab === "notes") {
-      if (result.annotations?.focus_points && result.annotations.focus_points.length > 0) {
-        setActiveTab("focus");
-      } else if (result.annotations?.mcqs && result.annotations.mcqs.length > 0) {
-        setActiveTab("quiz");
-      } else if (result.annotations?.flashcards && result.annotations.flashcards.length > 0) {
-        setActiveTab("flashcards");
-      } else {
-        setActiveTab("chat");
+    if (result?.downloadUrl && initialTabSelectedForUrlRef.current !== result.downloadUrl) {
+      initialTabSelectedForUrlRef.current = result.downloadUrl;
+      if (activeTab === "notes") {
+        if (result.annotations?.focus_points && result.annotations.focus_points.length > 0) {
+          setActiveTab("focus");
+        } else if (result.annotations?.mcqs && result.annotations.mcqs.length > 0) {
+          setActiveTab("quiz");
+        } else if (result.annotations?.flashcards && result.annotations.flashcards.length > 0) {
+          setActiveTab("flashcards");
+        } else {
+          setActiveTab("chat");
+        }
       }
     }
-  }, [result?.downloadUrl, activeTab, result?.annotations]);
+  }, [result?.downloadUrl, result?.annotations]);
 
   // Jump to PDF slide helper
   const jumpToPdfSlide = (
@@ -1315,12 +1320,13 @@ function DashboardContent() {
                         تم استخراج وتحليل جزء من المحاضرة وفق الرصيد المتاح. للوصول إلى تفريغ وتلخيص كامل لأي محاضرة مهما كان طولها، اشترك في إحدى باقات لمّاح الآن.
                       </p>
                     </div>
-                    <button
-                      onClick={() => router.push("/plans")}
-                      className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-1.5 rounded-lg font-black text-xs shrink-0 transition-colors shadow-xs cursor-pointer"
+                    <Link
+                      href="/plans"
+                      prefetch={true}
+                      className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-1.5 rounded-lg font-black text-xs shrink-0 transition-colors shadow-xs cursor-pointer text-center"
                     >
                       الترقية الآن
-                    </button>
+                    </Link>
                   </div>
                 )}
 
