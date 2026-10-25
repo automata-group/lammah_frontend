@@ -16,6 +16,7 @@ import {
   X,
   FastForward,
   ChevronRight,
+  ArrowRight,
   Sliders,
   CheckCircle2,
   CloudRain,
@@ -471,9 +472,12 @@ export default function StudyFocusTimer({
     setStudyMinutes(studyM);
     setBreakMinutes(breakM);
     setIsRunning(false);
-    setMode("study");
-    setSecondsLeft(studyM * 60);
-    setIsCustomizing(false);
+    if (mode === "study") {
+      setSecondsLeft(studyM * 60);
+    } else {
+      setSecondsLeft(breakM * 60);
+    }
+    // Note: Do NOT call setIsCustomizing(false) so the user stays on the custom screen
   };
 
   // Helper formatting: mm:ss
@@ -908,6 +912,21 @@ export default function StudyFocusTimer({
                   ) : (
                     /* Custom Minutes Controls with Quick Chips + Range Slider */
                     <div className="bg-slate-50 dark:bg-slate-900/60 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+                      {/* Back arrow button to return to presets */}
+                      <div className="flex items-center justify-between pb-1 border-b border-slate-200/60 dark:border-slate-800/80">
+                        <span className="text-[11px] font-black text-slate-700 dark:text-slate-300">
+                          تحديد أوقات مخصصة بدقة
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setIsCustomizing(false)}
+                          className="flex items-center gap-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors cursor-pointer group"
+                        >
+                          <span>الرجوع للأنماط</span>
+                          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                        </button>
+                      </div>
+
                       {/* Study Duration */}
                       <div>
                         <div className="flex justify-between items-center text-xs font-bold mb-1.5">
@@ -940,7 +959,7 @@ export default function StudyFocusTimer({
                           type="range"
                           min="5"
                           max="120"
-                          step="5"
+                          step="1"
                           value={studyMinutes}
                           onChange={(e) => handleApplyCustom(Number(e.target.value), breakMinutes)}
                           className="w-full accent-indigo-600 cursor-pointer"
