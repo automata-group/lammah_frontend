@@ -48,6 +48,11 @@ export default function DashboardPdfViewer({
     fetch(fullDownloadUrl, { method: "HEAD" })
       .then((res) => {
         if (!isMounted) return;
+        // Never falsely hide PDF on 405 Method Not Allowed or proxy issues
+        if (res.status === 405) {
+          setHasPdfError(false);
+          return;
+        }
         const contentType = res.headers.get("content-type") || "";
         if (!res.ok || contentType.includes("application/json")) {
           setHasPdfError(true);
@@ -57,6 +62,7 @@ export default function DashboardPdfViewer({
       })
       .catch(() => {
         // If fetch fails (e.g. CORS), let the iframe attempt normally
+        if (isMounted) setHasPdfError(false);
       });
 
     return () => {
