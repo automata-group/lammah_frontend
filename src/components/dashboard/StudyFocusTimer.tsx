@@ -115,24 +115,18 @@ export default function StudyFocusTimer({
     return `lammah_study_lecture_${currentHistoryId}`;
   }, [currentHistoryId]);
 
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Global event listener to open study timer from anywhere on the platform
   useEffect(() => {
     const handleOpen = () => setIsModalOpen(true);
     window.addEventListener("open-study-timer", handleOpen);
     return () => window.removeEventListener("open-study-timer", handleOpen);
   }, []);
-
-  // Close modal on Escape key press
-  useEffect(() => {
-    if (!isModalOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsModalOpen(false);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isModalOpen]);
 
   // Load persisted seconds on mount
   useEffect(() => {
@@ -441,6 +435,21 @@ export default function StudyFocusTimer({
   const radius = 86;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
+
+  if (!mounted) {
+    if (variant === "compact") return null;
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full border text-xs font-bold bg-indigo-50/80 dark:bg-indigo-500/10 border-indigo-200/90 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 opacity-80">
+          <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+          <span className="text-xs font-black">مؤقت المذاكرة والتركيز</span>
+          <span className="px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-[10px] text-indigo-700 dark:text-indigo-300 font-black">
+            25 د
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

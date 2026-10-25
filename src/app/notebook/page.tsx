@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -14,8 +15,11 @@ import {
 } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
-import StudyFocusTimer from "@/components/dashboard/StudyFocusTimer";
 import { createClient } from "@/lib/supabase";
+
+const StudyFocusTimer = dynamic(() => import("@/components/dashboard/StudyFocusTimer"), {
+  ssr: false,
+});
 
 function NotebookSkeleton() {
   return (

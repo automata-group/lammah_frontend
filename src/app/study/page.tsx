@@ -34,7 +34,10 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
 import dynamic from "next/dynamic";
 import AppHeader from "@/components/AppHeader";
-import StudyFocusTimer from "@/components/dashboard/StudyFocusTimer";
+
+const StudyFocusTimer = dynamic(() => import("@/components/dashboard/StudyFocusTimer"), {
+  ssr: false,
+});
 
 const PDFCanvasViewer = dynamic(
   () => import("@/components/study/PDFCanvasViewer"),

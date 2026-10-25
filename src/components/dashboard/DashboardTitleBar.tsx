@@ -3,7 +3,11 @@
 import React, { useState } from "react";
 import { BookOpen, Pencil, Check, X, ChevronLeft } from "lucide-react";
 
-import StudyFocusTimer from "@/components/dashboard/StudyFocusTimer";
+import dynamic from "next/dynamic";
+
+const StudyFocusTimer = dynamic(() => import("@/components/dashboard/StudyFocusTimer"), {
+  ssr: false,
+});
 
 interface DashboardTitleBarProps {
   lectureTitle: string;

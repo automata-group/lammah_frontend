@@ -3,6 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -12,7 +13,10 @@ import {
 } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
-import StudyFocusTimer from "@/components/dashboard/StudyFocusTimer";
+
+const StudyFocusTimer = dynamic(() => import("@/components/dashboard/StudyFocusTimer"), {
+  ssr: false,
+});
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
 
