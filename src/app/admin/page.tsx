@@ -1003,8 +1003,13 @@ export default function AdminPage() {
                                   {/* Student Name & Phone */}
                                   <td className="py-3 px-3">
                                     <div className="font-bold text-slate-900 dark:text-white text-xs">
-                                      {sub.user_name || "مستخدم بدون اسم"}
+                                      {sub.user_name || sub.email || "مستخدم بدون اسم"}
                                     </div>
+                                    {sub.email && (
+                                      <div className="text-[10px] text-slate-500 font-mono mt-0.5 select-all">
+                                        {sub.email}
+                                      </div>
+                                    )}
                                     {sub.phone ? (
                                       <a
                                         href={whatsappUrl || "#"}
@@ -1017,7 +1022,7 @@ export default function AdminPage() {
                                         <span>{sub.phone}</span>
                                       </a>
                                     ) : (
-                                      <span className="text-[10px] text-slate-400">بدون هاتف</span>
+                                      <span className="text-[10px] text-slate-400 block mt-0.5">بدون هاتف</span>
                                     )}
                                   </td>
 
