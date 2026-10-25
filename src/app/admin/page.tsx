@@ -761,21 +761,26 @@ export default function AdminPage() {
                             </div>
 
                             <div className="min-w-0">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className="font-black text-slate-900 dark:text-white text-xs sm:text-sm truncate">
                                   {studentName}
                                 </span>
-                                {phone && (
+                                {phone ? (
                                   <a
-                                    href={`https://wa.me/${phone.replace(/\D/g, '')}`}
+                                    href={`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(`مرحباً ${studentName}، بخصوص طلبك للاشتراك في باقة (${tx.subscription_plans?.name || 'لمّاح'}) رقم #${tx.short_order_id}...`)}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={e => e.stopPropagation()}
-                                    className="text-emerald-600 hover:text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 p-1 rounded-lg transition shrink-0"
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/15 dark:hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 text-xs font-mono font-bold transition shrink-0"
                                     title="مراسلة الطالب على واتساب"
                                   >
-                                    <MessageCircle className="w-3.5 h-3.5" />
+                                    <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                    <span dir="ltr">{phone}</span>
                                   </a>
+                                ) : (
+                                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md">
+                                    بدون رقم
+                                  </span>
                                 )}
                               </div>
 

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import AppHeader from "@/components/AppHeader";
+import SubscriptionContactModal from "@/components/SubscriptionContactModal";
 import { createClient } from "@/lib/supabase";
 
 const DEFAULT_PLANS = {
@@ -28,6 +29,11 @@ export default function PlansPage() {
   const [subscribing, setSubscribing] = useState("");
   const [userPlanName, setUserPlanName] = useState("free");
   const [userQuota, setUserQuota] = useState<number | null>(null);
+  
+  // Modal states
+  const [selectedPlanForModal, setSelectedPlanForModal] = useState<any>(null);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [userProfile, setUserProfile] = useState<{ full_name?: string; phone_number?: string }>({});
 
   useEffect(() => {
     if (!loading && !user) router.replace("/#pricing");
@@ -86,6 +92,20 @@ export default function PlansPage() {
             console.error("Direct Supabase plan query error:", sbErr);
           }
         }
+        // Also fetch profile name and phone number
+        if (session?.user?.id) {
+          try {
+            const supabase = createClient();
+            const { data: prof } = await supabase
+              .from("profiles")
+              .select("full_name, phone_number")
+              .eq("id", session.user.id)
+              .maybeSingle();
+            if (prof) {
+              setUserProfile({ full_name: prof.full_name, phone_number: prof.phone_number });
+            }
+          } catch {}
+        }
       };
 
       fetchQuotaAndPlan();
@@ -93,12 +113,17 @@ export default function PlansPage() {
   }, [session]);
 
   const handleSubscribe = (planId: string) => {
-    if (!session) {
-      router.push(`/auth?redirect=/checkout/${planId}`);
-      return;
+    const allAvailablePlans = [
+      ...activePlans,
+      ...(plans.weekly || []),
+      ...(plans.monthly || []),
+      ...DEFAULT_PLANS.monthly
+    ];
+    const targetPlan = allAvailablePlans.find((p: any) => p.id === planId);
+    if (targetPlan) {
+      setSelectedPlanForModal(targetPlan);
+      setShowContactModal(true);
     }
-    setSubscribing(planId);
-    router.push(`/checkout/${planId}`);
   };
 
   const getFriendlyPlanName = (name: string) => {
@@ -582,6 +607,16 @@ export default function PlansPage() {
           </div>
         </div>
       </div>
+
+      {/* WhatsApp Subscription Contact Modal */}
+      <SubscriptionContactModal
+        isOpen={showContactModal}
+        onClose={() => setShowContactModal(false)}
+        plan={selectedPlanForModal}
+        initialFullName={userProfile.full_name || user?.user_metadata?.full_name || ""}
+        initialPhone={userProfile.phone_number || ""}
+        sessionToken={session?.access_token}
+      />
     </main>
   );
 }

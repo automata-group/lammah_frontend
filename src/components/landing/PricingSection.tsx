@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Crown, Zap, Sparkles, Check, ArrowRight, Star, Lock, Mic, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import SubscriptionContactModal from "@/components/SubscriptionContactModal";
 
 const DEFAULT_PLANS = {
   weekly: [],
@@ -15,8 +17,11 @@ const DEFAULT_PLANS = {
 
 export default function PricingSection() {
   const router = useRouter();
+  const { user, session } = useAuth();
   const [plans, setPlans] = useState<any>(DEFAULT_PLANS);
   const [loadingPlans, setLoadingPlans] = useState(false);
+  const [selectedPlanForModal, setSelectedPlanForModal] = useState<any>(null);
+  const [showContactModal, setShowContactModal] = useState(false);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/plans`)
@@ -313,7 +318,10 @@ export default function PricingSection() {
                   </div>
 
                   <button 
-                    onClick={() => router.push("/auth")}
+                    onClick={() => {
+                      setSelectedPlanForModal(plan);
+                      setShowContactModal(true);
+                    }}
                     className={`w-full py-2.5 sm:py-3 rounded-xl font-black text-xs sm:text-sm transition-all duration-300 mt-auto flex items-center justify-center gap-2 relative overflow-hidden cursor-pointer ${
                       isGoldPlan 
                         ? "bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/25 hover:shadow-amber-500/40 hover:-translate-y-0.5 border border-amber-300 font-black" 
@@ -331,6 +339,16 @@ export default function PricingSection() {
           </div>
         )}
       </div>
+
+      {/* WhatsApp Subscription Contact Modal */}
+      <SubscriptionContactModal
+        isOpen={showContactModal}
+        onClose={() => setShowContactModal(false)}
+        plan={selectedPlanForModal}
+        initialFullName={user?.user_metadata?.full_name || ""}
+        initialPhone={user?.phone || ""}
+        sessionToken={session?.access_token}
+      />
     </section>
   );
 }

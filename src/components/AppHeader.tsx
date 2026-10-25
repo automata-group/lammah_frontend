@@ -258,33 +258,33 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full px-3 sm:px-6 pt-3 sm:pt-4 pb-2" dir="rtl">
+    <header className="sticky top-0 z-50 w-full px-2 sm:px-6 pt-2.5 sm:pt-4 pb-2" dir="rtl">
       <nav 
         ref={navRef}
-        className={`bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 px-4 sm:px-6 py-2.5 max-w-7xl mx-auto transition-all duration-300 relative ${
+        className={`w-full bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 px-2.5 sm:px-6 py-1.5 sm:py-2.5 max-w-7xl mx-auto transition-all duration-300 relative ${
           mobileMenuOpen
             ? "rounded-3xl shadow-xl border-slate-300 dark:border-slate-700/80 ring-1 ring-black/5 dark:ring-white/10"
             : "rounded-full shadow-sm"
         }`}
       >
-        <div className="flex items-center justify-between gap-2 sm:gap-4">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-4 w-full">
           
           {/* ── ZONE 1: Logo & Brand ── */}
           <div 
-            className="flex items-center cursor-pointer group shrink-0 gap-2.5" 
+            className="flex items-center cursor-pointer group shrink-0 gap-1.5 sm:gap-2.5" 
             onClick={() => router.push(isTutor ? "/tutor/dashboard" : "/dashboard")} 
             title={isTutor ? "لوحة المعلم" : "العودة للوحة التحكم"}
           >
-            <div className="relative">
+            <div className="relative shrink-0">
               <img 
                 src="/lammah-logo.png" 
                 alt="Lammah" 
-                className="w-7 h-7 sm:w-8 sm:h-8 object-contain drop-shadow-xs group-hover:scale-105 transition-transform duration-300" 
+                className="w-6 h-6 sm:w-8 sm:h-8 object-contain drop-shadow-xs group-hover:scale-105 transition-transform duration-300" 
               />
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-black text-lg sm:text-xl text-slate-900 dark:text-white tracking-tight">لمّاح</span>
-              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white tracking-wider shadow-2xs">AI</span>
+            <div className="flex items-center gap-1 sm:gap-1.5">
+              <span className="font-black text-base sm:text-xl text-slate-900 dark:text-white tracking-tight">لمّاح</span>
+              <span className="text-[9px] sm:text-[10px] font-black uppercase px-1.5 sm:px-2 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white tracking-wider shadow-2xs">AI</span>
             </div>
           </div>
 
@@ -366,23 +366,6 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
 
               {studyMenuOpen && (
                 <div className="absolute right-0 mt-2.5 w-60 bg-white/95 dark:bg-[#0c111d]/95 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-900/10 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                  <button
-                    onClick={() => { setStudyMenuOpen(false); router.push("/history"); }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer text-right ${
-                      activePage === "history"
-                        ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"
-                        : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5"
-                    }`}
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                      <Clock className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-black">سجل المحاضرات</div>
-                      <div className="text-[10px] text-slate-400 font-normal">أرشيف وتلخيصات جميع محاضراتك</div>
-                    </div>
-                  </button>
-
                   <button
                     onClick={() => { setStudyMenuOpen(false); router.push("/notebook"); }}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer text-right ${
@@ -510,13 +493,13 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
           </div>
 
           {/* ── ZONE 3: Quota, Quick Tools & User Profile Menu ── */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
             
             {/* Quota Badge (Always Visible for logged-in users on all screen sizes) */}
             {user && (
               <div 
                 suppressHydrationWarning
-                className={`border rounded-full px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-all duration-200 ${
+                className={`border rounded-full px-2 sm:px-3.5 py-1 sm:py-1.5 text-xs flex items-center gap-1 sm:gap-1.5 shadow-xs cursor-pointer transition-all duration-200 shrink-0 ${
                   (effectiveQuota ?? 0) > 0
                     ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-300 hover:border-emerald-400 dark:hover:border-emerald-400 hover:shadow-emerald-500/10"
                     : "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-300 hover:border-amber-300"
@@ -529,29 +512,29 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                 <span className={`font-black ${(effectiveQuota ?? 0) > 0 ? "text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm" : "text-amber-600 dark:text-amber-400 text-xs sm:text-sm"}`}>
                   {effectiveQuota !== null ? effectiveQuota.toLocaleString("en-US") : "..."}
                 </span>
-                <span className="font-bold text-slate-600 dark:text-slate-300 text-[11px] sm:text-xs">دقيقة</span>
+                <span className="font-bold text-slate-600 dark:text-slate-300 text-[11px] sm:text-xs hidden sm:inline">دقيقة</span>
               </div>
             )}
 
             {/* Theme Toggle Button */}
             <button 
               onClick={toggleTheme} 
-              className="text-slate-600 dark:text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-white/10 p-2 rounded-full transition-all cursor-pointer" 
+              className="text-slate-600 dark:text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-white/10 p-1.5 sm:p-2 rounded-full transition-all cursor-pointer shrink-0" 
               title={theme === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي'}
             >
-              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
+              {theme === 'dark' ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700" />}
             </button>
 
             {/* User Profile Dropdown Menu or Sign In */}
             {user ? (
-              <div className="relative" ref={userMenuRef}>
+              <div className="relative shrink-0" ref={userMenuRef}>
                 <button
                   onClick={() => {
                     setUserMenuOpen(!userMenuOpen);
                     setStudyMenuOpen(false);
                     setServicesMenuOpen(false);
                   }}
-                  className={`flex items-center gap-2 p-1.5 pr-2 pl-2.5 rounded-full border transition-all duration-200 cursor-pointer ${
+                  className={`flex items-center gap-1 sm:gap-2 p-1 sm:p-1.5 sm:pr-2 sm:pl-2.5 rounded-full border transition-all duration-200 cursor-pointer ${
                     userMenuOpen || activePage === "profile"
                       ? "bg-indigo-50 dark:bg-indigo-500/20 border-indigo-300 dark:border-indigo-500/50 shadow-xs ring-2 ring-indigo-500/20"
                       : "border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white/80 dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10"
@@ -561,7 +544,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                   <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center text-xs font-black shadow-xs ring-1 ring-white/20 shrink-0">
                     {user?.email ? user.email.charAt(0).toUpperCase() : <User className="w-3.5 h-3.5" />}
                   </div>
-                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${userMenuOpen ? "rotate-180 text-indigo-600 dark:text-indigo-400" : ""}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 hidden sm:block ${userMenuOpen ? "rotate-180 text-indigo-600 dark:text-indigo-400" : ""}`} />
                 </button>
 
                 {/* Floating Dropdown Card */}
@@ -718,10 +701,10 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
             {/* Mobile Menu Toggle Button (Visible on screens < lg) */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 p-2 rounded-full transition-all cursor-pointer"
+              className="lg:hidden text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 p-1.5 sm:p-2 rounded-full transition-all cursor-pointer shrink-0"
               title="القائمة"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? <X className="w-4 h-4 sm:w-5 sm:h-5" /> : <Menu className="w-4 h-4 sm:w-5 sm:h-5" />}
             </button>
 
           </div>
