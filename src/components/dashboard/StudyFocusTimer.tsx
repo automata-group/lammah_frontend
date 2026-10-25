@@ -102,6 +102,7 @@ export default function StudyFocusTimer({
   // Web Audio Context & Synthesizer refs
   const audioCtxRef = useRef<AudioContext | null>(null);
   const ambientNoiseNodeRef = useRef<AudioNode | null>(null);
+  const ambientGainRef = useRef<GainNode | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Today's storage key: YYYY-MM-DD
@@ -201,69 +202,121 @@ export default function StudyFocusTimer({
     [soundEnabled, getAudioContext]
   );
 
-  // Synthesize gentle pink-noise rain sound
+  // Synthesize gentle, realistic stereo rain sound for deep focus
   useEffect(() => {
-    if (!ambientRainEnabled || !isRunning || mode !== "study") {
-      if (ambientNoiseNodeRef.current) {
+    const shouldPlay = ambientRainEnabled && (isModalOpen || isRunning) && mode === "study";
+
+    if (!shouldPlay) {
+      if (ambientGainRef.current && audioCtxRef.current) {
         try {
-          (ambientNoiseNodeRef.current as AudioBufferSourceNode).stop();
+          ambientGainRef.current.gain.linearRampToValueAtTime(
+            0.0001,
+            audioCtxRef.current.currentTime + 0.15
+          );
         } catch {}
-        ambientNoiseNodeRef.current = null;
       }
-      return;
+      const timer = setTimeout(() => {
+        if (ambientNoiseNodeRef.current) {
+          try {
+            (ambientNoiseNodeRef.current as AudioBufferSourceNode).stop();
+            (ambientNoiseNodeRef.current as AudioBufferSourceNode).disconnect();
+          } catch {}
+          ambientNoiseNodeRef.current = null;
+        }
+        ambientGainRef.current = null;
+      }, 160);
+
+      return () => clearTimeout(timer);
     }
 
     const ctx = getAudioContext();
     if (!ctx) return;
 
+    if (ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
+
+    // If already playing, don't recreate
+    if (ambientNoiseNodeRef.current) return;
+
     try {
-        const bufferSize = ctx.sampleRate * 2;
-        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const output = noiseBuffer.getChannelData(0);
+      const sampleRate = ctx.sampleRate || 44100;
+      // 4-second loop of high quality stereo pink noise
+      const bufferSize = sampleRate * 4;
+      const noiseBuffer = ctx.createBuffer(2, bufferSize, sampleRate);
+      const left = noiseBuffer.getChannelData(0);
+      const right = noiseBuffer.getChannelData(1);
 
-        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-        for (let i = 0; i < bufferSize; i++) {
-          const white = Math.random() * 2 - 1;
-          b0 = 0.99886 * b0 + white * 0.0555179;
-          b1 = 0.99332 * b1 + white * 0.0750759;
-          b2 = 0.96900 * b2 + white * 0.1538520;
-          b3 = 0.86650 * b3 + white * 0.3104856;
-          b4 = 0.55000 * b4 + white * 0.5329522;
-          b5 = -0.7616 * b5 - white * 0.0168980;
-          output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.04;
-          b6 = white * 0.115926;
-        }
+      let b0_l = 0, b1_l = 0, b2_l = 0, b3_l = 0, b4_l = 0, b5_l = 0, b6_l = 0;
+      let b0_r = 0, b1_r = 0, b2_r = 0, b3_r = 0, b4_r = 0, b5_r = 0, b6_r = 0;
 
-        const whiteNoise = ctx.createBufferSource();
-        whiteNoise.buffer = noiseBuffer;
-        whiteNoise.loop = true;
+      for (let i = 0; i < bufferSize; i++) {
+        // Left channel pink noise
+        const whiteL = Math.random() * 2 - 1;
+        b0_l = 0.99886 * b0_l + whiteL * 0.0555179;
+        b1_l = 0.99332 * b1_l + whiteL * 0.0750759;
+        b2_l = 0.96900 * b2_l + whiteL * 0.1538520;
+        b3_l = 0.86650 * b3_l + whiteL * 0.3104856;
+        b4_l = 0.55000 * b4_l + whiteL * 0.5329522;
+        b5_l = -0.7616 * b5_l - whiteL * 0.0168980;
+        left[i] = (b0_l + b1_l + b2_l + b3_l + b4_l + b5_l + b6_l + whiteL * 0.5362) * 0.09;
+        b6_l = whiteL * 0.115926;
 
-        const filter = ctx.createBiquadFilter();
-        filter.type = "lowpass";
-        filter.frequency.setValueAtTime(800, ctx.currentTime);
-
-        const gainNode = ctx.createGain();
-        gainNode.gain.setValueAtTime(0.04, ctx.currentTime);
-
-        whiteNoise.connect(filter);
-        filter.connect(gainNode);
-        gainNode.connect(ctx.destination);
-
-        whiteNoise.start();
-        ambientNoiseNodeRef.current = whiteNoise;
-      } catch (e) {
-        console.warn("Pink noise generator error:", e);
+        // Right channel pink noise (decorrelated for authentic stereo field)
+        const whiteR = Math.random() * 2 - 1;
+        b0_r = 0.99886 * b0_r + whiteR * 0.0555179;
+        b1_r = 0.99332 * b1_r + whiteR * 0.0750759;
+        b2_r = 0.96900 * b2_r + whiteR * 0.1538520;
+        b3_r = 0.86650 * b3_r + whiteR * 0.3104856;
+        b4_r = 0.55000 * b4_r + whiteR * 0.5329522;
+        b5_r = -0.7616 * b5_r - whiteR * 0.0168980;
+        right[i] = (b0_r + b1_r + b2_r + b3_r + b4_r + b5_r + b6_r + whiteR * 0.5362) * 0.09;
+        b6_r = whiteR * 0.115926;
       }
+
+      const source = ctx.createBufferSource();
+      source.buffer = noiseBuffer;
+      source.loop = true;
+
+      // Highpass filter: remove deep hum below 180Hz
+      const highpass = ctx.createBiquadFilter();
+      highpass.type = "highpass";
+      highpass.frequency.setValueAtTime(180, ctx.currentTime);
+
+      // Lowpass filter: gentle warm ceiling at 2600Hz for soft rain acoustics
+      const lowpass = ctx.createBiquadFilter();
+      lowpass.type = "lowpass";
+      lowpass.frequency.setValueAtTime(2600, ctx.currentTime);
+      lowpass.Q.setValueAtTime(0.7, ctx.currentTime);
+
+      // Master gain node with smooth fade-in to comfortable, audible level
+      const gainNode = ctx.createGain();
+      gainNode.gain.setValueAtTime(0.001, ctx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.20, ctx.currentTime + 0.3);
+
+      source.connect(highpass);
+      highpass.connect(lowpass);
+      lowpass.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      source.start();
+      ambientNoiseNodeRef.current = source;
+      ambientGainRef.current = gainNode;
+    } catch (e) {
+      console.warn("Rain sound synthesizer error:", e);
+    }
 
     return () => {
       if (ambientNoiseNodeRef.current) {
         try {
           (ambientNoiseNodeRef.current as AudioBufferSourceNode).stop();
+          (ambientNoiseNodeRef.current as AudioBufferSourceNode).disconnect();
         } catch {}
         ambientNoiseNodeRef.current = null;
       }
+      ambientGainRef.current = null;
     };
-  }, [ambientRainEnabled, isRunning, mode, getAudioContext]);
+  }, [ambientRainEnabled, isRunning, isModalOpen, mode, getAudioContext]);
 
   // Handle ESC key to quickly dismiss the modal
   useEffect(() => {
@@ -344,8 +397,24 @@ export default function StudyFocusTimer({
   }, [isRunning, mode, studyMinutes, breakMinutes, todayKey, lectureKey, playChime]);
 
   // Handlers
+  const handleToggleRain = () => {
+    setAmbientRainEnabled((prev) => {
+      const next = !prev;
+      if (next) {
+        const ctx = getAudioContext();
+        if (ctx && ctx.state === "suspended") {
+          ctx.resume().catch(() => {});
+        }
+      }
+      return next;
+    });
+  };
+
   const handleTogglePlay = () => {
-    getAudioContext();
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === "suspended") {
+      ctx.resume().catch(() => {});
+    }
     if (!isRunning) {
       playChime(mode === "study" ? "start" : "break");
     }
@@ -589,11 +658,8 @@ export default function StudyFocusTimer({
                     <Clock className="w-3.5 h-3.5" />
                   </div>
                   <div>
-                    <h3 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
-                      <span>مؤقت المذاكرة والتركيز</span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">
-                        {mode === "study" ? "تركيز 🎯" : "استراحة ☕"}
-                      </span>
+                    <h3 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white">
+                      مؤقت المذاكرة والتركيز
                     </h3>
                   </div>
                 </div>
@@ -616,13 +682,13 @@ export default function StudyFocusTimer({
                   {/* Ambient Rain / White Noise Toggle */}
                   <button
                     type="button"
-                    onClick={() => setAmbientRainEnabled(!ambientRainEnabled)}
+                    onClick={handleToggleRain}
                     className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
                       ambientRainEnabled
-                        ? "bg-sky-50 dark:bg-sky-950/50 border-sky-300 dark:border-sky-700 text-sky-600 dark:text-sky-300 shadow-xs"
+                        ? "bg-sky-50 dark:bg-sky-950/50 border-sky-300 dark:border-sky-700 text-sky-600 dark:text-sky-300 shadow-xs ring-1 ring-sky-400/50"
                         : "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400"
                     }`}
-                    title="أصوات تركيز هادئة (مطر خفيف)"
+                    title={ambientRainEnabled ? "إيقاف صوت المطر الهادئ" : "أصوات تركيز هادئة (مطر خفيف)"}
                   >
                     <CloudRain className="w-3.5 h-3.5" />
                   </button>
@@ -809,7 +875,7 @@ export default function StudyFocusTimer({
                           : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
                       }`}
                     >
-                      ⚙️ تخصيص الوقت بنفسك (بكيفك)
+                      ⚙️ تخصيص الوقت بنفسك
                     </button>
                   </div>
 
