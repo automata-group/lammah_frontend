@@ -62,10 +62,10 @@ const CANONICAL_PLANS = [
     badgeIcon: "star",
     price: 100,
     priceNote: "للفصل كاملاً",
-    minutes: 2400,
+    minutes: 4500,
     durationText: "صلاحية شهر (30 يوم)",
-    desc: "الباقة الشاملة لأوائل الدفعات! رصيد عملاق مع توليد الدفاتر الجمالية وبيعها بالمتجر للأرباح.",
-    lectures: "40 إلى 45 محاضرة",
+    desc: "الباقة الشاملة لأوائل الدفعات! رصيد عملاق (75 ساعة / 4,500 دقيقة) يكفي كل مساقات الفصل مع توليد الدفاتر الجمالية وبيعها بالمتجر للأرباح.",
+    lectures: "75 إلى 100 محاضرة",
     chapters: "تغطية كافة سلايدات وشباتر الفصل",
     specialPerk: "👑 توليد الدفاتر الذكية الشاملة (PDF فخم يغنيك عن المراجعة)",
     theme: {
@@ -84,10 +84,10 @@ const CANONICAL_PLANS = [
     badgeIcon: "zap",
     price: 60,
     priceNote: "شهرياً",
-    minutes: 900,
+    minutes: 2200,
     durationText: "صلاحية شهر (30 يوم)",
-    desc: "الاشتراك الشهري الأكثر طلباً لتوديع تراكم المحاضرات! رصيد متجدد يغطي كافة مساقاتك بذكاء.",
-    lectures: "15 إلى 18 محاضرة شهرياً",
+    desc: "الاشتراك الشهري الأكثر طلباً لتوديع تراكم المحاضرات! رصيد ضخم (37 ساعة / 2,200 دقيقة) يغطي 3 إلى 4 مساقات شهرياً براحة تامة.",
+    lectures: "35 إلى 45 محاضرة شهرياً",
     chapters: "حتى 60 شابتر أو ملف سلايدات",
     specialPerk: "تفريغ صوتي + كويزات + فلاش كاردز + شات ذكي",
     theme: {
@@ -106,10 +106,10 @@ const CANONICAL_PLANS = [
     badgeIcon: "sparkles",
     price: 25,
     priceNote: "دفعة واحدة",
-    minutes: 300,
+    minutes: 800,
     durationText: "صلاحية شهر (30 يوم)",
-    desc: "شحنة إنقاذ فورية قبل الكويزات! تفريغ وتلخيص مركز للشابترات الصعبة تكفي 5 إلى 6 محاضرات.",
-    lectures: "5 إلى 6 محاضرات كاملة",
+    desc: "شحنة إنقاذ قوية للكويزات والميدتيرم! رصيد (13.5 ساعة / 800 دقيقة) يكفي 7 إلى 14 محاضرة كاملة لتلخيص الشابترات الصعبة.",
+    lectures: "7 إلى 14 محاضرة كاملة",
     chapters: "حتى 20 شابتر أو ملف سلايدات",
     specialPerk: "إنقاذ سريع للكويزات + شات ذكي",
     theme: {
@@ -132,6 +132,7 @@ export default function AssignSubscriptionModal({
   // Wizard Step: 1 = Email & Check, 2 = Choose Plan, 3 = Confirm & Assign
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
+  const [plansList, setPlansList] = useState(CANONICAL_PLANS);
   const [email, setEmail] = useState(initialEmail);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("7e17c4ba-0830-4f91-88da-7d6440d22123"); // Default to Elite
   const [customBonusMinutes, setCustomBonusMinutes] = useState<number>(0);
@@ -158,13 +159,44 @@ export default function AssignSubscriptionModal({
     }
   }, [initialEmail, isOpen]);
 
-  // Reset state when opening
+  // Reset state when opening and sync live plans from DB
   useEffect(() => {
     if (isOpen) {
       setStep(1);
       setResultMessage(null);
+
+      const fetchDbPlans = async () => {
+        try {
+          const res = await fetch(`${API}/api/v1/admin/subscriptions/plans`, {
+            headers: {
+              ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {})
+            }
+          });
+          if (!res.ok) return;
+          const dbPlans = await res.json();
+          if (Array.isArray(dbPlans) && dbPlans.length > 0) {
+            setPlansList((prev) =>
+              prev.map((cp) => {
+                const match = dbPlans.find((p: any) => p.id === cp.id || p.price_ils === cp.price);
+                if (match && typeof match.lecture_quota === "number") {
+                  return {
+                    ...cp,
+                    minutes: match.lecture_quota,
+                    price: typeof match.price_ils === "number" ? match.price_ils : cp.price
+                  };
+                }
+                return cp;
+              })
+            );
+          }
+        } catch (err) {
+          console.warn("Could not sync live DB plans:", err);
+        }
+      };
+
+      fetchDbPlans();
     }
-  }, [isOpen]);
+  }, [isOpen, sessionToken, API]);
 
   const handleLookup = async (targetEmail?: string) => {
     const emailToQuery = (targetEmail || email).trim().toLowerCase();
@@ -260,7 +292,7 @@ export default function AssignSubscriptionModal({
 
   if (!isOpen) return null;
 
-  const currentSelectedPlan = CANONICAL_PLANS.find(p => p.id === selectedPlanId);
+  const currentSelectedPlan = plansList.find(p => p.id === selectedPlanId);
   const baseMinutes = currentSelectedPlan ? currentSelectedPlan.minutes : 0;
   const previousQuota = lookupUser?.quota_remaining || 0;
   const bonusMins = Number(customBonusMinutes) || 0;
@@ -523,7 +555,7 @@ export default function AssignSubscriptionModal({
 
               {/* The 3 Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {CANONICAL_PLANS.map((plan) => {
+                {plansList.map((plan) => {
                   const isSelected = selectedPlanId === plan.id;
                   const isElite = plan.code === "elite";
                   const isPremium = plan.code === "premium";

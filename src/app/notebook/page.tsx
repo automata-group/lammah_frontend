@@ -653,7 +653,7 @@ function NotebookCreatorContent() {
               <div className="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
                 <GraduationCap className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" />
                 <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm mb-1">تغطية كاملة للفصل</h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">رصيد 2400 دقيقة ذكية يكفي حتى 40 محاضرة كاملة.</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">رصيد 4,500 دقيقة ذكية (75 ساعة كاملة) يكفي كافة مساقات الفصل.</p>
               </div>
             </div>
 
