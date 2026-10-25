@@ -248,13 +248,6 @@ export default function StudyFocusTimer({
       } catch (e) {
         console.warn("Pink noise generator error:", e);
       }
-    } else {
-      if (ambientNoiseNodeRef.current) {
-        try {
-          (ambientNoiseNodeRef.current as AudioBufferSourceNode).stop();
-        } catch {}
-        ambientNoiseNodeRef.current = null;
-      }
     }
 
     return () => {
