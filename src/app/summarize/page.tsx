@@ -28,7 +28,8 @@ import {
 } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
-import HeroSimulation from "@/components/landing/HeroSimulation";
+import DashboardProcessingScreen from "@/components/dashboard/DashboardProcessingScreen";
+import { PipelineStep } from "@/types/dashboard";
 import { createClient } from "@/lib/supabase";
 
 function SummarizeContent() {
@@ -109,38 +110,7 @@ function SummarizeContent() {
     ? Math.round(multiAudioFiles.reduce((acc, f) => acc + (f.progress || 0), 0) / totalAudioCount)
     : 0;
 
-  // Dhikr Counter during processing
-  const dhikrPhrases = [
-    "أستغفر الله العظيم",
-    "لا إله إلا الله",
-    "الحمد لله",
-    "سبحان الله وبحمده",
-    "الله أكبر",
-    "اللهم صلِّ على سيدنا محمد",
-    "لا حول ولا قوة إلا بالله"
-  ];
-  const [dhikrTotal, setDhikrTotal] = useState(0);
-  const [dhikrCurrentPhaseCount, setDhikrCurrentPhaseCount] = useState(0);
-  const [currentDhikrIndex, setCurrentDhikrIndex] = useState(0);
-  const [dhikrBurst, setDhikrBurst] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (!dhikrBurst) return;
-    const timer = setTimeout(() => setDhikrBurst(null), 600);
-    return () => clearTimeout(timer);
-  }, [dhikrBurst]);
-
-  const handleDhikrClick = () => {
-    setDhikrTotal(prev => prev + 1);
-    setDhikrBurst(Date.now());
-    const newPhaseCount = dhikrCurrentPhaseCount + 1;
-    if (newPhaseCount >= 10) {
-      setDhikrCurrentPhaseCount(0);
-      setCurrentDhikrIndex(prev => (prev + 1) % dhikrPhrases.length);
-    } else {
-      setDhikrCurrentPhaseCount(newPhaseCount);
-    }
-  };
 
   const getFingerprint = async () => {
     if (typeof window === "undefined") return "";
@@ -630,9 +600,23 @@ function SummarizeContent() {
       }
 
       if (!hasReceivedDone) {
+        if (streamBuffer.trim()) {
+          for (const line of streamBuffer.split("\n")) {
+            if (!line.startsWith("data: ")) continue;
+            try {
+              const p = JSON.parse(line.slice(6));
+              if (p.type === "error") {
+                setError(p.message || "حدث خطأ أثناء معالجة المحاضرة.");
+                setIsProcessing(false);
+                setIsStreaming(false);
+                return;
+              }
+            } catch {}
+          }
+        }
         setIsStreaming(false);
         setIsProcessing(false);
-        router.push(`/dashboard`);
+        setError("⚠️ انقطع الاتصال بالخادم أثناء المعالجة، أو لم تكتمل المهمة. يرجى المحاولة مجدداً.");
       }
     } catch (err: any) {
       setError(err.message || "حدث خطأ أثناء معالجة المحاضرة.");
@@ -651,20 +635,60 @@ function SummarizeContent() {
     return "محاضرة جامعية";
   }, [uploadMode, lectureUrl, lectureUrls, multiAudioFiles, audioFile, pdfFile]);
 
-  const currentPipelineSteps = useMemo(() => {
+  const currentPipelineSteps: PipelineStep[] = useMemo(() => {
     if (isDocumentOnly) {
       return [
-        { id: "read", label: "قراءة السلايدات", icon: FileText },
-        { id: "capsules", label: "استخراج الأفكار", icon: BrainCircuit },
-        { id: "mindmap", label: "بنك الأسئلة والملخص", icon: Lightbulb },
-        { id: "design", label: "ملف مخطط ومظلل", icon: Award }
+        {
+          id: 1,
+          title: "فحص الشرائح والصفحات",
+          shortDesc: "قراءة النصوص والجداول والرسومات بدقة هندسية",
+          icon: FileText,
+        },
+        {
+          id: 2,
+          title: "استيعاب المفاهيم والمصطلحات",
+          shortDesc: "فصل الأفكار الرئيسية وتحليل المعادلات والتعاريف",
+          icon: BrainCircuit,
+        },
+        {
+          id: 3,
+          title: "صياغة الشرح وفخاخ الامتحان",
+          shortDesc: "كتابة الشرح بالعامية والكبسولات وبنك الأسئلة",
+          icon: Lightbulb,
+        },
+        {
+          id: 4,
+          title: "التظليل وإخراج الدفتر",
+          shortDesc: "تلوين الملاحظات وإعداد دفتر المذاكرة الفائق",
+          icon: Sparkles,
+        },
       ];
     }
     return [
-      { id: "audio", label: "تفريغ الصوت", icon: FileAudio },
-      { id: "align", label: "مطابقة الشرائح", icon: FileText },
-      { id: "mindmap", label: "استنتاج الأفكار", icon: BrainCircuit },
-      { id: "design", label: "ملف مخطط ومظلل", icon: Award }
+      {
+        id: 1,
+        title: "تدقيق ومعالجة الصوت",
+        shortDesc: "تصفية النقاء الصوتي وتهيئة المسار للمحرك الذكي",
+        icon: FileAudio,
+      },
+      {
+        id: 2,
+        title: "التفريغ الذكي فائق الدقة",
+        shortDesc: "تحويل كلام المحاضر لنص دقيق ومصحح لغوياً",
+        icon: BrainCircuit,
+      },
+      {
+        id: 3,
+        title: "مطابقة الشرح بالسلايدات",
+        shortDesc: "ربط كل دقيقة صوتية مع الشريحة الخاصة بها تلقائياً",
+        icon: FileText,
+      },
+      {
+        id: 4,
+        title: "التظليل والامتحانات والكبسولات",
+        shortDesc: "استخراج أسئلة الامتحانات وبطاقات الحفظ وتلوين السلايدات",
+        icon: Sparkles,
+      },
     ];
   }, [isDocumentOnly]);
 
@@ -833,113 +857,16 @@ function SummarizeContent() {
               </div>
             </motion.div>
           ) : isProcessing || isStreaming ? (
-            <motion.div
-              key="processing"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              className="w-full max-w-3xl"
-            >
-              <div className="w-full bg-white/95 dark:bg-slate-900/90 backdrop-blur-2xl border border-indigo-100/90 dark:border-indigo-500/20 rounded-3xl p-5 sm:p-7 shadow-xl shadow-indigo-500/5 relative overflow-hidden text-right">
-                
-                {/* Header Bar */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800/80">
-                  <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 px-3.5 py-1.5 rounded-xl max-w-xs truncate">
-                    {isDocumentOnly ? (
-                      <FileText className="w-4 h-4 text-indigo-500 shrink-0" />
-                    ) : (
-                      <FileAudio className="w-4 h-4 text-emerald-500 shrink-0" />
-                    )}
-                    <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">
-                      {activeFileName}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2.5 bg-indigo-50/80 dark:bg-indigo-500/20 border border-indigo-200 dark:border-indigo-500/40 px-3.5 py-1.5 rounded-xl">
-                    <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin" style={{ animationDuration: '6s' }} />
-                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300 tabular-nums">
-                      الوقت المتبقي: {
-                        timeLeft === null
-                          ? "جاري الحساب..."
-                          : timeLeft > 10
-                          ? `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')} د`
-                          : "لحظات قليلة، جاري إنهاء وتدقيق الملف..."
-                      }
-                    </span>
-                  </div>
-                </div>
-
-                {/* Progress message */}
-                <div className="my-4 flex items-center justify-between gap-2">
-                  <div>
-                    <h2 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                      <span>{isDocumentOnly ? "جاري تحويل السلايدات إلى ملف مخطط ومظلل" : "جاري تفريغ وتلخيص المحاضرة عبر لمّاح"}</span>
-                      <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
-                    </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
-                      {progressStep || "تحليل الصوت والنصوص وصياغة الملخص والبطاقات الذكية..."}
-                    </p>
-                  </div>
-                  <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 tabular-nums bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/60 dark:border-indigo-500/20 px-2.5 py-1 rounded-lg">
-                    {progressPercent}%
-                  </span>
-                </div>
-
-                {/* Progress bar */}
-                <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 mb-4">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full"
-                    animate={{ width: `${progressPercent}%` }}
-                    transition={{ type: "spring", stiffness: 45, damping: 15 }}
-                  />
-                </div>
-
-                {/* Steps */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5">
-                  {currentPipelineSteps.map((step, idx) => {
-                    const isDone = idx < activeStepIdx;
-                    const isActive = idx === activeStepIdx;
-                    const IconComponent = step.icon;
-                    return (
-                      <div
-                        key={step.id}
-                        className={`flex flex-col p-2.5 rounded-2xl border transition-all ${
-                          isActive
-                            ? "bg-indigo-50/80 dark:bg-indigo-950/50 border-indigo-500/60 scale-[1.02]"
-                            : isDone
-                            ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-400/40 opacity-90"
-                            : "bg-slate-50/50 dark:bg-slate-800/30 border-slate-200/60 dark:border-slate-800/60 opacity-60"
-                        }`}
-                      >
-                        <div className="flex items-center gap-1.5 mb-1 text-slate-600 dark:text-slate-300">
-                          <IconComponent className="w-3.5 h-3.5" />
-                          <span className="text-[11px] font-bold truncate">{step.label}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Dhikr Counter */}
-                <div
-                  onClick={handleDhikrClick}
-                  className="p-3.5 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 flex items-center justify-between cursor-pointer select-none"
-                >
-                  <div className="text-right">
-                    <span className="text-xs font-black text-emerald-800 dark:text-emerald-300 block">
-                      {dhikrPhrases[currentDhikrIndex]}
-                    </span>
-                    <span className="text-[10px] text-emerald-600/80 dark:text-emerald-400/70">
-                      انقر للتسبيح واستثمار الوقت أثناء المعالجة ✨
-                    </span>
-                  </div>
-                  <div className="text-xs font-black text-emerald-700 dark:text-emerald-300 bg-white/90 dark:bg-emerald-900/60 px-3 py-1 rounded-xl border border-emerald-200 dark:border-emerald-700">
-                    {dhikrCurrentPhaseCount} / 10 (المجموع: {dhikrTotal})
-                  </div>
-                </div>
-
-              </div>
-            </motion.div>
+            <DashboardProcessingScreen
+              isDocumentOnly={isDocumentOnly}
+              activeFileName={activeFileName}
+              queuePosition={queuePosition}
+              timeLeft={timeLeft}
+              progressStep={progressStep}
+              progressPercent={progressPercent}
+              currentPipelineSteps={currentPipelineSteps}
+              activeStepIdx={activeStepIdx}
+            />
           ) : (
             <motion.div
               key="upload"
