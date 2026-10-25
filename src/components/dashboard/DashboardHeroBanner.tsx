@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { GraduationCap, BookOpen, Layers, ArrowLeft, CheckSquare } from "lucide-react";
 import { StudentProfileData } from "@/types/dashboard";
 
@@ -18,8 +18,6 @@ export default function DashboardHeroBanner({
   studentProfileData,
   onOpenStudentProfileModal,
 }: DashboardHeroBannerProps) {
-  const router = useRouter();
-
   const displayName = userFullName || (userEmail ? userEmail.split("@")[0] : null) || "طالبنا";
   const isProfileCompleted = Boolean(studentProfileData?.university);
 
@@ -43,14 +41,13 @@ export default function DashboardHeroBanner({
           </div>
 
           <div className="relative z-10 mt-6 pt-4 border-t border-slate-100 dark:border-white/[0.08] flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => router.push("/summarize")}
+            <Link
+              href="/summarize"
               className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow-md hover:shadow-indigo-600/20 flex items-center gap-2 transition cursor-pointer active:scale-95"
             >
               <span>ابدأ تلخيص جديد</span>
               <ArrowLeft className="w-4 h-4" />
-            </button>
+            </Link>
 
             <span className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60 px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-slate-700/50 hidden sm:inline font-medium">
               صوت • فيديو • ملفات PDF
@@ -109,8 +106,8 @@ export default function DashboardHeroBanner({
       {/* Bento Grid Row 2: 3 Clean Academic Companion Modules */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         {/* Cell 1: ورقة مهام المذاكرة */}
-        <div
-          onClick={() => router.push("/tasks")}
+        <Link
+          href="/tasks"
           className="rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-500/30 shadow-xs hover:shadow-sm transition-all group relative overflow-hidden"
         >
           <div className="flex items-center gap-3.5 min-w-0">
@@ -132,11 +129,11 @@ export default function DashboardHeroBanner({
             </div>
           </div>
           <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:-translate-x-1 transition-all shrink-0 mr-1" />
-        </div>
+        </Link>
 
         {/* Cell 2: Interactive Study Space */}
-        <div
-          onClick={() => router.push("/study")}
+        <Link
+          href="/study"
           className="rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-purple-200 dark:hover:border-purple-500/30 shadow-xs hover:shadow-sm transition-all group"
         >
           <div className="flex items-center gap-3.5 min-w-0">
@@ -153,11 +150,11 @@ export default function DashboardHeroBanner({
             </div>
           </div>
           <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 group-hover:-translate-x-1 transition-all shrink-0 mr-1" />
-        </div>
+        </Link>
 
         {/* Cell 3: Notebook / Saved Collections */}
-        <div
-          onClick={() => router.push("/notebook")}
+        <Link
+          href="/notebook"
           className="rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-indigo-200 dark:hover:border-indigo-500/30 shadow-xs hover:shadow-sm transition-all group"
         >
           <div className="flex items-center gap-3.5 min-w-0">
@@ -174,7 +171,7 @@ export default function DashboardHeroBanner({
             </div>
           </div>
           <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:-translate-x-1 transition-all shrink-0 mr-1" />
-        </div>
+        </Link>
       </div>
     </div>
   );
