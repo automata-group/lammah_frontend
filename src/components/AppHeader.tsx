@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { 
   Package, Store, BookOpen, Download, Crown, 
   History, User, Sun, Moon, LogOut, LayoutDashboard,
@@ -188,6 +189,32 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Proactive background prefetching for instantaneous 0ms perceived latency
+  useEffect(() => {
+    if (userMenuOpen) {
+      router.prefetch("/profile");
+      router.prefetch("/plans");
+      router.prefetch("/history");
+      router.prefetch("/faq");
+      if (isTutor) router.prefetch("/tutor/dashboard");
+    }
+  }, [userMenuOpen, router, isTutor]);
+
+  useEffect(() => {
+    if (studyMenuOpen) {
+      router.prefetch("/notebook");
+      router.prefetch("/tasks");
+      router.prefetch("/study");
+    }
+  }, [studyMenuOpen, router]);
+
+  useEffect(() => {
+    if (servicesMenuOpen) {
+      router.prefetch("/kiosk");
+      router.prefetch("/marketplace");
+    }
+  }, [servicesMenuOpen, router]);
+
   const navItems = [
     {
       id: "dashboard",
@@ -366,8 +393,10 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
 
               {studyMenuOpen && (
                 <div className="absolute right-0 mt-2.5 w-60 bg-white/95 dark:bg-[#0c111d]/95 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-900/10 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                  <button
-                    onClick={() => { setStudyMenuOpen(false); router.push("/notebook"); }}
+                  <Link
+                    href="/notebook"
+                    prefetch={true}
+                    onClick={() => setStudyMenuOpen(false)}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer text-right ${
                       activePage === "notebook"
                         ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"
@@ -381,10 +410,12 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                       <div className="font-black">دفاتر المحاضرات</div>
                       <div className="text-[10px] text-slate-400 font-normal">المحاضرات والملخصات المحفوظة</div>
                     </div>
-                  </button>
+                  </Link>
 
-                  <button
-                    onClick={() => { setStudyMenuOpen(false); router.push("/tasks"); }}
+                  <Link
+                    href="/tasks"
+                    prefetch={true}
+                    onClick={() => setStudyMenuOpen(false)}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer mt-1 text-right ${
                       activePage === "tasks"
                         ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"
@@ -398,12 +429,14 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                       <div className="font-black">مهام المذاكرة</div>
                       <div className="text-[10px] text-slate-400 font-normal">تنظيم وجدول إنجاز المهام</div>
                     </div>
-                  </button>
+                  </Link>
 
                   <div className="border-t border-slate-100 dark:border-slate-800/80 my-1 mx-1" />
 
-                  <button
-                    onClick={() => { setStudyMenuOpen(false); router.push("/study"); }}
+                  <Link
+                    href="/study"
+                    prefetch={true}
+                    onClick={() => setStudyMenuOpen(false)}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer text-right ${
                       activePage === "study"
                         ? "bg-purple-50 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400"
@@ -422,7 +455,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                       </div>
                       <div className="text-[10px] text-slate-400 font-normal">مساحة المذاكرة والتركيز الذكية</div>
                     </div>
-                  </button>
+                  </Link>
                 </div>
               )}
             </div>
@@ -448,8 +481,10 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
 
               {servicesMenuOpen && (
                 <div className="absolute right-0 mt-2.5 w-60 bg-white/95 dark:bg-[#0c111d]/95 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-900/10 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                  <button
-                    onClick={() => { setServicesMenuOpen(false); router.push("/kiosk"); }}
+                  <Link
+                    href="/kiosk"
+                    prefetch={true}
+                    onClick={() => setServicesMenuOpen(false)}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer text-right ${
                       activePage === "kiosk"
                         ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
@@ -468,10 +503,12 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                     <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 shrink-0">
                       جديد
                     </span>
-                  </button>
+                  </Link>
 
-                  <button
-                    onClick={() => { setServicesMenuOpen(false); router.push("/marketplace"); }}
+                  <Link
+                    href="/marketplace"
+                    prefetch={true}
+                    onClick={() => setServicesMenuOpen(false)}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer mt-1 text-right ${
                       activePage === "marketplace"
                         ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"
@@ -485,7 +522,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                       <div className="font-black">سوق الملخصات</div>
                       <div className="text-[10px] text-slate-400 font-normal">متجر بيع وشراء الدوسيات</div>
                     </div>
-                  </button>
+                  </Link>
                 </div>
               )}
             </div>
@@ -588,8 +625,10 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
 
                     {/* Menu Items List */}
                     <div className="space-y-1">
-                      <button
-                        onClick={() => { setUserMenuOpen(false); router.push("/profile"); }}
+                      <Link
+                        href="/profile"
+                        prefetch={true}
+                        onClick={() => setUserMenuOpen(false)}
                         className={`w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs font-bold transition-all duration-150 cursor-pointer ${
                           activePage === "profile" 
                             ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-2xs" 
@@ -602,10 +641,12 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                           </div>
                           <span className="whitespace-nowrap">الملف الشخصي والإعدادات</span>
                         </div>
-                      </button>
+                      </Link>
 
-                      <button
-                        onClick={() => { setUserMenuOpen(false); router.push("/plans"); }}
+                      <Link
+                        href="/plans"
+                        prefetch={true}
+                        onClick={() => setUserMenuOpen(false)}
                         className={`w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs font-bold transition-all duration-150 cursor-pointer ${
                           activePage === "plans" 
                             ? "bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 shadow-2xs" 
@@ -619,10 +660,12 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                           <span className="whitespace-nowrap">باقات الاشتراك والرصيد</span>
                         </div>
                         <span className="text-[10px] font-black px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full shadow-2xs shrink-0">ترقية</span>
-                      </button>
+                      </Link>
 
-                      <button
-                        onClick={() => { setUserMenuOpen(false); router.push("/history"); }}
+                      <Link
+                        href="/history"
+                        prefetch={true}
+                        onClick={() => setUserMenuOpen(false)}
                         className={`w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs font-bold transition-all duration-150 cursor-pointer ${
                           activePage === "history" 
                             ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-2xs" 
@@ -635,11 +678,13 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                           </div>
                           <span className="whitespace-nowrap">سجل العمليات والمحاضرات</span>
                         </div>
-                      </button>
+                      </Link>
 
                       {isTutor && (
-                        <button
-                          onClick={() => { setUserMenuOpen(false); router.push("/tutor/dashboard"); }}
+                        <Link
+                          href="/tutor/dashboard"
+                          prefetch={true}
+                          onClick={() => setUserMenuOpen(false)}
                           className={`w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs font-bold transition-all duration-150 cursor-pointer ${
                             activePage === "tutor" 
                               ? "bg-purple-50 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400 shadow-2xs" 
@@ -652,11 +697,13 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                             </div>
                             <span className="whitespace-nowrap">لوحة تحكم المعلم</span>
                           </div>
-                        </button>
+                        </Link>
                       )}
 
-                      <button
-                        onClick={() => { setUserMenuOpen(false); router.push("/faq"); }}
+                      <Link
+                        href="/faq"
+                        prefetch={true}
+                        onClick={() => setUserMenuOpen(false)}
                         className="w-full flex items-center justify-between px-2.5 py-2 rounded-2xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-white/5 transition-all duration-150 cursor-pointer"
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
@@ -665,7 +712,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                           </div>
                           <span className="whitespace-nowrap">الأسئلة الشائعة والمساعدة</span>
                         </div>
-                      </button>
+                      </Link>
                     </div>
 
                     <div className="border-t border-slate-100 dark:border-slate-800/80 my-2 mx-1"></div>

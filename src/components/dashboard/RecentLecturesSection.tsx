@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Clock,
@@ -8,6 +8,7 @@ import {
   Calendar,
   BookOpen,
   Download,
+  Loader2,
 } from "lucide-react";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
 import { RecentLectureLog } from "@/types/dashboard";
@@ -24,8 +25,15 @@ export default function RecentLecturesSection({
   onSelectLecture,
 }: RecentLecturesSectionProps) {
   const router = useRouter();
+  const [openingId, setOpeningId] = useState<string | null>(null);
+
+  useEffect(() => {
+    router.prefetch("/notebook");
+    router.prefetch("/dashboard");
+  }, [router]);
 
   const handleOpenLecture = (log: RecentLectureLog) => {
+    setOpeningId(log.id);
     if (log.metadata?.is_notebook || log.metadata?.job_id?.startsWith("notebook_")) {
       const jobId = log.metadata?.job_id;
       const title = log.metadata?.title || log.feature_name || "دفتر دراسي";
@@ -129,10 +137,20 @@ export default function RecentLecturesSection({
                       e.stopPropagation();
                       handleOpenLecture(log);
                     }}
-                    className="flex-1 py-2 px-3 rounded-xl bg-slate-50 hover:bg-indigo-600 hover:text-white dark:bg-slate-800/60 hover:dark:bg-indigo-600 text-slate-700 hover:text-white dark:text-slate-300 dark:hover:text-white border border-slate-200/70 hover:border-indigo-600 dark:border-slate-700/60 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                    disabled={openingId === log.id}
+                    className="flex-1 py-2 px-3 rounded-xl bg-slate-50 hover:bg-indigo-600 hover:text-white dark:bg-slate-800/60 hover:dark:bg-indigo-600 text-slate-700 hover:text-white dark:text-slate-300 dark:hover:text-white border border-slate-200/70 hover:border-indigo-600 dark:border-slate-700/60 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-80 disabled:pointer-events-none"
                   >
-                    <BookOpen className="w-3.5 h-3.5" />
-                    <span>متابعة المذاكرة</span>
+                    {openingId === log.id ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>جاري الفتح...</span>
+                      </>
+                    ) : (
+                      <>
+                        <BookOpen className="w-3.5 h-3.5" />
+                        <span>متابعة المذاكرة</span>
+                      </>
+                    )}
                   </button>
 
                   {hasPdf && (() => {

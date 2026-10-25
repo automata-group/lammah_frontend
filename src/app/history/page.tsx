@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -29,6 +30,13 @@ export default function HistoryPage() {
   const editInputRef = useRef<HTMLInputElement>(null);
   const [publishedMap, setPublishedMap] = useState<Record<string, any>>({});
   const [userQuota, setUserQuota] = useState<number | null>(null);
+  const [openingId, setOpeningId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Proactively prefetch destination routes for 0-latency navigation
+    router.prefetch("/dashboard");
+    router.prefetch("/notebook");
+  }, [router]);
 
   useEffect(() => {
     try {
@@ -447,19 +455,38 @@ export default function HistoryPage() {
 
                     {/* Actions */}
                     <div className="flex flex-wrap gap-2.5">
-                      <button
-                        onClick={() => {
-                          if (jobId) {
-                            router.push(`/notebook?job_id=${jobId}&title=${encodeURIComponent(title)}&student_name=${encodeURIComponent(studentName)}&history_id=${log.id}`);
-                          } else {
-                            router.push(`/notebook?history_id=${log.id}`);
-                          }
-                        }}
-                        className="w-full flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-all text-center cursor-pointer"
-                      >
-                        <BookOpen className="w-4 h-4 shrink-0" />
-                        فتح وتصفح الدفتر 📖
-                      </button>
+                      {(() => {
+                        const notebookHref = jobId
+                          ? `/notebook?job_id=${jobId}&title=${encodeURIComponent(title)}&student_name=${encodeURIComponent(studentName)}&history_id=${log.id}`
+                          : `/notebook?history_id=${log.id}`;
+                        const isOpening = openingId === log.id;
+
+                        return (
+                          <Link
+                            href={notebookHref}
+                            prefetch={true}
+                            onClick={() => setOpeningId(log.id)}
+                            onMouseEnter={() => router.prefetch(notebookHref)}
+                            className={`w-full flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl text-xs font-black shadow-xs transition-all text-center cursor-pointer select-none ${
+                              isOpening
+                                ? "bg-indigo-700 text-white opacity-90 scale-98 pointer-events-none"
+                                : "bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white"
+                            }`}
+                          >
+                            {isOpening ? (
+                              <>
+                                <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+                                <span>جاري فتح الدفتر...</span>
+                              </>
+                            ) : (
+                              <>
+                                <BookOpen className="w-4 h-4 shrink-0" />
+                                <span>فتح وتصفح الدفتر 📖</span>
+                              </>
+                            )}
+                          </Link>
+                        );
+                      })()}
 
                       {jobId && (() => {
                         const isPrep = log.metadata?.is_prep !== undefined
@@ -620,37 +647,53 @@ export default function HistoryPage() {
                             {isExpanded ? "إخفاء" : "التفريغ"}
                           </button>
                         )}
-                        {hasData && (
-                          <button
-                            onClick={() => {
-                              if (log.metadata?.is_notebook || log.metadata?.job_id?.startsWith("notebook_")) {
-                                const jId = log.metadata?.job_id;
-                                const t = getTitle(log) || log.feature_name || "دفتر دراسي";
-                                const sName = log.metadata?.student_name || "طالب متميز";
-                                if (jId) {
-                                  router.push(`/notebook?job_id=${jId}&title=${encodeURIComponent(t)}&student_name=${encodeURIComponent(sName)}&history_id=${log.id}`);
-                                } else {
-                                  router.push(`/notebook?history_id=${log.id}`);
-                                }
-                              } else {
-                                // Prime instant cache for 0ms dashboard load
-                                try {
-                                  if (log.metadata) {
+                        {hasData && (() => {
+                          const isNotebook = !!(log.metadata?.is_notebook || log.metadata?.job_id?.startsWith("notebook_"));
+                          const targetHref = isNotebook
+                            ? (log.metadata?.job_id
+                                ? `/notebook?job_id=${log.metadata.job_id}&title=${encodeURIComponent(getTitle(log) || log.feature_name || "دفتر دراسي")}&student_name=${encodeURIComponent(log.metadata?.student_name || "طالب متميز")}&history_id=${log.id}`
+                                : `/notebook?history_id=${log.id}`)
+                            : `/dashboard?history_id=${log.id}`;
+                          const isOpening = openingId === log.id;
+
+                          return (
+                            <Link
+                              href={targetHref}
+                              prefetch={true}
+                              onClick={() => {
+                                setOpeningId(log.id);
+                                if (!isNotebook && log.metadata) {
+                                  try {
                                     sessionStorage.setItem("lammah_instant_lecture_" + log.id, JSON.stringify({
                                       metadata: log.metadata,
                                       downloadUrl: log.metadata?.has_pdf ? `/api/v1/summarize/download/${log.metadata.job_id}.pdf` : null
                                     }));
-                                  }
-                                } catch {}
-                                router.push(`/dashboard?history_id=${log.id}`);
-                              }
-                            }}
-                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-xs cursor-pointer"
-                          >
-                            <Sparkles className="w-3.5 h-3.5" />
-                            فتح
-                          </button>
-                        )}
+                                  } catch {}
+                                }
+                              }}
+                              onMouseEnter={() => {
+                                router.prefetch(targetHref);
+                              }}
+                              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer select-none ${
+                                isOpening
+                                  ? "bg-indigo-700 text-white opacity-90 scale-95 pointer-events-none"
+                                  : "bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white"
+                              }`}
+                            >
+                              {isOpening ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  <span>جاري الفتح...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="w-3.5 h-3.5" />
+                                  <span>فتح</span>
+                                </>
+                              )}
+                            </Link>
+                          );
+                        })()}
                         {log.metadata?.job_id && (() => {
                           const isPrep = log.metadata?.is_prep !== undefined
                             ? !!log.metadata.is_prep
