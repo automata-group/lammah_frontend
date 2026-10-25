@@ -248,7 +248,6 @@ export default function StudyFocusTimer({
       } catch (e) {
         console.warn("Pink noise generator error:", e);
       }
-    }
 
     return () => {
       if (ambientNoiseNodeRef.current) {
