@@ -734,8 +734,6 @@ function DashboardContent() {
 
     // 2. Fetch fresh revalidated data from server
     try {
-      const fp = await getFingerprint();
-      const meta = await getDeviceMetadata();
       const token = session?.access_token;
       if (token) {
         const res = await fetch(
@@ -743,8 +741,6 @@ function DashboardContent() {
           {
             headers: {
               Authorization: `Bearer ${token}`,
-              "X-Fingerprint": fp,
-              "X-Device-Metadata": meta,
             },
           }
         );

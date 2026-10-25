@@ -31,6 +31,9 @@ export default function RecentLecturesSection({
   useEffect(() => {
     router.prefetch("/notebook");
     router.prefetch("/dashboard");
+    router.prefetch("/study");
+    router.prefetch("/tasks");
+    router.prefetch("/summarize");
   }, [router]);
 
   const handleOpenLecture = (log: RecentLectureLog) => {
@@ -130,7 +133,8 @@ export default function RecentLecturesSection({
                 key={log.id}
                 onClick={() => handleOpenLecture(log)}
                 onMouseEnter={() => router.prefetch(getLectureHref(log))}
-                className="min-w-[260px] max-w-[285px] sm:min-w-0 sm:max-w-none shrink-0 snap-start rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex flex-col justify-between hover:border-indigo-300 dark:hover:border-indigo-500/40 shadow-xs hover:shadow-sm transition-all cursor-pointer group"
+                onPointerDown={() => router.prefetch(getLectureHref(log))}
+                className="min-w-[260px] max-w-[285px] sm:min-w-0 sm:max-w-none shrink-0 snap-start rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex flex-col justify-between hover:border-indigo-300 dark:hover:border-indigo-500/40 shadow-xs hover:shadow-sm active:scale-[0.98] transition-all cursor-pointer group"
               >
                 <div className="space-y-2">
                   <div className="flex items-center text-[11px] text-slate-400 dark:text-slate-500 font-medium">

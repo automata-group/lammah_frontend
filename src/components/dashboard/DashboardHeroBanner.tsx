@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { GraduationCap, BookOpen, Layers, ArrowLeft, CheckSquare } from "lucide-react";
 import { StudentProfileData } from "@/types/dashboard";
 
@@ -18,8 +19,17 @@ export default function DashboardHeroBanner({
   studentProfileData,
   onOpenStudentProfileModal,
 }: DashboardHeroBannerProps) {
+  const router = useRouter();
   const displayName = userFullName || (userEmail ? userEmail.split("@")[0] : null) || "طالبنا";
   const isProfileCompleted = Boolean(studentProfileData?.university);
+
+  // Eagerly prefetch all companion navigation routes for instantaneous 0ms transitions
+  useEffect(() => {
+    router.prefetch("/study");
+    router.prefetch("/notebook");
+    router.prefetch("/tasks");
+    router.prefetch("/summarize");
+  }, [router]);
 
   return (
     <div className="w-full space-y-3.5">
@@ -43,6 +53,7 @@ export default function DashboardHeroBanner({
           <div className="relative z-10 mt-6 pt-4 border-t border-slate-100 dark:border-white/[0.08] flex items-center justify-between gap-3">
             <Link
               href="/summarize"
+              prefetch={true}
               className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow-md hover:shadow-indigo-600/20 flex items-center gap-2 transition cursor-pointer active:scale-95"
             >
               <span>ابدأ تلخيص جديد</span>
@@ -59,7 +70,7 @@ export default function DashboardHeroBanner({
         {!isProfileCompleted && (
           <div
             onClick={onOpenStudentProfileModal}
-            className="rounded-3xl p-5 flex flex-col justify-between cursor-pointer transition-all duration-300 group relative overflow-hidden bg-gradient-to-br from-indigo-50/90 via-white to-violet-50/50 dark:from-indigo-950/40 dark:via-[#0e1426] dark:to-[#0c111d] border-2 border-indigo-400/70 dark:border-indigo-500/60 hover:border-indigo-500 dark:hover:border-indigo-400 shadow-[0_4px_20px_-4px_rgba(99,102,241,0.15)] dark:shadow-[0_4px_25px_-5px_rgba(99,102,241,0.25)] hover:-translate-y-0.5"
+            className="rounded-3xl p-5 flex flex-col justify-between cursor-pointer transition-all duration-300 group relative overflow-hidden bg-gradient-to-br from-indigo-50/90 via-white to-violet-50/50 dark:from-indigo-950/40 dark:via-[#0e1426] dark:to-[#0c111d] border-2 border-indigo-400/70 dark:border-indigo-500/60 hover:border-indigo-500 dark:hover:border-indigo-400 shadow-[0_4px_20px_-4px_rgba(99,102,241,0.15)] dark:shadow-[0_4px_25px_-5px_rgba(99,102,241,0.25)] hover:-translate-y-0.5 active:scale-[0.99]"
           >
             {/* Ambient Corner Glow when not completed */}
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/15 dark:bg-indigo-500/25 rounded-full blur-2xl pointer-events-none" />
@@ -108,7 +119,8 @@ export default function DashboardHeroBanner({
         {/* Cell 1: ورقة مهام المذاكرة */}
         <Link
           href="/tasks"
-          className="rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-500/30 shadow-xs hover:shadow-sm transition-all group relative overflow-hidden"
+          prefetch={true}
+          className="rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-500/30 shadow-xs hover:shadow-sm active:scale-[0.98] transition-all group relative overflow-hidden"
         >
           <div className="flex items-center gap-3.5 min-w-0">
             <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform shrink-0">
@@ -134,7 +146,8 @@ export default function DashboardHeroBanner({
         {/* Cell 2: Interactive Study Space */}
         <Link
           href="/study"
-          className="rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-purple-200 dark:hover:border-purple-500/30 shadow-xs hover:shadow-sm transition-all group"
+          prefetch={true}
+          className="rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-purple-200 dark:hover:border-purple-500/30 shadow-xs hover:shadow-sm active:scale-[0.98] transition-all group"
         >
           <div className="flex items-center gap-3.5 min-w-0">
             <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:purple-500/10 border border-purple-100 dark:border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform shrink-0">
@@ -155,7 +168,8 @@ export default function DashboardHeroBanner({
         {/* Cell 3: Notebook / Saved Collections */}
         <Link
           href="/notebook"
-          className="rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-indigo-200 dark:hover:border-indigo-500/30 shadow-xs hover:shadow-sm transition-all group"
+          prefetch={true}
+          className="rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-indigo-200 dark:hover:border-indigo-500/30 shadow-xs hover:shadow-sm active:scale-[0.98] transition-all group"
         >
           <div className="flex items-center gap-3.5 min-w-0">
             <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform shrink-0">
