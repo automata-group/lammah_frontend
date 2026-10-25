@@ -28,6 +28,7 @@ export default function DashboardPdfViewer({
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
 
   const [hasPdfError, setHasPdfError] = useState<boolean>(false);
+  const [isPdfLoading, setIsPdfLoading] = useState<boolean>(true);
 
   const cleanTitle = (lectureTitle || "المادة الدراسية")
     .replace(/^محاضرة\s+/, "")
@@ -43,9 +44,9 @@ export default function DashboardPdfViewer({
     let isMounted = true;
     if (!downloadUrl) return;
 
-    // Check if the endpoint returns valid PDF or error JSON
-    fetch(`${apiUrl}${downloadUrl}`, { method: "GET", headers: { Range: "bytes=0-100" } })
-      .then(async (res) => {
+    // Fast HEAD check to verify PDF availability without downloading redundant payload
+    fetch(fullDownloadUrl, { method: "HEAD" })
+      .then((res) => {
         if (!isMounted) return;
         const contentType = res.headers.get("content-type") || "";
         if (!res.ok || contentType.includes("application/json")) {
@@ -61,7 +62,7 @@ export default function DashboardPdfViewer({
     return () => {
       isMounted = false;
     };
-  }, [apiUrl, downloadUrl]);
+  }, [fullDownloadUrl, downloadUrl]);
 
   return (
     <div
@@ -146,11 +147,22 @@ export default function DashboardPdfViewer({
             </div>
           </div>
         ) : (
-          <iframe
-            key={pdfPage || "default"}
-            src={`${apiUrl}${downloadUrl}#page=${pdfPage || 1}`}
-            className="w-full h-[400px] sm:h-[550px] lg:h-[700px] rounded-lg bg-white dark:bg-slate-950 transition-all border border-slate-200 dark:border-slate-900"
-          />
+          <div className="relative w-full">
+            {isPdfLoading && (
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-xs rounded-lg transition-opacity duration-300">
+                <div className="w-8 h-8 rounded-full border-3 border-indigo-600 border-t-transparent animate-spin mb-3" />
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  جاري تحميل وعرض الملف المخطط...
+                </span>
+              </div>
+            )}
+            <iframe
+              key={downloadUrl}
+              src={`${fullDownloadUrl}#page=${pdfPage || 1}`}
+              onLoad={() => setIsPdfLoading(false)}
+              className="w-full h-[400px] sm:h-[550px] lg:h-[700px] rounded-lg bg-white dark:bg-slate-950 transition-all border border-slate-200 dark:border-slate-900"
+            />
+          </div>
         )}
       </div>
     </div>
