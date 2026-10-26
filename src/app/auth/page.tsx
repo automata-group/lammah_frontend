@@ -109,7 +109,10 @@ function AuthForm() {
                   className="w-full bg-white hover:bg-slate-50 dark:bg-white dark:hover:bg-slate-100 text-slate-900 font-black py-3 px-4 rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-md hover:shadow-lg text-sm border border-slate-200 dark:border-transparent group cursor-pointer"
                 >
                   {submitting ? (
-                    <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+                      <span className="text-indigo-600 font-bold text-sm">جاري التوجيه إلى Google...</span>
+                    </div>
                   ) : (
                     <>
                       <div className="bg-slate-50 p-1 rounded-full group-hover:scale-110 transition-transform">

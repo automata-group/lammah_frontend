@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GraduationCap, BookOpen, Layers, ArrowLeft, CheckSquare } from "lucide-react";
+import { GraduationCap, BookOpen, Layers, ArrowLeft, CheckSquare, Loader2 } from "lucide-react";
 import { StudentProfileData } from "@/types/dashboard";
 
 interface DashboardHeroBannerProps {
@@ -20,6 +20,7 @@ export default function DashboardHeroBanner({
   onOpenStudentProfileModal,
 }: DashboardHeroBannerProps) {
   const router = useRouter();
+  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
   const displayName = userFullName || (userEmail ? userEmail.split("@")[0] : null) || "طالبنا";
   const isProfileCompleted = Boolean(studentProfileData?.university);
 
@@ -120,10 +121,15 @@ export default function DashboardHeroBanner({
         <Link
           href="/tasks"
           prefetch={true}
-          className="rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-500/30 shadow-xs hover:shadow-sm active:scale-[0.98] transition-all group relative overflow-hidden"
+          onClick={() => setNavigatingTo("/tasks")}
+          className={`rounded-3xl bg-white dark:bg-[#0c111d] border p-4 sm:p-5 flex items-center justify-between cursor-pointer shadow-xs hover:shadow-sm active:scale-[0.98] transition-all group relative overflow-hidden ${
+            navigatingTo === "/tasks"
+              ? "border-indigo-400 dark:border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/30 dark:bg-indigo-950/20 pointer-events-none"
+              : "border-slate-200/90 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/30"
+          }`}
         >
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform shrink-0">
+            <div className={`w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform shrink-0 ${navigatingTo === "/tasks" ? "scale-105" : ""}`}>
               <CheckSquare className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div className="min-w-0">
@@ -136,21 +142,30 @@ export default function DashboardHeroBanner({
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
-                تنظيم وإنجاز مهامك الدراسية
+                {navigatingTo === "/tasks" ? "جاري الفتح..." : "تنظيم وإنجاز مهامك الدراسية"}
               </p>
             </div>
           </div>
-          <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:-translate-x-1 transition-all shrink-0 mr-1" />
+          {navigatingTo === "/tasks" ? (
+            <Loader2 className="w-4 h-4 animate-spin text-indigo-600 dark:text-indigo-400 shrink-0 mr-1" />
+          ) : (
+            <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:-translate-x-1 transition-all shrink-0 mr-1" />
+          )}
         </Link>
 
         {/* Cell 2: Interactive Study Space */}
         <Link
           href="/study"
           prefetch={true}
-          className="rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-purple-200 dark:hover:border-purple-500/30 shadow-xs hover:shadow-sm active:scale-[0.98] transition-all group"
+          onClick={() => setNavigatingTo("/study")}
+          className={`rounded-3xl bg-white dark:bg-[#0c111d] border p-4 sm:p-5 flex items-center justify-between cursor-pointer shadow-xs hover:shadow-sm active:scale-[0.98] transition-all group ${
+            navigatingTo === "/study"
+              ? "border-purple-400 dark:border-purple-500 ring-2 ring-purple-500/20 bg-purple-50/30 dark:bg-purple-950/20 pointer-events-none"
+              : "border-slate-200/90 dark:border-slate-800 hover:border-purple-200 dark:hover:border-purple-500/30"
+          }`}
         >
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:purple-500/10 border border-purple-100 dark:border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform shrink-0">
+            <div className={`w-10 h-10 rounded-2xl bg-purple-50 dark:purple-500/10 border border-purple-100 dark:border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform shrink-0 ${navigatingTo === "/study" ? "scale-105" : ""}`}>
               <BookOpen className="w-5 h-5" />
             </div>
             <div className="min-w-0">
@@ -158,21 +173,30 @@ export default function DashboardHeroBanner({
                 مساحة المذاكرة
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
-                ملاحظات ومراجعة دراسية ذكية
+                {navigatingTo === "/study" ? "جاري الفتح والتجهيز..." : "ملاحظات ومراجعة دراسية ذكية"}
               </p>
             </div>
           </div>
-          <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 group-hover:-translate-x-1 transition-all shrink-0 mr-1" />
+          {navigatingTo === "/study" ? (
+            <Loader2 className="w-4 h-4 animate-spin text-purple-600 dark:text-purple-400 shrink-0 mr-1" />
+          ) : (
+            <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 group-hover:-translate-x-1 transition-all shrink-0 mr-1" />
+          )}
         </Link>
 
         {/* Cell 3: Notebook / Saved Collections */}
         <Link
           href="/notebook"
           prefetch={true}
-          className="rounded-3xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:border-indigo-200 dark:hover:border-indigo-500/30 shadow-xs hover:shadow-sm active:scale-[0.98] transition-all group"
+          onClick={() => setNavigatingTo("/notebook")}
+          className={`rounded-3xl bg-white dark:bg-[#0c111d] border p-4 sm:p-5 flex items-center justify-between cursor-pointer shadow-xs hover:shadow-sm active:scale-[0.98] transition-all group ${
+            navigatingTo === "/notebook"
+              ? "border-indigo-400 dark:border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/30 dark:bg-indigo-950/20 pointer-events-none"
+              : "border-slate-200/90 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-500/30"
+          }`}
         >
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform shrink-0">
+            <div className={`w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform shrink-0 ${navigatingTo === "/notebook" ? "scale-105" : ""}`}>
               <Layers className="w-5 h-5" />
             </div>
             <div className="min-w-0">
@@ -180,11 +204,15 @@ export default function DashboardHeroBanner({
                 دفاتر المحاضرات
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
-                تصفح جميع محاضراتك ودفاترك
+                {navigatingTo === "/notebook" ? "جاري فتح الدفاتر..." : "تصفح جميع محاضراتك ودفاترك"}
               </p>
             </div>
           </div>
-          <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:-translate-x-1 transition-all shrink-0 mr-1" />
+          {navigatingTo === "/notebook" ? (
+            <Loader2 className="w-4 h-4 animate-spin text-indigo-600 dark:text-indigo-400 shrink-0 mr-1" />
+          ) : (
+            <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:-translate-x-1 transition-all shrink-0 mr-1" />
+          )}
         </Link>
       </div>
     </div>

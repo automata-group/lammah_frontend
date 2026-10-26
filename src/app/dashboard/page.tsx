@@ -819,7 +819,7 @@ function DashboardContent() {
     }
 
     if (session?.access_token) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/history`, {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/history?limit=6`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
         .then((r) => r.json())

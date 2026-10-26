@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles, Sun, Moon, ArrowLeft, Menu, X, GraduationCap, ChevronDown, Users, LayoutDashboard } from "lucide-react";
+import { Sparkles, Sun, Moon, ArrowLeft, Menu, X, GraduationCap, ChevronDown, Users, LayoutDashboard, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -15,7 +15,13 @@ export default function Header({ user }: { user?: any }) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [isTutor, setIsTutor] = useState(false);
   const [tutorsDropdownOpen, setTutorsDropdownOpen] = useState(false);
+  const [isNavigatingAuth, setIsNavigatingAuth] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    router.prefetch("/auth");
+    router.prefetch("/dashboard");
+  }, [router]);
 
   useEffect(() => {
     if (user) {
@@ -291,16 +297,32 @@ export default function Header({ user }: { user?: any }) {
             <>
               <Link
                 href="/auth"
-                className="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap"
+                prefetch={true}
+                className="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap cursor-pointer"
               >
                 دخول
               </Link>
               <Link
                 href="/auth"
-                className="px-4 py-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm hover:shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 whitespace-nowrap"
+                prefetch={true}
+                onClick={() => setIsNavigatingAuth(true)}
+                className={`px-4 py-2 rounded-full font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                  isNavigatingAuth
+                    ? "bg-indigo-700 text-white opacity-90 scale-95 pointer-events-none"
+                    : "bg-indigo-600 hover:bg-indigo-700 hover:scale-105 active:scale-95 text-white hover:shadow-indigo-500/20"
+                }`}
               >
-                <span>ابدأ مجاناً</span>
-                <Sparkles className="w-3.5 h-3.5" />
+                {isNavigatingAuth ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>جاري التحويل...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>ابدأ مجاناً</span>
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </>
+                )}
               </Link>
             </>
           )}

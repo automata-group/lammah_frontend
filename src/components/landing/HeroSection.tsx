@@ -1,19 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   Sparkles, 
   ArrowLeft, 
   Play, 
-  Volume2,
-  Brain,
-  Zap,
-  FileText
+  Volume2, 
+  Brain, 
+  Zap, 
+  FileText,
+  Loader2
 } from "lucide-react";
 
 export default function HeroSection() {
+  const router = useRouter();
+  const [isNavigatingAuth, setIsNavigatingAuth] = useState(false);
+
+  useEffect(() => {
+    router.prefetch("/auth");
+    router.prefetch("/dashboard");
+  }, [router]);
 
   return (
     <section className="relative z-10 pt-32 xs:pt-36 sm:pt-32 lg:pt-36 pb-20 xs:pb-24 sm:pb-28 px-4 sm:px-6 max-w-5xl mx-auto text-center" dir="rtl">
@@ -128,10 +137,25 @@ export default function HeroSection() {
       >
         <Link
           href="/auth"
-          className="w-full sm:w-auto px-8 py-4 rounded-full font-black text-[15px] xs:text-base text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:opacity-95 shadow-lg shadow-indigo-600/25 dark:shadow-[0_0_35px_rgba(99,102,241,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group cursor-pointer"
+          prefetch={true}
+          onClick={() => setIsNavigatingAuth(true)}
+          className={`w-full sm:w-auto px-8 py-4 rounded-full font-black text-[15px] xs:text-base text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-lg shadow-indigo-600/25 dark:shadow-[0_0_35px_rgba(99,102,241,0.4)] transition-all flex items-center justify-center gap-2 group cursor-pointer ${
+            isNavigatingAuth
+              ? "opacity-90 scale-98 pointer-events-none"
+              : "hover:opacity-95 hover:scale-[1.02] active:scale-[0.98]"
+          }`}
         >
-          <span>سجل في لماح</span>
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          {isNavigatingAuth ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin text-white" />
+              <span>جاري التحويل...</span>
+            </>
+          ) : (
+            <>
+              <span>سجل في لماح</span>
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            </>
+          )}
         </Link>
 
         <a

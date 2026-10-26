@@ -625,7 +625,7 @@ export default function HistoryPage() {
                             </span>
                             {transcript && (
                               <span className="text-xs text-slate-400 font-medium">
-                                • {Math.round(transcript.length / 5)} كلمة تقريباً
+                                • {Math.round((log.metadata?.transcript_length || transcript.length) / 5)} كلمة تقريباً
                               </span>
                             )}
                           </div>

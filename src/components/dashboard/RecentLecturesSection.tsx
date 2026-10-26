@@ -27,8 +27,10 @@ export default function RecentLecturesSection({
 }: RecentLecturesSectionProps) {
   const router = useRouter();
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [isOpeningHistory, setIsOpeningHistory] = useState<boolean>(false);
 
   useEffect(() => {
+    router.prefetch("/history");
     router.prefetch("/notebook");
     router.prefetch("/dashboard");
     router.prefetch("/study");
@@ -90,10 +92,24 @@ export default function RecentLecturesSection({
         <Link
           href="/history"
           prefetch={true}
-          className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1 cursor-pointer transition-colors"
+          onClick={() => setIsOpeningHistory(true)}
+          className={`text-xs font-bold transition-all flex items-center gap-1 cursor-pointer select-none ${
+            isOpeningHistory
+              ? "text-indigo-700 dark:text-indigo-300 opacity-90 pointer-events-none"
+              : "text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+          }`}
         >
-          <span>عرض كل السجل</span>
-          <ArrowLeft className="w-3.5 h-3.5" />
+          {isOpeningHistory ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>جاري فتح السجل...</span>
+            </>
+          ) : (
+            <>
+              <span>عرض كل السجل</span>
+              <ArrowLeft className="w-3.5 h-3.5" />
+            </>
+          )}
         </Link>
       </div>
 
