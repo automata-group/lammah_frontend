@@ -30,7 +30,6 @@ export default function Header({ user: propUser }: HeaderProps = {}) {
   useEffect(() => {
     router.prefetch("/auth");
     router.prefetch("/dashboard");
-    router.prefetch("/marketplace");
     router.prefetch("/faq");
     if (isTutor) router.prefetch("/tutor/dashboard");
   }, [router, isTutor]);
@@ -111,7 +110,6 @@ export default function Header({ user: propUser }: HeaderProps = {}) {
   const navItems = [
     { label: "المميزات", href: "/#features", badge: "" },
     { label: "الأسعار", href: "/#pricing", badge: "" },
-    { label: "المتجر", href: "/marketplace", badge: "" },
     { label: "الأسئلة الشائعة", href: "/faq", badge: "" },
   ];
 
