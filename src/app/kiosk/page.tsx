@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import AppHeader from "@/components/AppHeader";
+import Header from "@/components/landing/Header";
 import KioskHero from "@/components/kiosk/KioskHero";
 import TrendingSection from "@/components/kiosk/TrendingSection";
 import KioskCategoryFilter from "@/components/kiosk/KioskCategoryFilter";
@@ -175,8 +176,8 @@ export default function KioskPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 font-sans flex flex-col transition-colors" dir="rtl">
-      {/* Platform Header */}
-      <AppHeader activePage="kiosk" />
+      {/* Platform Header (Landing Header for guests, AppHeader for authenticated users) */}
+      {user ? <AppHeader activePage="kiosk" /> : <Header />}
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8">

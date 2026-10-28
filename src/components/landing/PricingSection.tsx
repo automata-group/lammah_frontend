@@ -48,7 +48,7 @@ export default function PricingSection() {
   ].sort((a: any, b: any) => a.price_ils - b.price_ils);
 
   return (
-    <section id="pricing" className="relative z-10 py-20 sm:py-24 px-4 sm:px-6 overflow-hidden">
+    <section id="pricing" className="relative scroll-mt-24 z-10 py-20 sm:py-24 px-4 sm:px-6 overflow-hidden">
       {/* Background glowing elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-amber-500/[0.03] rounded-full blur-[140px]" />

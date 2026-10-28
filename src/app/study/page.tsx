@@ -34,6 +34,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
 import dynamic from "next/dynamic";
 import AppHeader from "@/components/AppHeader";
+import Header from "@/components/landing/Header";
 
 const StudyFocusTimer = dynamic(() => import("@/components/dashboard/StudyFocusTimer"), {
   ssr: false,
@@ -657,7 +658,7 @@ function StudyPageContent() {
 
       {/* ── Top Navigation: Unified AppHeader in Bento Hub / Focused Bar in Reading Mode ── */}
       {!pdfSource || showInstructions ? (
-        <AppHeader quota={quota} activePage="study" />
+        user ? <AppHeader quota={quota} activePage="study" /> : <Header />
       ) : (
         <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-3 sm:px-6 py-2">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">

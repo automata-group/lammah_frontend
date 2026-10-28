@@ -11,6 +11,7 @@ import {
   Laptop, Stethoscope, TrendingUp, Scale, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Layers
 } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
+import Header from "@/components/landing/Header";
 
 interface AcademicCategory {
   id: string;
@@ -760,8 +761,8 @@ export default function MarketplacePage() {
       className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col relative transition-colors duration-300 font-sans"
       dir="rtl"
     >
-      {/* Main Inner Tab App Header */}
-      <AppHeader quota={quota} activePage="marketplace" />
+      {/* Main Inner Tab App Header (Landing Header for guests, AppHeader for authenticated users) */}
+      {user ? <AppHeader quota={quota} activePage="marketplace" /> : <Header />}
 
       <div className="flex-1 px-4 sm:px-6 pt-4 sm:pt-6 pb-16 max-w-7xl mx-auto w-full relative z-10 space-y-5 sm:space-y-6">
 

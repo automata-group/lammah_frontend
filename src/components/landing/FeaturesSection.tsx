@@ -72,7 +72,7 @@ export default function FeaturesSection() {
   ];
 
   return (
-    <section id="features" className="relative py-24 sm:py-32 px-4 sm:px-6 overflow-hidden z-20">
+    <section id="features" className="relative scroll-mt-24 py-24 sm:py-32 px-4 sm:px-6 overflow-hidden z-20">
       {/* Background Decor */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr from-indigo-500/5 to-purple-500/5 blur-[120px] rounded-full" />

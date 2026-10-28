@@ -137,7 +137,13 @@ export default function Header({ user: propUser }: HeaderProps = {}) {
         const targetId = href.replace("/#", "");
         const targetElement = document.getElementById(targetId);
         if (targetElement) {
-          targetElement.scrollIntoView({ behavior: "smooth", block: "start" });
+          const headerOffset = 85;
+          const elementPosition = targetElement.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth",
+          });
           window.history.pushState(null, "", `#${targetId}`);
           setActiveHash(targetId);
         }
