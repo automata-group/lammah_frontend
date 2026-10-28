@@ -66,19 +66,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }),
           }}
         />
-        {/* Secondary canvas fonts loaded asynchronously on idle to guarantee 0ms LCP blockage */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.addEventListener('DOMContentLoaded', function() {
-                var l = document.createElement('link');
-                l.rel = 'stylesheet';
-                l.href = 'https://fonts.googleapis.com/css2?family=Almarai:wght@400;700&family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=Baloo+Bhaijaan+2:wght@400;700&family=Cairo:wght@400;700&family=Caveat:wght@400;700&family=Changa:wght@400;700&family=El+Messiri:wght@400;700&family=Katibeh&family=Lalezar&family=Lateef:wght@400;700&family=Marhey:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;600&family=Reem+Kufi:wght@400;700&family=Tajawal:wght@400;700&display=swap';
-                document.head.appendChild(l);
-              });
-            `,
-          }}
-        />
         <script
           dangerouslySetInnerHTML={{
             __html: `

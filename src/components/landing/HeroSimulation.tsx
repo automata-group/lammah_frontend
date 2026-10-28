@@ -1,13 +1,24 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileAudio, FileText, Sparkles, Upload, Loader2, 
   CheckCircle, Check, X, Zap, PenTool, ArrowLeft
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import DemoResultUI from "./DemoResultUI";
+
+// Lazy load DemoResultUI (59KB) to drastically speed up initial page LCP & TBT
+const DemoResultUI = dynamic(() => import("./DemoResultUI"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full py-20 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-900/80 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl">
+      <Loader2 className="w-10 h-10 animate-spin text-indigo-500 mb-3" />
+      <p className="text-sm font-bold text-slate-700 dark:text-slate-300">جاري تجهيز وعرض النتيجة النموذجية...</p>
+    </div>
+  )
+});
 
 export interface HeroSimulationProps {
   isEmbedded?: boolean;
@@ -24,6 +35,14 @@ export default function HeroSimulation({
   const [showDemoModal, setShowDemoModal] = useState<"audio" | "pdf" | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showResultPopup, setShowResultPopup] = useState(false);
+  const processTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timeout on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (processTimeoutRef.current) clearTimeout(processTimeoutRef.current);
+    };
+  }, []);
 
   // Prevent background page scrolling when demo modal/result popup is open
   useEffect(() => {
@@ -50,11 +69,11 @@ export default function HeroSimulation({
 
   const handleProcess = () => {
     setIsProcessing(true);
-    // Simulate processing for 2 seconds then show result popup
-    setTimeout(() => {
+    if (processTimeoutRef.current) clearTimeout(processTimeoutRef.current);
+    processTimeoutRef.current = setTimeout(() => {
       setIsProcessing(false);
       setShowResultPopup(true);
-    }, 2000);
+    }, 1500);
   };
 
   const content = (
@@ -64,142 +83,118 @@ export default function HeroSimulation({
         <div className="absolute w-[500px] h-[500px] bg-gradient-to-tr from-indigo-500/15 to-fuchsia-500/15 blur-3xl rounded-full opacity-60 dark:opacity-40" />
       </div>
 
-      <AnimatePresence mode="wait">
-        {!showResultPopup ? (
-          <motion.div
-            key="simulation"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
-            transition={{ duration: 0.3 }}
-            className="w-full bg-white/70 dark:bg-[#070b16]/75 backdrop-blur-2xl border border-white/80 dark:border-white/10 p-4 sm:p-8 rounded-[2rem] sm:rounded-[3rem] shadow-[0_20px_80px_rgba(99,102,241,0.08)] dark:shadow-[0_30px_100px_rgba(0,0,0,0.7)] relative overflow-hidden group ring-1 ring-white/50 dark:ring-white/5"
-          >
-            <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] dark:opacity-[0.05] pointer-events-none" />
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50" />
-            
-            {/* Floating Ornaments */}
-            <div className="absolute top-6 right-6 sm:top-8 sm:right-8 text-indigo-400/50 dark:text-indigo-500/40 animate-pulse">
-              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <div className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 text-fuchsia-400/50 dark:text-fuchsia-500/40 animate-pulse delay-700">
-              <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-            {/* Extra decorative circles inside */}
-            <div className="absolute top-20 -left-10 w-32 h-32 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-10 right-20 w-40 h-40 bg-fuchsia-500/10 dark:bg-fuchsia-500/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="w-full bg-white/80 dark:bg-[#070b16]/85 backdrop-blur-xl border border-white/80 dark:border-white/10 p-4 sm:p-8 rounded-[2rem] sm:rounded-[3rem] shadow-[0_20px_80px_rgba(99,102,241,0.08)] dark:shadow-[0_30px_100px_rgba(0,0,0,0.7)] relative overflow-hidden group ring-1 ring-white/50 dark:ring-white/5">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-[0.03] dark:opacity-[0.05] pointer-events-none" />
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50" />
+        
+        {/* Floating Ornaments */}
+        <div className="absolute top-6 right-6 sm:top-8 sm:right-8 text-indigo-400/50 dark:text-indigo-500/40 animate-pulse">
+          <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
+        </div>
+        <div className="absolute bottom-6 left-6 sm:bottom-8 sm:left-8 text-fuchsia-400/50 dark:text-fuchsia-500/40 animate-pulse delay-700">
+          <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
+        </div>
+        {/* Extra decorative circles inside */}
+        <div className="absolute top-20 -left-10 w-32 h-32 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 right-20 w-40 h-40 bg-fuchsia-500/10 dark:bg-fuchsia-500/20 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="max-w-3xl mx-auto w-full relative z-10 flex flex-col items-center">
-              
-              {/* Dropzones Grid */}
-              <div className="w-full mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 w-full relative z-10">
-                  {/* PDF Slide Dropzone */}
-                  <div 
-                    onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                    onDrop={(e) => { e.preventDefault(); e.stopPropagation(); setShowDemoModal('pdf'); }}
-                    className={`relative group rounded-[1.25rem] sm:rounded-[2rem] p-4 sm:p-6 flex flex-col items-center justify-center transition-all duration-500 transform hover:-translate-y-1 cursor-pointer min-h-[130px] sm:min-h-[220px] ${pdfFile ? 'border-2 border-purple-500 bg-purple-50 dark:bg-purple-500/10 shadow-[0_15px_40px_rgba(168,85,247,0.15)]' : 'bg-white/80 dark:bg-[#020617]/50 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-purple-400 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 shadow-sm'}`}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 via-transparent to-indigo-500/0 group-hover:from-purple-500/5 group-hover:to-indigo-500/5 rounded-[1.5rem] sm:rounded-[2rem] transition-colors duration-500 pointer-events-none" />
-                    <div onClick={() => setShowDemoModal('pdf')} className="absolute inset-0 z-20" />
-                    
-                    {pdfFile ? (
-                      <div className="text-center w-full z-20 relative">
-                        <div className="w-10 h-10 sm:w-16 sm:h-16 bg-purple-100 dark:bg-purple-900/50 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-4 shadow-inner">
-                          <CheckCircle className="w-5 h-5 sm:w-8 sm:h-8 text-purple-500 dark:text-purple-400" />
-                        </div>
-                        <p className="font-black text-purple-800 dark:text-purple-200 text-[10px] sm:text-xs truncate w-full mb-2 sm:mb-3" dir="ltr">{pdfFile.name}</p>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); setPdfFile(null); }} className="text-[10px] sm:text-[11px] text-rose-500 font-bold hover:bg-rose-50 dark:hover:bg-rose-900/30 px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg border border-rose-200 dark:border-rose-500/20 transition-colors z-30 relative shadow-sm">
-                          إزالة الملف
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="w-10 h-10 sm:w-16 sm:h-16 bg-gradient-to-tr from-purple-100 to-indigo-50 dark:from-purple-900/40 dark:to-indigo-900/20 rounded-[1rem] sm:rounded-[1.5rem] flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-purple-500/10 border border-purple-200 dark:border-purple-500/20 rotate-3 group-hover:rotate-0">
-                          <FileText className="w-5 h-5 sm:w-7 sm:h-7 text-purple-600 dark:text-purple-400" />
-                        </div>
-                        <h3 className="text-sm sm:text-lg font-black text-slate-800 dark:text-slate-100 mb-1 sm:mb-2">شرائح العرض (PDF)</h3>
-                        <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 text-center mb-2 sm:mb-3">اسحب الـ PDF هنا لربط الشرح شفوياً</p>
-                      </>
-                    )}
-                  </div>
-                  
-                  {/* Audio Slide Dropzone */}
-                  <div 
-                    onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                    onDrop={(e) => { e.preventDefault(); e.stopPropagation(); setShowDemoModal('audio'); }}
-                    className={`relative group rounded-[1.25rem] sm:rounded-[2rem] p-4 sm:p-6 flex flex-col items-center justify-center transition-all duration-500 transform hover:-translate-y-1 cursor-pointer min-h-[130px] sm:min-h-[220px] ${audioFile ? 'border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 shadow-[0_15px_40px_rgba(99,102,241,0.15)]' : 'bg-white/80 dark:bg-[#020617]/50 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 shadow-sm'}`}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-transparent to-purple-500/0 group-hover:from-indigo-500/5 group-hover:to-purple-500/5 rounded-[1.5rem] sm:rounded-[2rem] transition-colors duration-500 pointer-events-none" />
-                    <div onClick={() => setShowDemoModal('audio')} className="absolute inset-0 z-20" />
-                    
-                    {audioFile ? (
-                      <div className="text-center w-full z-20 relative">
-                        <div className="w-10 h-10 sm:w-16 sm:h-16 bg-indigo-100 dark:bg-indigo-900/50 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-4 shadow-inner">
-                          <CheckCircle className="w-5 h-5 sm:w-8 sm:h-8 text-indigo-500 dark:text-indigo-400" />
-                        </div>
-                        <p className="font-black text-indigo-800 dark:text-indigo-200 text-[10px] sm:text-xs truncate w-full mb-2 sm:mb-3" dir="ltr">{audioFile.name}</p>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); setAudioFile(null); }} className="text-[10px] sm:text-[11px] text-rose-500 font-bold hover:bg-rose-50 dark:hover:bg-rose-900/30 px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg border border-rose-200 dark:border-rose-500/20 transition-colors z-30 relative shadow-sm">
-                          إزالة الملف
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="w-10 h-10 sm:w-16 sm:h-16 bg-gradient-to-tr from-indigo-100 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/20 rounded-[1rem] sm:rounded-[1.5rem] flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 -rotate-3 group-hover:rotate-0">
-                          <FileAudio className="w-5 h-5 sm:w-7 sm:h-7 text-indigo-600 dark:text-indigo-400" />
-                        </div>
-                        <h3 className="text-sm sm:text-lg font-black text-slate-800 dark:text-slate-100 mb-1 sm:mb-2">تسجيل المحاضرة</h3>
-                        <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 text-center leading-relaxed">اسحب الملف الصوتي هنا<br /><span className="text-[9px] sm:text-[10px] opacity-75">(MP3, WAV, M4A)</span></p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Creative Free Trial Banner */}
-              <div className="mt-6 sm:mt-8 mb-6 sm:mb-8 flex flex-row items-center sm:items-start gap-3 sm:gap-4 bg-gradient-to-r from-indigo-50/90 to-purple-50/90 dark:from-indigo-900/30 dark:to-purple-900/30 backdrop-blur-md border border-indigo-100 dark:border-indigo-500/20 p-3 sm:p-6 rounded-xl sm:rounded-3xl text-right w-full shadow-lg shadow-indigo-900/5 dark:shadow-none relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-1.5 sm:w-2 h-full bg-gradient-to-b from-indigo-500 to-purple-500 rounded-r-xl sm:rounded-r-3xl"></div>
-                <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white dark:bg-indigo-950/70 rounded-full flex items-center justify-center shrink-0 shadow-sm border border-indigo-100 dark:border-indigo-500/30 z-10">
-                  <Sparkles className="w-4 h-4 sm:w-6 sm:h-6 text-indigo-500 dark:text-indigo-400 animate-pulse" />
-                </div>
-                <div className="flex-1 z-10 text-right">
-                  <p className="text-xs sm:text-base font-black text-indigo-950 dark:text-indigo-200 mb-0.5 sm:mb-2">كيف تبدأ تجربتك النموذجية؟</p>
-                  <p className="text-[10px] sm:text-sm text-indigo-800/90 dark:text-indigo-300/90 leading-relaxed font-medium">
-                    <span className="sm:hidden">اختر ملفاً بالأعلى ثم اضغط زر البدء لترى النتائج!</span>
-                    <span className="hidden sm:inline">ببساطة، انقر فوق <strong>تسجيل المحاضرة</strong> أو <strong>شرائح العرض (PDF)</strong> بالأعلى لاختيار ملف تجريبي، ثم اضغط على زر البدء أدناه ودع <strong>لمّاح</strong> يلخص محاضرتك بدقة فائقة!</span>
-                  </p>
-                </div>
-              </div>
-
-              {/* Epic Start Button */}
-              <button 
-                onClick={handleProcess} 
-                disabled={isProcessing || (!audioFile && !pdfFile)}
-                className="w-full relative group overflow-hidden bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black py-3.5 sm:py-6 rounded-xl sm:rounded-3xl shadow-xl shadow-slate-900/20 dark:shadow-white/10 transition-all duration-300 transform active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none text-sm sm:text-base"
+        <div className="max-w-3xl mx-auto w-full relative z-10 flex flex-col items-center">
+          
+          {/* Dropzones Grid */}
+          <div className="w-full mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 w-full relative z-10">
+              {/* PDF Slide Dropzone */}
+              <div 
+                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onDrop={(e) => { e.preventDefault(); e.stopPropagation(); setShowDemoModal('pdf'); }}
+                className={`relative group rounded-[1.25rem] sm:rounded-[2rem] p-4 sm:p-6 flex flex-col items-center justify-center transition-all duration-500 transform hover:-translate-y-1 cursor-pointer min-h-[130px] sm:min-h-[220px] ${pdfFile ? 'border-2 border-purple-500 bg-purple-50 dark:bg-purple-500/10 shadow-[0_15px_40px_rgba(168,85,247,0.15)]' : 'bg-white/80 dark:bg-[#020617]/50 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-purple-400 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 shadow-sm'}`}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                {isProcessing ? (
-                  <span className="relative z-10 flex items-center justify-center text-sm sm:text-lg"><Loader2 className="w-5 h-5 sm:w-6 sm:h-6 ml-2 sm:ml-3 animate-spin" />جاري التوليد والتلخيص...</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 via-transparent to-indigo-500/0 group-hover:from-purple-500/5 group-hover:to-indigo-500/5 rounded-[1.5rem] sm:rounded-[2rem] transition-colors duration-500 pointer-events-none" />
+                <div onClick={() => setShowDemoModal('pdf')} className="absolute inset-0 z-20" />
+                
+                {pdfFile ? (
+                  <div className="text-center w-full z-20 relative">
+                    <div className="w-10 h-10 sm:w-16 sm:h-16 bg-purple-100 dark:bg-purple-900/50 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-4 shadow-inner">
+                      <CheckCircle className="w-5 h-5 sm:w-8 sm:h-8 text-purple-500 dark:text-purple-400" />
+                    </div>
+                    <p className="font-black text-purple-800 dark:text-purple-200 text-[10px] sm:text-xs truncate w-full mb-2 sm:mb-3" dir="ltr">{pdfFile.name}</p>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setPdfFile(null); }} className="text-[10px] sm:text-[11px] text-rose-500 font-bold hover:bg-rose-50 dark:hover:bg-rose-900/30 px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg border border-rose-200 dark:border-rose-500/20 transition-colors z-30 relative shadow-sm">
+                      إزالة الملف
+                    </button>
+                  </div>
                 ) : (
-                  <span className="relative z-10 flex items-center justify-center text-sm sm:text-lg group-hover:text-white transition-colors duration-500"><Upload className="w-5 h-5 sm:w-6 sm:h-6 ml-2 sm:ml-3 group-hover:-translate-y-1 transition-transform" />ابدأ التلخيص الذكي الآن</span>
+                  <>
+                    <div className="w-10 h-10 sm:w-16 sm:h-16 bg-gradient-to-tr from-purple-100 to-indigo-50 dark:from-purple-900/40 dark:to-indigo-900/20 rounded-[1rem] sm:rounded-[1.5rem] flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-purple-500/10 border border-purple-200 dark:border-purple-500/20 rotate-3 group-hover:rotate-0">
+                      <FileText className="w-5 h-5 sm:w-7 sm:h-7 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <h3 className="text-sm sm:text-lg font-black text-slate-800 dark:text-slate-100 mb-1 sm:mb-2">شرائح العرض (PDF)</h3>
+                    <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 text-center mb-2 sm:mb-3">اسحب الـ PDF هنا لربط الشرح شفوياً</p>
+                  </>
                 )}
-              </button>
+              </div>
+              
+              {/* Audio Slide Dropzone */}
+              <div 
+                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onDrop={(e) => { e.preventDefault(); e.stopPropagation(); setShowDemoModal('audio'); }}
+                className={`relative group rounded-[1.25rem] sm:rounded-[2rem] p-4 sm:p-6 flex flex-col items-center justify-center transition-all duration-500 transform hover:-translate-y-1 cursor-pointer min-h-[130px] sm:min-h-[220px] ${audioFile ? 'border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 shadow-[0_15px_40px_rgba(99,102,241,0.15)]' : 'bg-white/80 dark:bg-[#020617]/50 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 shadow-sm'}`}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-transparent to-purple-500/0 group-hover:from-indigo-500/5 group-hover:to-purple-500/5 rounded-[1.5rem] sm:rounded-[2rem] transition-colors duration-500 pointer-events-none" />
+                <div onClick={() => setShowDemoModal('audio')} className="absolute inset-0 z-20" />
+                
+                {audioFile ? (
+                  <div className="text-center w-full z-20 relative">
+                    <div className="w-10 h-10 sm:w-16 sm:h-16 bg-indigo-100 dark:bg-indigo-900/50 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-4 shadow-inner">
+                      <CheckCircle className="w-5 h-5 sm:w-8 sm:h-8 text-indigo-500 dark:text-indigo-400" />
+                    </div>
+                    <p className="font-black text-indigo-800 dark:text-indigo-200 text-[10px] sm:text-xs truncate w-full mb-2 sm:mb-3" dir="ltr">{audioFile.name}</p>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setAudioFile(null); }} className="text-[10px] sm:text-[11px] text-rose-500 font-bold hover:bg-rose-50 dark:hover:bg-rose-900/30 px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg border border-rose-200 dark:border-rose-500/20 transition-colors z-30 relative shadow-sm">
+                      إزالة الملف
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-10 h-10 sm:w-16 sm:h-16 bg-gradient-to-tr from-indigo-100 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/20 rounded-[1rem] sm:rounded-[1.5rem] flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 -rotate-3 group-hover:rotate-0">
+                      <FileAudio className="w-5 h-5 sm:w-7 sm:h-7 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <h3 className="text-sm sm:text-lg font-black text-slate-800 dark:text-slate-100 mb-1 sm:mb-2">تسجيل المحاضرة</h3>
+                    <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 text-center leading-relaxed">اسحب الملف الصوتي هنا<br /><span className="text-[9px] sm:text-[10px] opacity-75">(MP3, WAV, M4A)</span></p>
+                  </>
+                )}
+              </div>
             </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="result"
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.8, type: "spring" }}
-            className="w-full"
+          </div>
+
+          {/* Creative Free Trial Banner */}
+          <div className="mt-6 sm:mt-8 mb-6 sm:mb-8 flex flex-row items-center sm:items-start gap-3 sm:gap-4 bg-gradient-to-r from-indigo-50/90 to-purple-50/90 dark:from-indigo-900/30 dark:to-purple-900/30 backdrop-blur-md border border-indigo-100 dark:border-indigo-500/20 p-3 sm:p-6 rounded-xl sm:rounded-3xl text-right w-full shadow-lg shadow-indigo-900/5 dark:shadow-none relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-1.5 sm:w-2 h-full bg-gradient-to-b from-indigo-500 to-purple-500 rounded-r-xl sm:rounded-r-3xl"></div>
+            <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white dark:bg-indigo-950/70 rounded-full flex items-center justify-center shrink-0 shadow-sm border border-indigo-100 dark:border-indigo-500/30 z-10">
+              <Sparkles className="w-4 h-4 sm:w-6 sm:h-6 text-indigo-500 dark:text-indigo-400 animate-pulse" />
+            </div>
+            <div className="flex-1 z-10 text-right">
+              <p className="text-xs sm:text-base font-black text-indigo-950 dark:text-indigo-200 mb-0.5 sm:mb-2">كيف تبدأ تجربتك النموذجية؟</p>
+              <p className="text-[10px] sm:text-sm text-indigo-800/90 dark:text-indigo-300/90 leading-relaxed font-medium">
+                <span className="sm:hidden">اختر ملفاً بالأعلى ثم اضغط زر البدء لترى النتائج!</span>
+                <span className="hidden sm:inline">ببساطة، انقر فوق <strong>تسجيل المحاضرة</strong> أو <strong>شرائح العرض (PDF)</strong> بالأعلى لاختيار ملف تجريبي، ثم اضغط على زر البدء أدناه ودع <strong>لمّاح</strong> يلخص محاضرتك بدقة فائقة!</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Epic Start Button */}
+          <button 
+            onClick={handleProcess} 
+            disabled={isProcessing || (!audioFile && !pdfFile)}
+            className="w-full relative group overflow-hidden bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black py-3.5 sm:py-6 rounded-xl sm:rounded-3xl shadow-xl shadow-slate-900/20 dark:shadow-white/10 transition-all duration-300 transform active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none text-sm sm:text-base cursor-pointer"
           >
-            <DemoResultUI 
-              actionText={isEmbedded ? "شحن رصيدك لتلخيص محاضراتك" : "أنشئ حسابك لحفظ النتيجة"}
-              onAction={isEmbedded ? (onRecharge || (() => router.push("/plans"))) : undefined}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            {isProcessing ? (
+              <span className="relative z-10 flex items-center justify-center text-sm sm:text-lg"><Loader2 className="w-5 h-5 sm:w-6 sm:h-6 ml-2 sm:ml-3 animate-spin" />جاري التوليد والتلخيص...</span>
+            ) : (
+              <span className="relative z-10 flex items-center justify-center text-sm sm:text-lg group-hover:text-white transition-colors duration-500"><Upload className="w-5 h-5 sm:w-6 sm:h-6 ml-2 sm:ml-3 group-hover:-translate-y-1 transition-transform" />ابدأ التلخيص الذكي الآن</span>
+            )}
+          </button>
+        </div>
+      </div>
 
       {/* Demo Modal (Audio & PDF) */}
       <AnimatePresence>
@@ -212,7 +207,7 @@ export default function HeroSimulation({
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
               className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-8 rounded-3xl shadow-2xl max-w-md w-full relative text-right"
             >
-              <button onClick={() => setShowDemoModal(null)} className="absolute top-4 left-4 p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors z-50">
+              <button onClick={() => setShowDemoModal(null)} className="absolute top-4 left-4 p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors z-50 cursor-pointer">
                 <X className="w-4 h-4 text-slate-500 dark:text-slate-300" />
               </button>
               
@@ -243,7 +238,7 @@ export default function HeroSimulation({
               
               <button
                 onClick={() => handleImportDemo(showDemoModal)}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-indigo-500/20"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-indigo-500/20 cursor-pointer"
               >
                 استيراد الملف النموذجي وبدء المعالجة
               </button>
@@ -251,14 +246,15 @@ export default function HeroSimulation({
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Result Modal - Full Screen */}
+
+      {/* Result Modal - Single Render Only, Lazily Loaded */}
       <AnimatePresence>
         {showResultPopup && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex items-start justify-center bg-slate-100/90 dark:bg-slate-950/95 backdrop-blur-2xl px-2 sm:px-4 pt-18 sm:pt-20 pb-12 sm:pb-16 overflow-y-auto overflow-x-hidden touch-pan-y overscroll-contain w-full max-w-full"
           >
-            {/* Top Fixed Safe Bar: Prevents accidental closing during pinch/zoom gestures */}
+            {/* Top Fixed Safe Bar */}
             <div className="fixed top-0 inset-x-0 h-14 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 z-[110] flex items-center justify-between px-3 sm:px-8 shadow-sm">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />

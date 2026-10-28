@@ -144,3 +144,54 @@ html.dark .hero-quote-box,
   border: 1px solid #1e293b !important;
 }
 
+/* GPU-Accelerated Animations for Hero Section (0% Main-Thread JS Overhead) */
+@keyframes floatGentle1 {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(0, -12px, 0) rotate(3deg); }
+}
+
+@keyframes floatGentle2 {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(0, 14px, 0) rotate(-4deg); }
+}
+
+@keyframes soundWaveBar {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+
+.animate-float-1 {
+  animation: floatGentle1 6s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-float-2 {
+  animation: floatGentle2 7.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-wave-1 {
+  animation: soundWaveBar 1.1s ease-in-out infinite;
+  transform-origin: bottom;
+  will-change: transform;
+}
+
+.animate-wave-2 {
+  animation: soundWaveBar 1.25s ease-in-out infinite 0.15s;
+  transform-origin: bottom;
+  will-change: transform;
+}
+
+.animate-wave-3 {
+  animation: soundWaveBar 0.95s ease-in-out infinite 0.3s;
+  transform-origin: bottom;
+  will-change: transform;
+}
+
+.animate-wave-4 {
+  animation: soundWaveBar 1.35s ease-in-out infinite 0.45s;
+  transform-origin: bottom;
+  will-change: transform;
+}
+
+

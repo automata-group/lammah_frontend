@@ -6,10 +6,13 @@ import { useRouter } from "next/navigation";
 import { Sparkles, Sun, Moon, ArrowLeft, Menu, X, GraduationCap, ChevronDown, Users, LayoutDashboard, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
 
-export default function Header({ user }: { user?: any }) {
+export default function Header({ user: propUser }: { user?: any } = {}) {
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
+  const { user: authUser, session } = useAuth();
+  const user = propUser !== undefined ? propUser : authUser;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -19,25 +22,31 @@ export default function Header({ user }: { user?: any }) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
     router.prefetch("/auth");
     router.prefetch("/dashboard");
   }, [router]);
 
   useEffect(() => {
-    if (user) {
-      // Check if user is an approved tutor
+    if (session?.access_token) {
+      // Check if user is an approved tutor using valid Supabase v2 session token
       fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/my-status`, {
-        headers: { "Authorization": `Bearer ${user.access_token || ""}` }
+        headers: { "Authorization": `Bearer ${session.access_token}` }
       })
         .then(res => res.json())
         .then(data => {
-          if (data.is_tutor || data.status === "approved") {
+          if (data && (data.is_tutor || data.status === "approved")) {
             setIsTutor(true);
           }
         })
         .catch(() => {});
     }
-  }, [user]);
+  }, [session]);
 
   useEffect(() => {
     let ticking = false;

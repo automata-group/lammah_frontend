@@ -1,16 +1,10 @@
-"use client";
-
-import { motion } from "framer-motion";
 import { 
-  Sparkles, 
   FileAudio, 
   Brain, 
   ShoppingBag, 
   MessageSquare, 
   BookOpen, 
-  GraduationCap,
-  Layers,
-  ArrowRight
+  Layers
 } from "lucide-react";
 
 export default function FeaturesSection() {

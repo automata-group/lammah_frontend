@@ -7,7 +7,7 @@ import {
   ArrowRight, RotateCcw, Copy, Send, ExternalLink, Layers, Eye, Zap,
   ZoomIn, ZoomOut, Maximize2, Minimize2, Move, X
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 // Data from user lama33@gmail.com (0968d265.pdf - تطور العملات: الذهب للبيتكوين)
@@ -124,6 +124,43 @@ export default function DemoResultUI({ actionText, onAction }: DemoResultUIProps
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"chat" | "focus" | "flashcards" | "quiz">("chat");
   const [isCopied, setIsCopied] = useState(false);
+  const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
+
+  const transcriptText = `بسم الله الرحمن الرحيم، صباح الخير للجميع. في المحاضرة السابقة كنا نتحدث عن لمحة تاريخية عن الذهب والعملات وكيف تحول الذهب إلى عملات ورقية، وكيف كانت البنوك تخزن غطاء من الذهب وتعطي الناس بدلاً منه أوراقاً نقدية.
+
+وحكينا كيف تعهدت أمريكا في الحرب العالمية الثانية بأن كل 35 دولاراً تعادل أونصة ذهب، ثم في عام 1971 وقعت صدمة نيكسون حين تم فك ارتباط الذهب بالدولار، وأصبحت أمريكا تسيطر على النظام المالي العالمي عبر الدولار ونظام سويفت دون وجود غطاء ذهبي حقيقي.
+
+ثم جاءت أزمة الرهن العقاري عام 2008، حيث انهارت كبرى المؤسسات البنكية الأمريكية وكشفت عن هشاشة المركزية الشديدة. وهنا ظهرت فكرة اللامركزية مع ساتوشي ناكاموتو وإطلاق أول عملة رقمية مبنية على سلاسل الكتل (البلوكتشين)...
+
+المساق يركز على تكنولوجيا البلوكتشين كبنية تحتية للأصول الرقمية وليس فقط العملات، وسنناقش لغة Solidity وتطبيقات العقود الذكية لاحقاً في الفصل...`;
+
+  const handleCopyTranscript = async () => {
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(transcriptText);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = transcriptText;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setIsCopied(true);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error("Clipboard copy failed:", err);
+    }
+  };
 
   // Flashcards state
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -426,10 +463,7 @@ export default function DemoResultUI({ actionText, onAction }: DemoResultUIProps
                 </div>
               </div>
               <button
-                onClick={() => {
-                  setIsCopied(true);
-                  setTimeout(() => setIsCopied(false), 2000);
-                }}
+                onClick={handleCopyTranscript}
                 className={`flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl sm:rounded-[1.25rem] font-bold transition-all border text-xs sm:text-sm w-full md:w-auto justify-center cursor-pointer ${
                   isCopied 
                     ? 'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-300 dark:border-emerald-500/50 text-emerald-700 dark:text-emerald-400' 

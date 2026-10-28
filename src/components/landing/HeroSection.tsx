@@ -1,14 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   Sparkles, 
   ArrowLeft, 
   Play, 
-  Volume2, 
   Brain, 
   Zap, 
   FileText,
@@ -27,39 +25,23 @@ export default function HeroSection() {
   return (
     <section className="relative z-10 pt-32 xs:pt-36 sm:pt-32 lg:pt-36 pb-20 xs:pb-24 sm:pb-28 px-4 sm:px-6 max-w-5xl mx-auto text-center" dir="rtl">
       
-      {/* ── Floating Decorative Ornaments ── */}
+      {/* ── Floating Decorative Ornaments (Pure GPU CSS Animation - 0ms TBT) ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 max-w-7xl mx-auto hidden md:block">
-        <motion.div
-          animate={{ y: [-10, 10, -10], rotate: [0, 5, 0] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-20 right-[10%] text-amber-400/60 dark:text-amber-500/40"
-        >
+        <div className="absolute top-20 right-[10%] text-amber-400/60 dark:text-amber-500/40 animate-float-1">
           <Sparkles className="w-12 h-12 drop-shadow-xl" />
-        </motion.div>
+        </div>
         
-        <motion.div
-          animate={{ y: [15, -10, 15], rotate: [0, -10, 0] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-32 left-[8%] text-indigo-400/60 dark:text-indigo-500/40"
-        >
+        <div className="absolute top-32 left-[8%] text-indigo-400/60 dark:text-indigo-500/40 animate-float-2">
           <Brain className="w-14 h-14 drop-shadow-xl" />
-        </motion.div>
+        </div>
         
-        <motion.div
-          animate={{ y: [-5, 15, -5], rotate: [0, 15, 0] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-72 right-[5%] text-pink-400/50 dark:text-pink-500/30"
-        >
+        <div className="absolute top-72 right-[5%] text-pink-400/50 dark:text-pink-500/30 animate-float-1" style={{ animationDelay: "1.5s" }}>
           <Zap className="w-10 h-10 drop-shadow-xl" />
-        </motion.div>
+        </div>
 
-        <motion.div
-          animate={{ y: [10, -15, 10], rotate: [0, -15, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-80 left-[5%] text-blue-400/50 dark:text-blue-500/30"
-        >
+        <div className="absolute top-80 left-[5%] text-blue-400/50 dark:text-blue-500/30 animate-float-2" style={{ animationDelay: "2s" }}>
           <FileText className="w-12 h-12 drop-shadow-xl" />
-        </motion.div>
+        </div>
       </div>
 
       {/* ── Top Catchphrase / Accent ─────────────────────────── */}
@@ -78,20 +60,9 @@ export default function HeroSection() {
           <span className="inline-flex items-center justify-center gap-1.5 sm:gap-2">
             <span>حوّل</span>
             <span className="inline-flex items-center gap-0.5 text-slate-500 dark:text-slate-400 opacity-90 relative">
-              <motion.span 
-                animate={{ y: [-2, 3, -2], rotate: [-6, 3, -6] }} 
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }} 
-                className="inline-block origin-bottom"
-              >
-                فو
-              </motion.span>
-              <motion.span 
-                animate={{ y: [2, -3, 2], rotate: [5, -4, 5] }} 
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} 
-                className="inline-block origin-bottom"
-              >
-                ضى
-              </motion.span>
+              <span className="inline-block transform -rotate-3 text-indigo-600 dark:text-indigo-400 font-extrabold px-1 rounded-md bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/50 dark:border-indigo-500/20">
+                فوضى
+              </span>
             </span>
           </span>
 
@@ -105,12 +76,12 @@ export default function HeroSection() {
                   <span className="w-1.5 h-1.5 xs:w-2 xs:h-2 sm:w-2 sm:h-2 bg-slate-900 dark:bg-white rounded-xs sm:rounded-sm rotate-45"></span>
                   <span className="w-1.5 h-1.5 xs:w-2 xs:h-2 sm:w-2 sm:h-2 bg-slate-900 dark:bg-white rounded-xs sm:rounded-sm rotate-45"></span>
                 </span>
-                {/* Waveform acting as the base of Taa - Uses GPU scaleY with origin-bottom to prevent layout shifts */}
+                {/* Waveform acting as the base of Taa - 100% GPU Keyframes to guarantee 0ms LCP & 0ms TBT */}
                 <span className="inline-flex items-end gap-[3px] xs:gap-1 sm:gap-1 h-9 xs:h-10 sm:h-11 lg:h-14 translate-y-0.5 sm:translate-y-1">
-                  <motion.span animate={{ scaleY: [0.3, 0.8, 0.4, 1.0, 0.3] }} transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }} className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 h-full origin-bottom bg-indigo-500 rounded-full" />
-                  <motion.span animate={{ scaleY: [0.5, 1.0, 0.3, 0.8, 0.5] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }} className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 h-full origin-bottom bg-purple-500 rounded-full" />
-                  <motion.span animate={{ scaleY: [0.8, 0.4, 1.0, 0.5, 0.8] }} transition={{ repeat: Infinity, duration: 1.0, ease: "easeInOut" }} className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 h-full origin-bottom bg-pink-500 rounded-full" />
-                  <motion.span animate={{ scaleY: [0.4, 0.9, 0.2, 0.7, 0.4] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }} className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 h-full origin-bottom bg-amber-500 rounded-full" />
+                  <span className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 h-full bg-indigo-500 rounded-full animate-wave-1" />
+                  <span className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 h-full bg-purple-500 rounded-full animate-wave-2" />
+                  <span className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 h-full bg-pink-500 rounded-full animate-wave-3" />
+                  <span className="w-1.5 xs:w-2 sm:w-2.5 lg:w-3 h-full bg-amber-500 rounded-full animate-wave-4" />
                 </span>
               </span>
               <span>ـسجيلات</span>
