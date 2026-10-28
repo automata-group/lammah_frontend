@@ -74,12 +74,12 @@ function getArabicRelativeTime(dateStr: string): { label: string; isOld: boolean
 
 function getApiBase() {
   if (typeof window !== "undefined") {
-    // If accessed through admin tunnel (port 8888, 9090, etc.), use the tunnel origin directly
-    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    // Only use local tunnel origin if accessing via designated Caddy tunnel ports (8888, 9090)
+    if (window.location.port === "8888" || window.location.port === "9090") {
       return window.location.origin;
     }
   }
-  return process.env.NEXT_PUBLIC_API_URL || "https://lammah.site";
+  return process.env.NEXT_PUBLIC_API_URL || "https://api.lammah.site";
 }
 
 const API = getApiBase();

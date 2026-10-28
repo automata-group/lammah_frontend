@@ -89,6 +89,8 @@ function SummarizeContent() {
   const [pdfTempId, setPdfTempId] = useState<string | null>(null);
   const [isAudioUploading, setIsAudioUploading] = useState(false);
   const [isPdfUploading, setIsPdfUploading] = useState(false);
+  const [startPage, setStartPage] = useState<string>("");
+  const [endPage, setEndPage] = useState<string>("");
 
   const hasQuota = quota !== null ? quota > 0 : false;
   const hasPaidPlan = Boolean(
@@ -484,6 +486,9 @@ function SummarizeContent() {
 
     if (!forceRawFiles && pdfTempId) formData.append("pdf_temp_id", pdfTempId);
     else if (pdfFile) formData.append("pdf_file", pdfFile);
+
+    if (startPage.trim()) formData.append("start_page", startPage.trim());
+    if (endPage.trim()) formData.append("end_page", endPage.trim());
 
     formData.append("auto_generate_past_exams", "true");
 
@@ -1020,34 +1025,89 @@ function SummarizeContent() {
                       />
 
                       {pdfFile ? (
-                        <div className="w-full z-20 relative flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200/80 dark:border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
-                              {isPdfUploading ? (
-                                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">{pdfUploadProgress}%</span>
-                              ) : (
-                                <CheckCircle className="w-5 h-5" />
+                        <div className="w-full z-20 relative flex flex-col gap-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200/80 dark:border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                                {isPdfUploading ? (
+                                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">{pdfUploadProgress}%</span>
+                                ) : (
+                                  <CheckCircle className="w-5 h-5" />
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-bold text-slate-800 dark:text-slate-100 text-xs truncate" dir="ltr">{pdfFile.name}</p>
+                                <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                                  {isPdfUploading ? "جاري الرفع..." : "جاهز للبدء"}
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPdfFile(null);
+                                setPdfTempId(null);
+                                setStartPage("");
+                                setEndPage("");
+                              }}
+                              className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition cursor-pointer shrink-0"
+                              title="إزالة"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          {/* Page / Slide Range Selector */}
+                          <div className="pt-2.5 border-t border-slate-200/80 dark:border-slate-800 text-right" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                                <span>📖</span>
+                                <span>تحديد صفحات معينة (اختياري)</span>
+                              </span>
+                              {(startPage || endPage) && (
+                                <button
+                                  type="button"
+                                  onClick={() => { setStartPage(""); setEndPage(""); }}
+                                  className="text-[10px] text-rose-500 hover:text-rose-600 font-bold transition"
+                                >
+                                  إلغاء التحديد (الكل)
+                                </button>
                               )}
                             </div>
-                            <div className="min-w-0">
-                              <p className="font-bold text-slate-800 dark:text-slate-100 text-xs truncate" dir="ltr">{pdfFile.name}</p>
-                              <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                                {isPdfUploading ? "جاري الرفع..." : "جاهز للبدء"}
-                              </p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">من صفحة/شريحة:</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  placeholder="1"
+                                  value={startPage}
+                                  onChange={(e) => setStartPage(e.target.value)}
+                                  className="w-full text-xs font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-center focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">إلى صفحة/شريحة:</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  placeholder="النهاية"
+                                  value={endPage}
+                                  onChange={(e) => setEndPage(e.target.value)}
+                                  className="w-full text-xs font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-center focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                />
+                              </div>
                             </div>
+                            <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium mt-1.5 flex items-center gap-1">
+                              <span>💡</span>
+                              <span>
+                                {startPage || endPage
+                                  ? `سيتم تلخيص النطاق من ${startPage || 1} إلى ${endPage || "النهاية"} واحتساب رصيدك عليه فقط.`
+                                  : "حدد صفحات محددة إذا لم تكن بحاجة لتلخيص الكتاب كاملاً لتوفير رصيدك."}
+                              </span>
+                            </p>
                           </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPdfFile(null);
-                              setPdfTempId(null);
-                            }}
-                            className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition cursor-pointer shrink-0"
-                            title="إزالة"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
                         </div>
                       ) : (
                         <div className="flex flex-col items-center justify-center text-center py-2">

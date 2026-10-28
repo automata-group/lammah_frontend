@@ -129,6 +129,8 @@ function NotebookCreatorContent() {
   
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [startPage, setStartPage] = useState<string>("");
+  const [endPage, setEndPage] = useState<string>("");
   const [notebookType, setNotebookType] = useState<"university" | "course_podcast">("university");
   const [languageMode, setLanguageMode] = useState<"bilingual" | "english" | "arabic">("bilingual");
   const [paperStyle, setPaperStyle] = useState<"ruled" | "grid" | "dotted">("ruled");
@@ -516,6 +518,9 @@ function NotebookCreatorContent() {
 
     if (pdfTempId) formData.append("pdf_temp_id", pdfTempId);
     else if (pdfFile) formData.append("pdf_file", pdfFile);
+
+    if (startPage.trim()) formData.append("start_page", startPage.trim());
+    if (endPage.trim()) formData.append("end_page", endPage.trim());
 
     if (lectureTitle) formData.append("lecture_title", lectureTitle);
     formData.append("student_name", customStudentName || fullName);
@@ -1009,29 +1014,78 @@ function NotebookCreatorContent() {
                       className="absolute inset-0 opacity-0 cursor-pointer z-10" 
                     />
                     {pdfFile ? (
-                      <div className="w-full z-20 relative flex items-center justify-between text-right gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0">
-                            <FileText className="w-4 h-4" />
+                      <div className="w-full z-20 relative flex flex-col gap-2.5 text-right">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0">
+                              <FileText className="w-4 h-4" />
+                            </div>
+                            <div className="min-w-0 text-right">
+                              <p className="text-xs font-black text-slate-900 dark:text-slate-100 truncate max-w-[130px]">{pdfFile.name}</p>
+                              <p className="text-[10px] text-violet-600 dark:text-violet-400 font-bold mt-0.5">{isPdfUploading ? `${pdfUploadProgress}%` : "جاهز للربط"}</p>
+                            </div>
                           </div>
-                          <div className="min-w-0 text-right">
-                            <p className="text-xs font-black text-slate-900 dark:text-slate-100 truncate max-w-[130px]">{pdfFile.name}</p>
-                            <p className="text-[10px] text-violet-600 dark:text-violet-400 font-bold mt-0.5">{isPdfUploading ? `${pdfUploadProgress}%` : "جاهز للربط"}</p>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              setPdfFile(null);
+                              setPdfTempId("");
+                              setStartPage("");
+                              setEndPage("");
+                            }}
+                            className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
+                            title="إلغاء الملف"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            setPdfFile(null);
-                            setPdfTempId("");
-                          }}
-                          className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
-                          title="إلغاء الملف"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+
+                        {/* Page / Slide Range Selector */}
+                        <div className="pt-2 border-t border-slate-200/80 dark:border-slate-800 text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                              📖 تحديد صفحات معينة (اختياري)
+                            </span>
+                            {(startPage || endPage) && (
+                              <button
+                                type="button"
+                                onClick={() => { setStartPage(""); setEndPage(""); }}
+                                className="text-[9px] text-rose-500 hover:text-rose-600 font-bold"
+                              >
+                                الكل
+                              </button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 gap-1.5">
+                            <div>
+                              <input
+                                type="number"
+                                min="1"
+                                placeholder="من صفحة"
+                                value={startPage}
+                                onChange={(e) => setStartPage(e.target.value)}
+                                className="w-full text-xs font-bold px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-center focus:outline-none focus:ring-1 focus:ring-violet-500"
+                              />
+                            </div>
+                            <div>
+                              <input
+                                type="number"
+                                min="1"
+                                placeholder="إلى صفحة"
+                                value={endPage}
+                                onChange={(e) => setEndPage(e.target.value)}
+                                className="w-full text-xs font-bold px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-center focus:outline-none focus:ring-1 focus:ring-violet-500"
+                              />
+                            </div>
+                          </div>
+                          <p className="text-[9px] text-violet-600 dark:text-violet-400 font-medium mt-1">
+                            {startPage || endPage
+                              ? `سيتم تحضير الدفتر من صفحة ${startPage || 1} إلى ${endPage || "النهاية"}.`
+                              : "💡 حدد نطاقاً معيناً لتلخيص شابتر بدلاً من الكتاب كاملاً."}
+                          </p>
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-1 pointer-events-none">
