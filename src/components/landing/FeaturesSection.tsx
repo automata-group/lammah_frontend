@@ -1,28 +1,18 @@
 import { 
-  FileAudio, 
-  Brain, 
-  ShoppingBag, 
-  MessageSquare, 
+  PenTool, 
+  Target, 
   BookOpen, 
-  Layers
+  Brain, 
+  Zap, 
+  Coins 
 } from "lucide-react";
 
 export default function FeaturesSection() {
   const features = [
     {
-      title: "توليد دفاتر التلخيص الملونة",
-      description: "دفتر ملخص منسق بصرياً بألوان مريحة للعين، يتضمن جداول مقارنة، رسومات توضيحية، وهوامش ذكية، جاهز للطباعة فوراً كـ PDF فائق الجودة.",
-      icon: BookOpen,
-      color: "from-pink-500 to-rose-500",
-      bgLight: "bg-pink-50",
-      bgDark: "dark:bg-pink-500/10",
-      borderColor: "border-pink-200 dark:border-pink-500/20",
-      iconColor: "text-pink-600 dark:text-pink-400"
-    },
-    {
-      title: "دمج فائق الدقة للصوت والسلايدات",
-      description: "ارفع السلايدات (PDF أو PPTX) مع تسجيل أو عدة فويسات متفرقة للمحاضرة؛ يربط لمّاح كل فكرة بشريحتها بدقة متناهية ولا يفوّت أي تفصيلة.",
-      icon: FileAudio,
+      title: "تخطيط السلايدات وكتابة كلام الدكتور",
+      description: "يظلل لمّاح سلايداتك الأصلية ويكتب نصاً كل ما شرحه الدكتور في القاعة، مع توضيح للمصطلحات الإنجليزية باللغة العربية لضمان فهمك السريع ليلة الامتحان.",
+      icon: PenTool,
       color: "from-indigo-500 to-blue-500",
       bgLight: "bg-indigo-50",
       bgDark: "dark:bg-indigo-500/10",
@@ -30,8 +20,28 @@ export default function FeaturesSection() {
       iconColor: "text-indigo-600 dark:text-indigo-400"
     },
     {
-      title: "امتحانات تجريبية وبطاقات ذكية",
-      description: "اختبر جاهزيتك قبل قاعة الامتحان بأسئلة اختيار من متعدد مع شرح فوري للإجابة، وبطاقات استرجاع (Flashcards) بنظام التكرار المتباعد.",
+      title: "صيد ما ركز عليه الدكتور وأسئلة الامتحان",
+      description: "يلتقط لمّاح بدقة كل جملة شدد عليها الدكتور وقال عنها «مهمة وجاية بالامتحان»، ويبرزها لك في قسم خاص مع أسئلة متوقعة تغنيك عن سماع ساعات التسجيل.",
+      icon: Target,
+      color: "from-rose-500 to-red-500",
+      bgLight: "bg-rose-50",
+      bgDark: "dark:bg-rose-500/10",
+      borderColor: "border-rose-200 dark:border-rose-500/20",
+      iconColor: "text-rose-600 dark:text-rose-400"
+    },
+    {
+      title: "دفاتر دراسية ملونة جاهزة للطباعة فوراً",
+      description: "دوسية دراسية فخمة (A4 PDF) بتصميم الدفاتر المسطرة، تشمل جداول مقارنة، مسرد مصطلحات، وهوامش لكتابة نوتاتك، جاهزة للطباعة أو المذاكرة من الجوال.",
+      icon: BookOpen,
+      color: "from-pink-500 to-purple-500",
+      bgLight: "bg-pink-50",
+      bgDark: "dark:bg-pink-500/10",
+      borderColor: "border-pink-200 dark:border-pink-500/20",
+      iconColor: "text-pink-600 dark:text-pink-400"
+    },
+    {
+      title: "امتحانات تجريبية وبطاقات ذكية (MCQs)",
+      description: "اختبر جاهزيتك قبل قاعة الاختبار بأسئلة اختيار من متعدد تحاكي نمط امتحانات الجامعة مع تصحيح فوري، وبطاقات فلاش كاردز لاسترجاع أصعب المصطلحات.",
       icon: Brain,
       color: "from-emerald-500 to-teal-500",
       bgLight: "bg-emerald-50",
@@ -40,19 +50,9 @@ export default function FeaturesSection() {
       iconColor: "text-emerald-600 dark:text-emerald-400"
     },
     {
-      title: "مساعد المحاضرة الذكي والمحادثة",
-      description: "اسأل عن أي مصطلح غامض أو اطلب توضيح مسألة حسابية؛ يجيبك المساعد بالاستناد الدقيق فقط إلى محتوى المحاضرة وشرح الدكتور دون تشتيت.",
-      icon: MessageSquare,
-      color: "from-cyan-500 to-blue-500",
-      bgLight: "bg-cyan-50",
-      bgDark: "dark:bg-cyan-500/10",
-      borderColor: "border-cyan-200 dark:border-cyan-500/20",
-      iconColor: "text-cyan-600 dark:text-cyan-400"
-    },
-    {
-      title: "متجر الدفاتر الأول من نوعه",
-      description: "انشر دفاترك وملخصاتك التي تم توليدها وبعها لزملائك في الجامعة لتحقيق دخل حقيقي، أو تصفح المتجر لشراء ملخصات الطلاب المتميزين.",
-      icon: ShoppingBag,
+      title: "يعمل مع الفويسات أو السلايدات وحدها",
+      description: "ما سجلت المحاضرة أو معك فويسات متفرقة؟ ارفع السلايدات أو الكتاب فقط، وسيتولى لمّاح قراءتها، تخطيطها، وتلخيص كل شابتر كأنك حضرت في القاعة.",
+      icon: Zap,
       color: "from-amber-400 to-orange-500",
       bgLight: "bg-amber-50",
       bgDark: "dark:bg-amber-500/10",
@@ -60,14 +60,14 @@ export default function FeaturesSection() {
       iconColor: "text-amber-600 dark:text-amber-400"
     },
     {
-      title: "حفظ سحابي وأرشيف دائم",
-      description: "احفظ كافة تسجيلاتك، تلخيصاتك، ودفاترك المولدة تلقائياً في سحابتك الخاصة للوصول إليها وتنزيلها من أي جهاز وفي أي وقت بكل أمان دون فقدان أي ملف.",
-      icon: Layers,
-      color: "from-purple-500 to-violet-600",
-      bgLight: "bg-purple-50",
-      bgDark: "dark:bg-purple-500/10",
-      borderColor: "border-purple-200 dark:border-purple-500/20",
-      iconColor: "text-purple-600 dark:text-purple-400"
+      title: "حوّل دراستك لأرباح مالية حقيقية",
+      description: "لا تدرس مجاناً! انشر دفاتر تلخيصاتك المعتمدة في متجر لمّاح لتباع لزملائك بالجامعات، مع تحويل أرباحك مباشرة لمحفظتك عبر تطبيق ريفلكت أو الحساب البنكي.",
+      icon: Coins,
+      color: "from-violet-500 to-indigo-600",
+      bgLight: "bg-violet-50",
+      bgDark: "dark:bg-violet-500/10",
+      borderColor: "border-violet-200 dark:border-violet-500/20",
+      iconColor: "text-violet-600 dark:text-violet-400"
     }
   ];
 
@@ -88,7 +88,7 @@ export default function FeaturesSection() {
           </h2>
           
           <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl text-center leading-relaxed font-medium">
-            كل ما تحتاجه لتفوقك الدراسي في مكان واحد؛ من تفريغ المحاضرات وتوليد الدفاتر الجمالية إلى الامتحانات وسوق الدفاتر.
+            كل ما تحتاجه لتتفوق بأقل وقت ومجهود؛ من تخطيط السلايدات وصيد كلام الدكتور إلى دفاتر الطباعة والامتحانات التجريبية.
           </p>
         </div>
 
