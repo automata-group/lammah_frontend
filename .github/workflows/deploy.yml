@@ -53,16 +53,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_SERVER }}
           port: 2222
           script: |
-            # Clean space
-            docker system prune -f
-            
             mkdir -p ~/lammah_frontend
             cd ~/lammah_frontend
 
-            # Stop any running frontend container to free up port 3001
-            docker compose down || true
-            docker ps -q --filter publish=3001 | xargs -r docker stop || true
-            
             cat <<EOF > docker-compose.yml
             services:
               frontend:
@@ -79,7 +72,7 @@ jobs:
 
             echo ${{ secrets.GHCR_PAT }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
             
-            echo "Pulling latest image with retries..."
+            echo "Pulling latest image while old container is still serving traffic (Zero Downtime)..."
             MAX_PULL_RETRIES=5
             PULL_COUNT=0
             until docker compose pull; do
@@ -92,4 +85,9 @@ jobs:
               sleep 15
             done
 
+            # Seamless switch: recreate container in < 1 second now that the image is already pulled
             docker compose up -d --force-recreate
+
+            # Clean stale docker images in background without affecting traffic
+            docker image prune -f || true
+
