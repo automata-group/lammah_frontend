@@ -23,7 +23,7 @@ export default function HeroSection() {
   }, [router]);
 
   return (
-    <section className="relative z-10 pt-32 xs:pt-36 sm:pt-32 lg:pt-36 pb-20 xs:pb-24 sm:pb-28 px-4 sm:px-6 max-w-5xl mx-auto text-center" dir="rtl">
+    <section className="relative z-10 pt-16 xs:pt-20 sm:pt-20 lg:pt-24 pb-20 xs:pb-24 sm:pb-28 px-4 sm:px-6 max-w-5xl mx-auto text-center" dir="rtl">
       
       {/* ── Floating Decorative Ornaments (Pure GPU CSS Animation - 0ms TBT) ── */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 max-w-7xl mx-auto hidden md:block">

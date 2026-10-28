@@ -180,7 +180,7 @@ export default function KioskPage() {
       {user ? <AppHeader activePage="kiosk" /> : <Header />}
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 pt-6 sm:pt-10 pb-8 sm:pb-12">
         
         {/* Hero Section */}
         <KioskHero

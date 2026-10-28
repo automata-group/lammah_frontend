@@ -30,9 +30,7 @@ export default function Header({ user: propUser }: HeaderProps = {}) {
   useEffect(() => {
     router.prefetch("/auth");
     router.prefetch("/dashboard");
-    router.prefetch("/kiosk");
     router.prefetch("/marketplace");
-    router.prefetch("/study");
     router.prefetch("/faq");
     if (isTutor) router.prefetch("/tutor/dashboard");
   }, [router, isTutor]);
@@ -109,13 +107,11 @@ export default function Header({ user: propUser }: HeaderProps = {}) {
     };
   }, [pathname]);
 
-  // Navigation Items (Pure and Clean - No Dead Dropdown Artifacts)
+  // Navigation Items (Pure and Clean - Guest Conversion Focused)
   const navItems = [
     { label: "المميزات", href: "/#features", badge: "" },
     { label: "الأسعار", href: "/#pricing", badge: "" },
-    { label: "كشك المشاريع", href: "/kiosk", badge: "جديد" },
     { label: "المتجر", href: "/marketplace", badge: "" },
-    { label: "دوّن ملاحظاتك", href: "/study", badge: "" },
     { label: "الأسئلة الشائعة", href: "/faq", badge: "" },
   ];
 
@@ -137,7 +133,7 @@ export default function Header({ user: propUser }: HeaderProps = {}) {
         const targetId = href.replace("/#", "");
         const targetElement = document.getElementById(targetId);
         if (targetElement) {
-          const headerOffset = 85;
+          const headerOffset = 100;
           const elementPosition = targetElement.getBoundingClientRect().top;
           const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
           window.scrollTo({
@@ -154,7 +150,7 @@ export default function Header({ user: propUser }: HeaderProps = {}) {
   );
 
   return (
-    <header className="sticky top-5 z-50 max-w-5xl mx-auto px-4 w-full select-none" dir="rtl">
+    <header className="sticky top-5 z-50 max-w-5xl mx-auto px-4 w-full select-none mb-6 sm:mb-8" dir="rtl">
       {/* ── Floating Glass Bar ─────────────────────────────────── */}
       <div
         className={`w-full h-14 rounded-full border transition-all duration-300 px-4 sm:px-5 flex items-center justify-between backdrop-blur-xl relative ${

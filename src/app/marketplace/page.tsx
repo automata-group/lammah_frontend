@@ -764,7 +764,7 @@ export default function MarketplacePage() {
       {/* Main Inner Tab App Header (Landing Header for guests, AppHeader for authenticated users) */}
       {user ? <AppHeader quota={quota} activePage="marketplace" /> : <Header />}
 
-      <div className="flex-1 px-4 sm:px-6 pt-4 sm:pt-6 pb-16 max-w-7xl mx-auto w-full relative z-10 space-y-5 sm:space-y-6">
+      <div className="flex-1 px-4 sm:px-6 pt-6 sm:pt-10 pb-16 max-w-7xl mx-auto w-full relative z-10 space-y-5 sm:space-y-6">
 
         {/* Cohesive Editorial Header & Ledger */}
         <div className="hidden lg:grid lg:grid-cols-12 gap-5 p-5 lg:p-6 rounded-2xl bg-white dark:bg-[#0c111d] border border-slate-200/90 dark:border-slate-800 shadow-xs relative overflow-hidden">
