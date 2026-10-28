@@ -1,0 +1,18 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: "https://ytlpiomgkyxfcuxexuii.supabase.co"
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0bHBpb21na3l4ZmN1eGV4dWlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4MzkzMTEsImV4cCI6MjA4OTQxNTMxMX0.tkX7jz2OIYHloNIjNUI8PhoKsHxyjM_OQRdcmFGTwjQ"
+        NEXT_PUBLIC_API_URL: "https://lammah.site"
+        NEXT_PUBLIC_UPLOADER_URL: "https://lammah.site"
+        NEXT_PUBLIC_SITE_URL: "https://lammah.site"
+    container_name: lammah-frontend
+    restart: always
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000

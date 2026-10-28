@@ -74,15 +74,12 @@ function getArabicRelativeTime(dateStr: string): { label: string; isOld: boolean
 
 function getApiBase() {
   if (typeof window !== "undefined") {
+    // If accessed through admin tunnel (port 8888, 9090, etc.), use the tunnel origin directly
     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-      const envUrl = process.env.NEXT_PUBLIC_API_URL;
-      if (envUrl && (envUrl.includes("localhost") || envUrl.includes("127.0.0.1"))) {
-        return envUrl;
-      }
-      return "http://localhost:8003";
+      return window.location.origin;
     }
   }
-  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+  return process.env.NEXT_PUBLIC_API_URL || "https://lammah.site";
 }
 
 const API = getApiBase();
@@ -176,7 +173,7 @@ export default function AdminPage() {
       }
     } catch (e: any) {
       const msg = e.message?.includes("Failed to fetch")
-        ? `تعذر الاتصال بخادم المنظومة (${API}). يرجى التأكد من تشغيل الباك إند على المنفذ 8003.`
+        ? `تعذر الاتصال بخادم المنظومة (${API}). يرجى التأكد من تشغيل الباك إند على المنفذ 8000.`
         : e.message;
       setError(msg);
     } finally {
