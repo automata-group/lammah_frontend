@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { 
   Package, Store, BookOpen, Download, Crown, 
@@ -20,10 +20,31 @@ interface AppHeaderProps {
   activePage?: "dashboard" | "summarize" | "tasks" | "notebook" | "plans" | "ytdl" | "marketplace" | "history" | "profile" | "tutor" | "sessions" | "study" | "kiosk";
 }
 
-export default function AppHeader({ quota = null, activePage }: AppHeaderProps) {
+export default function AppHeader({ quota = null, activePage: propActivePage }: AppHeaderProps) {
   const { user, session, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Self-reliant Active Page deduction from current URL
+  const activePage = useMemo(() => {
+    if (propActivePage) return propActivePage;
+    if (!pathname) return "dashboard";
+    if (pathname.startsWith("/tutor")) return "tutor";
+    if (pathname.startsWith("/summarize")) return "summarize";
+    if (pathname.startsWith("/study")) return "study";
+    if (pathname.startsWith("/notebook")) return "notebook";
+    if (pathname.startsWith("/tasks")) return "tasks";
+    if (pathname.startsWith("/kiosk")) return "kiosk";
+    if (pathname.startsWith("/marketplace")) return "marketplace";
+    if (pathname.startsWith("/plans")) return "plans";
+    if (pathname.startsWith("/history")) return "history";
+    if (pathname.startsWith("/profile")) return "profile";
+    if (pathname.startsWith("/sessions")) return "sessions";
+    if (pathname.startsWith("/ytdl")) return "ytdl";
+    if (pathname.startsWith("/dashboard")) return "dashboard";
+    return undefined;
+  }, [pathname, propActivePage]);
   const [isTutor, setIsTutor] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [studyMenuOpen, setStudyMenuOpen] = useState(false);
@@ -327,7 +348,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                 setStudyMenuOpen(false);
                 setServicesMenuOpen(false);
               }}
-              className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
                 activePage === "dashboard"
                   ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-xs border border-slate-200/60 dark:border-slate-700"
                   : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/10"
@@ -346,7 +367,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                   setStudyMenuOpen(false);
                   setServicesMenuOpen(false);
                 }}
-                className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
                   activePage === "summarize"
                     ? "bg-indigo-600 text-white shadow-xs"
                     : "text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-white hover:bg-white/80 dark:hover:bg-white/10"
@@ -365,7 +386,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
                 setStudyMenuOpen(false);
                 setServicesMenuOpen(false);
               }}
-              className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
                 activePage === "study"
                   ? "bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-300 shadow-xs border border-purple-200/80 dark:border-purple-800/60 ring-1 ring-purple-500/20"
                   : "text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-300 hover:bg-white/60 dark:hover:bg-white/10"

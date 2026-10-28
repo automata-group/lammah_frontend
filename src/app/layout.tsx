@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import Footer from "@/components/Footer";
 import GlobalAnnouncementBanner from "@/components/GlobalAnnouncementBanner";
 import AnalyticsTracker from "@/components/analytics/AnalyticsTracker";
+import NavigationProgressBar from "@/components/NavigationProgressBar";
 
 const alexandria = Alexandria({
   subsets: ["arabic", "latin"],
@@ -100,6 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className={`${alexandria.variable} font-sans antialiased bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-colors duration-300 flex flex-col min-h-screen`}>
+        <NavigationProgressBar />
         <ThemeProvider>
           <AuthProvider>
             <AnalyticsTracker />
