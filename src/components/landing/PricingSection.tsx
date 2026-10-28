@@ -24,7 +24,7 @@ export default function PricingSection() {
   const [showContactModal, setShowContactModal] = useState(false);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/plans`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/plans`)
       .then(r => r.json())
       .then(data => { 
         if (data && (data.weekly?.length || data.monthly?.length)) {

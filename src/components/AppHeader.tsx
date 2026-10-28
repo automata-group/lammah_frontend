@@ -63,7 +63,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
     const syncQuota = async () => {
       // 1. Try Backend API
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/quota`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/quota`, {
           headers: { "Authorization": `Bearer ${session.access_token}` }
         });
         if (res.ok) {
@@ -155,7 +155,7 @@ export default function AppHeader({ quota = null, activePage }: AppHeaderProps) 
 
   useEffect(() => {
     if (session?.access_token) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/my-status`, {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/my-status`, {
         headers: { "Authorization": `Bearer ${session.access_token}` }
       })
         .then(res => res.json())

@@ -262,7 +262,7 @@ function PublishToMarketplaceContent() {
   useEffect(() => {
     if (session) {
       // 1. Quota & seller profile
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/quota`, {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/quota`, {
         headers: {
           "Authorization": `Bearer ${session.access_token}`
         }
@@ -283,7 +283,7 @@ function PublishToMarketplaceContent() {
       .catch(e => console.error("Failed to load seller profile in publish page:", e));
 
       // 2. Auto-load student profile university if available
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/student-profile`, {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/student-profile`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
       .then((r) => r.json())
@@ -381,7 +381,7 @@ function PublishToMarketplaceContent() {
         ? `${courseName.trim()} - ${cleanTitle}`
         : cleanTitle;
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/marketplace/publish`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/marketplace/publish`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

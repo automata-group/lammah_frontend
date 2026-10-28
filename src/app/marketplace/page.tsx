@@ -246,7 +246,7 @@ function NotebookCard({
               <>
                 <button 
                   onClick={() => {
-                    window.open(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}${nb.pdf_url}`, '_blank');
+                    window.open(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${nb.pdf_url}`, '_blank');
                   }}
                   className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-2.5 rounded-xl text-xs flex justify-center items-center gap-1.5 transition cursor-pointer active:scale-95 shadow-2xs"
                 >
@@ -445,7 +445,7 @@ export default function MarketplacePage() {
     const fetchQuota = async () => {
       if (session) {
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/quota`, {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/quota`, {
             headers: {
               "Authorization": `Bearer ${session.access_token}`
             }
@@ -464,7 +464,7 @@ export default function MarketplacePage() {
 
   const fetchNotebooks = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/marketplace/notebooks`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/marketplace/notebooks`);
       const data = await res.json();
       if (data.status === "success") {
         setNotebooks(data.notebooks);
@@ -515,11 +515,11 @@ export default function MarketplacePage() {
 
   const handlePreview = async (notebookId: string, previewUrl: string) => {
     // Open preview in new tab
-    window.open(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}${previewUrl}`, '_blank');
+    window.open(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${previewUrl}`, '_blank');
     
     // Increment view count quietly
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/marketplace/${notebookId}/view`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/marketplace/${notebookId}/view`, {
         method: "POST"
       });
       fetchNotebooks(); // Refresh to update view counts
@@ -547,7 +547,7 @@ export default function MarketplacePage() {
     if (!session) return;
     setLoadingPurchases(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/marketplace/my-purchases`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/marketplace/my-purchases`, {
         headers: { "Authorization": `Bearer ${session.access_token}` }
       });
       const data = await res.json();
@@ -565,7 +565,7 @@ export default function MarketplacePage() {
     if (!session) return;
     setLoadingSellerOrders(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/marketplace/seller-orders`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/marketplace/seller-orders`, {
         headers: { "Authorization": `Bearer ${session.access_token}` }
       });
       const data = await res.json();
@@ -589,7 +589,7 @@ export default function MarketplacePage() {
     if (!confirm("هل تأكدت من وصول الحوالة لحسابك وتريد فتح الدفتر المرخص للطالب فوراً؟")) return;
     setActionInProgress(orderId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/marketplace/order/${orderId}/approve`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/marketplace/order/${orderId}/approve`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${session.access_token}` }
       });
@@ -613,7 +613,7 @@ export default function MarketplacePage() {
     if (!confirm("هل أنت متأكد من رغبتك في رفض هذا الطلب؟")) return;
     setActionInProgress(orderId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/marketplace/order/${orderId}/reject`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/marketplace/order/${orderId}/reject`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${session.access_token}` }
       });
@@ -641,7 +641,7 @@ export default function MarketplacePage() {
 
     setIsSubmittingPurchase(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/marketplace/purchase-request`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/marketplace/purchase-request`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
@@ -690,7 +690,7 @@ export default function MarketplacePage() {
     if (!confirm("هل أنت متأكد من رغبتك في حذف هذا الدفتر من المتجر؟")) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/marketplace/${notebookId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/marketplace/${notebookId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${session.access_token}`
@@ -1443,7 +1443,7 @@ export default function MarketplacePage() {
                       <div>
                         {isApproved ? (
                           <a
-                            href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/marketplace/order/${purchase.id}/download`}
+                            href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/marketplace/order/${purchase.id}/download`}
                             target="_blank"
                             rel="noreferrer"
                             className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 transition-all text-center cursor-pointer"

@@ -51,7 +51,7 @@ export default function UserBehaviorAnalytics({ sessionToken }: UserBehaviorAnal
   const [journeyData, setJourneyData] = useState<any>(null);
   const [journeyError, setJourneyError] = useState("");
 
-  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   const fetchOverview = async (showSpinner = false) => {
     if (showSpinner) setIsRefreshing(true);

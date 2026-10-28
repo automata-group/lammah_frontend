@@ -1,6 +1,6 @@
 import { KioskProject, KioskCategoryItem, KioskReview } from "@/types/kiosk";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function fetchKioskCategories(): Promise<KioskCategoryItem[]> {
   try {

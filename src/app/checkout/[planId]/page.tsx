@@ -50,7 +50,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ planId: str
     try {
       setCheckoutLoading(true);
       // Fetch plan info and user profile
-      const quotaRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/quota`, {
+      const quotaRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/quota`, {
         headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
       if (quotaRes.ok) {
@@ -68,7 +68,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ planId: str
       }
 
       // Fetch plan details
-      const plansRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/plans`);
+      const plansRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/plans`);
       if (plansRes.ok) {
         const pData = await plansRes.json();
         const allPlans = [...(pData.weekly || []), ...(pData.monthly || [])];
@@ -113,7 +113,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ planId: str
 
     setSubmitting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/transactions/checkout`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/transactions/checkout`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json", 

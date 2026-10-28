@@ -170,7 +170,7 @@ function SummarizeContent() {
     formData.append('file', file);
 
     const xhr = new XMLHttpRequest();
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     let uploaderUrl = process.env.NEXT_PUBLIC_UPLOADER_URL || apiUrl;
     if (uploaderUrl.includes("8080") || uploaderUrl.includes(":8000")) {
       uploaderUrl = apiUrl;
@@ -224,7 +224,7 @@ function SummarizeContent() {
     formData.append('file', file);
 
     const xhr = new XMLHttpRequest();
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     let uploaderUrl = process.env.NEXT_PUBLIC_UPLOADER_URL || apiUrl;
     if (uploaderUrl.includes("8080") || uploaderUrl.includes(":8000")) {
       uploaderUrl = apiUrl;
@@ -267,7 +267,7 @@ function SummarizeContent() {
     // 1. Try Backend API
     try {
       const fp = (typeof window !== "undefined" && localStorage.getItem("device_id_v3")) || await getFingerprint();
-      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/quota`, {
+      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/quota`, {
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
           "X-Fingerprint": String(fp || "")
@@ -450,8 +450,8 @@ function SummarizeContent() {
     setInitialEstimate(estimatedSecs);
 
     const endpoint = isBatch
-      ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/summarize/process-batch-lectures`
-      : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/summarize/process-lecture`;
+      ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/summarize/process-batch-lectures`
+      : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/summarize/process-lecture`;
 
     const formData = new FormData();
     formData.append("metadata", await getDeviceMetadata());

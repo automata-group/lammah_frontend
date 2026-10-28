@@ -1132,6 +1132,7 @@ export default function AdminPage() {
         onClose={() => setShowAssignModal(false)}
         sessionToken={session?.access_token}
         onSuccess={fetchOverview}
+        apiUrl={API}
       />
 
     </main>

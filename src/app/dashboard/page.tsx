@@ -142,7 +142,7 @@ function DashboardContent() {
     if (!session) return;
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/chat-usage`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/chat-usage`,
         {
           headers: { Authorization: `Bearer ${session.access_token}` },
         }
@@ -172,7 +172,7 @@ function DashboardContent() {
     }
 
     if (!session?.access_token) return;
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/student-profile`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/student-profile`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
       .then((r) => r.json())
@@ -506,7 +506,7 @@ function DashboardContent() {
     setOnboardError("");
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/transactions/update-name`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/transactions/update-name`,
         {
           method: "POST",
           headers: {
@@ -548,7 +548,7 @@ function DashboardContent() {
       }
 
       const r = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/quota`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/quota`,
         { headers }
       );
 
@@ -674,7 +674,7 @@ function DashboardContent() {
       const checkTutorAccess = async () => {
         try {
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/my-status`,
+            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/my-status`,
             { headers: { Authorization: `Bearer ${session.access_token}` } }
           );
           if (res.ok) {
@@ -737,7 +737,7 @@ function DashboardContent() {
       const token = session?.access_token;
       if (token) {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/history/${historyId}`,
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/history/${historyId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -819,7 +819,7 @@ function DashboardContent() {
     }
 
     if (session?.access_token) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/history?limit=6`, {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/history?limit=6`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
         .then((r) => r.json())
@@ -922,8 +922,8 @@ function DashboardContent() {
     setInitialEstimate(estimatedSecs);
 
     const endpoint = isBatch
-      ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/summarize/process-batch-lectures`
-      : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/summarize/process-lecture`;
+      ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/summarize/process-batch-lectures`
+      : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/summarize/process-lecture`;
 
     const formData = new FormData();
     formData.append("metadata", await getDeviceMetadata());
@@ -1054,7 +1054,7 @@ function DashboardContent() {
                     setCurrentHistoryId(p.history_id);
                     if (lectureTitle.trim() && session) {
                       fetch(
-                        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/history/${p.history_id}/title`,
+                        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/history/${p.history_id}/title`,
                         {
                           method: "PATCH",
                           headers: {
@@ -1065,7 +1065,7 @@ function DashboardContent() {
                         }
                       ).catch(() => {});
                     }
-                    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+                    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
                     fetch(`${apiBase}/api/v1/subscription/history/${p.history_id}`, {
                       headers: {
                         Authorization: `Bearer ${session.access_token}`,
@@ -1163,7 +1163,7 @@ function DashboardContent() {
     try {
       const fp = await getFingerprint();
       const meta = await getDeviceMetadata();
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/chat/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/chat/`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${session.access_token}`,

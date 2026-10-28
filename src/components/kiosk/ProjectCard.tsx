@@ -41,7 +41,7 @@ const CATEGORY_NAMES_AR: Record<string, string> = {
 
 export function formatImageUrl(url: string): string {
   if (!url) return "";
-  const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+  const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   
   // If it was saved with a localhost URL but now viewed from a remote/mobile host
   if ((url.includes("localhost:8000") || url.includes("localhost:8003")) && typeof window !== "undefined" && window.location.hostname !== "localhost") {

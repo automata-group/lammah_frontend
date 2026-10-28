@@ -44,7 +44,7 @@ export default function TutorsDirectoryPage() {
   const fetchTutors = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/tutors`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/tutors`);
       const data = await res.json();
       setTutors(data.tutors || []);
     } catch (e) {

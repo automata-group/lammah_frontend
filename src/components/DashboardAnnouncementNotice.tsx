@@ -57,7 +57,7 @@ export default function DashboardAnnouncementNotice() {
 
   const fetchAnnouncement = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/admin/announcements`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/admin/announcements`, {
         cache: "no-store",
         headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
       });

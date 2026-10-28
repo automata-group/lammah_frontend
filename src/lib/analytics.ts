@@ -1,7 +1,7 @@
 // ── Lammah In-House Lightweight Analytics & Behavioral Intelligence Client ──
 // Zero dependencies, zero lag, asynchronous beacon dispatch
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 interface QueuedEvent {
   name: string;

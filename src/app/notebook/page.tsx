@@ -185,7 +185,7 @@ function NotebookCreatorContent() {
       const fetchQuota = async () => {
         const fp = await getFingerprint();
         const meta = await getDeviceMetadata();
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         fetch(`${apiUrl}/api/v1/subscription/quota`, {
           headers: {
             "Authorization": `Bearer ${session.access_token}`,
@@ -308,7 +308,7 @@ function NotebookCreatorContent() {
     const fetchNotebookHistory = async () => {
       if (session && historyId && !jobIdParam) {
         setIsProcessing(true);
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         try {
           const response = await fetch(`${apiUrl}/api/v1/subscription/history/${historyId}`, {
             headers: {
@@ -361,7 +361,7 @@ function NotebookCreatorContent() {
     formData.append("file", file);
 
     const xhr = new XMLHttpRequest();
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     let uploaderUrl = process.env.NEXT_PUBLIC_UPLOADER_URL || apiUrl;
     if (uploaderUrl.includes("8080") || uploaderUrl.includes(":8000")) {
       uploaderUrl = apiUrl;
@@ -411,7 +411,7 @@ function NotebookCreatorContent() {
     formData.append('file', file);
 
     const xhr = new XMLHttpRequest();
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     let uploaderUrl = process.env.NEXT_PUBLIC_UPLOADER_URL || apiUrl;
     if (uploaderUrl.includes("8080") || uploaderUrl.includes(":8000")) {
       uploaderUrl = apiUrl;
@@ -498,7 +498,7 @@ function NotebookCreatorContent() {
     setError(null);
     setResult(null);
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     const formData = new FormData();
     
     if (uploadMode === "url") {
@@ -814,7 +814,7 @@ function NotebookCreatorContent() {
                   const isPrep = result.isPrep ?? !(audioFile || multiAudioFiles.length > 0);
                   const notebookFilename = `${cleanTitle} - ${isPrep ? "دفتر تحضير سلايدات" : "دفتر مخطط فويسات"} - لمّاح.pdf`;
                   const sep = result.downloadUrl.includes("?") ? "&" : "?";
-                  const finalDownloadUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}${result.downloadUrl}${sep}download=true&title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`;
+                  const finalDownloadUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${result.downloadUrl}${sep}download=true&title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`;
 
                   return (
                     <a 
@@ -830,7 +830,7 @@ function NotebookCreatorContent() {
 
                 {/* 2. Secondary Action: Fullscreen Preview */}
                 <a 
-                  href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}${result.downloadUrl}`}
+                  href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${result.downloadUrl}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="sm:col-span-3 h-11 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 active:scale-[0.98] text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 border border-slate-200/80 dark:border-white/10 cursor-pointer"
@@ -853,7 +853,7 @@ function NotebookCreatorContent() {
               {/* PDF Preview Iframe */}
               <div className="w-full h-[650px] sm:h-[820px] bg-slate-100 dark:bg-slate-950 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-850 relative shadow-inner">
                 <iframe 
-                  src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}${result.downloadUrl}#toolbar=1&navpanes=0`}
+                  src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${result.downloadUrl}#toolbar=1&navpanes=0`}
                   className="w-full h-full border-none"
                   title="Notebook Preview"
                 />

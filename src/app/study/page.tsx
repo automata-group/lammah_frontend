@@ -244,7 +244,7 @@ function StudyPageContent() {
         const formData = new FormData();
         formData.append("file", firstFile);
 
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         const res = await fetch(`${apiUrl}/api/v1/summarize/convert-pptx-stream`, {
           method: "POST",
           body: formData,

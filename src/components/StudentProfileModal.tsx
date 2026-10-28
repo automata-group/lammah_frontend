@@ -326,7 +326,7 @@ export default function StudentProfileModal({
   const [bonusAwarded, setBonusAwarded] = useState(false);
   const [justWonBonus, setJustWonBonus] = useState(false);
 
-  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   // Pre-fill existing data if available
   useEffect(() => {

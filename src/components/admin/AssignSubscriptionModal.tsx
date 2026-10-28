@@ -50,6 +50,7 @@ interface AssignSubscriptionModalProps {
   sessionToken?: string;
   initialEmail?: string;
   onSuccess?: () => void;
+  apiUrl?: string;
 }
 
 // The 3 Canonical Plans of Lammah
@@ -127,7 +128,8 @@ export default function AssignSubscriptionModal({
   onClose,
   sessionToken,
   initialEmail = "",
-  onSuccess
+  onSuccess,
+  apiUrl
 }: AssignSubscriptionModalProps) {
   // Wizard Step: 1 = Email & Check, 2 = Choose Plan, 3 = Confirm & Assign
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -149,7 +151,18 @@ export default function AssignSubscriptionModal({
   const [submitting, setSubmitting] = useState(false);
   const [resultMessage, setResultMessage] = useState<{ type: "success" | "error"; text: string; details?: any } | null>(null);
 
-  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+  // Dynamically resolve API URL: prefer prop, then window origin if tunnel, then env var, fallback to safe port
+  const API = apiUrl || (() => {
+    if (typeof window !== "undefined") {
+      if (window.location.port === "8888" || window.location.port === "9090") {
+        return window.location.origin;
+      }
+      if (window.location.hostname.includes("lammah.site")) {
+        return "https://api.lammah.site";
+      }
+    }
+    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  })();
 
   // Pre-fill email and auto check if initialEmail exists
   useEffect(() => {
@@ -173,7 +186,7 @@ export default function AssignSubscriptionModal({
             }
           });
           if (!res.ok) return;
-          const dbPlans = await res.json();
+          const dbPlans = await res.json().catch(() => null);
           if (Array.isArray(dbPlans) && dbPlans.length > 0) {
             setPlansList((prev) =>
               prev.map((cp) => {
@@ -211,17 +224,18 @@ export default function AssignSubscriptionModal({
     try {
       const res = await fetch(`${API}/api/v1/admin/users/lookup-by-email?email=${encodeURIComponent(emailToQuery)}`, {
         headers: {
-          Authorization: `Bearer ${sessionToken}`
+          ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {})
         }
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setLookupUser(data);
       } else {
-        setLookupError(data.detail?.user_message || data.detail || "تعذر فحص الحساب.");
+        const msg = data.detail?.user_message || (typeof data.detail === "string" ? data.detail : null) || data.message || `تعذر فحص الحساب (رمز ${res.status})`;
+        setLookupError(msg);
       }
     } catch (err: any) {
-      setLookupError("تعذر الاتصال بالخادم للتحقق من الحساب.");
+      setLookupError(`تعذر الاتصال بالخادم للتحقق من الحساب: ${err.message || err}`);
     } finally {
       setLookupLoading(false);
     }
@@ -255,7 +269,7 @@ export default function AssignSubscriptionModal({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionToken}`
+          ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {})
         },
         body: JSON.stringify({
           email: cleanEmail,
@@ -266,7 +280,7 @@ export default function AssignSubscriptionModal({
         })
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setResultMessage({
           type: "success",
@@ -275,15 +289,16 @@ export default function AssignSubscriptionModal({
         });
         if (onSuccess) onSuccess();
       } else {
+        const errorText = data.detail?.user_message || (typeof data.detail === "string" ? data.detail : null) || data.message || `فشلت عملية تفعيل الاشتراك (رمز ${res.status})`;
         setResultMessage({
           type: "error",
-          text: data.detail?.user_message || data.detail || "فشلت عملية تفعيل الاشتراك."
+          text: errorText
         });
       }
     } catch (err: any) {
       setResultMessage({
         type: "error",
-        text: `حدث خطأ أثناء الاتصال بالخادم: ${err.message}`
+        text: `حدث خطأ أثناء الاتصال بالخادم: ${err.message || err}`
       });
     } finally {
       setSubmitting(false);

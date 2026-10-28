@@ -57,7 +57,7 @@ export default function NotificationBell() {
   const loadNotifications = async () => {
     if (!session?.access_token) return;
     try {
-      const api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+      const api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const res = await fetch(`${api}/api/v1/tutoring/notifications`, {
         headers: { "Authorization": `Bearer ${session.access_token}` }
       });
@@ -74,7 +74,7 @@ export default function NotificationBell() {
   const handleMarkAllRead = async () => {
     if (!session?.access_token) return;
     try {
-      const api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+      const api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       await fetch(`${api}/api/v1/tutoring/notifications/read-all`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${session.access_token}` }
@@ -89,7 +89,7 @@ export default function NotificationBell() {
   const handleNotificationClick = async (notif: NotificationItem) => {
     if (!notif.is_read && session?.access_token) {
       try {
-        const api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+        const api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         fetch(`${api}/api/v1/tutoring/notifications/${notif.id}/read`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${session.access_token}` }

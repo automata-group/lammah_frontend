@@ -95,7 +95,7 @@ function TutorProfileContent({ tutorId }: { tutorId: string }) {
   const fetchTutorProfile = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/tutors/${tutorId}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/tutors/${tutorId}`);
       const data = await res.json();
       if (data.status === "success") {
         setTutor(data.tutor);
@@ -173,7 +173,7 @@ function TutorProfileContent({ tutorId }: { tutorId: string }) {
     setBookingError("");
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/bookings/create`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/bookings/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

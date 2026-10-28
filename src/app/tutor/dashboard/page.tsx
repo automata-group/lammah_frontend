@@ -110,7 +110,7 @@ export default function TutorDashboardPage() {
     setLoading(true);
     try {
       const headers = { "Authorization": `Bearer ${session?.access_token}` };
-      const api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+      const api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
       // 1. Tutor status
       const statusRes = await fetch(`${api}/api/v1/tutoring/my-status`, { headers });
@@ -152,7 +152,7 @@ export default function TutorDashboardPage() {
     setActionLoading(true);
     setActionMessage("");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/tutor/services`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/tutor/services`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -185,7 +185,7 @@ export default function TutorDashboardPage() {
   const handleDeleteService = async (serviceId: string) => {
     if (!confirm("هل أنت متأكد من رغبتك في حذف هذه الخدمة؟")) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/tutor/services/${serviceId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/tutor/services/${serviceId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
@@ -200,7 +200,7 @@ export default function TutorDashboardPage() {
   const handleCompleteSession = async (bookingId: string) => {
     if (!confirm("هل ترغب في توثيق تقديم الحصة؟\nسيتم إشعار الطالب لتأكيد الاستلام والتقييم، وستُحرر أرباحك فور تأكيده أو تلقائياً بعد مرور 24 ساعة من موعد الجلسة.")) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/bookings/${bookingId}/complete`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/bookings/${bookingId}/complete`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
@@ -224,7 +224,7 @@ export default function TutorDashboardPage() {
     }
     setSavingMeetingId(bookingId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/bookings/${bookingId}/meeting-link`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/bookings/${bookingId}/meeting-link`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -276,7 +276,7 @@ export default function TutorDashboardPage() {
     }
     setBookingActionLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/bookings/${acceptModalBooking.id}/accept`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/bookings/${acceptModalBooking.id}/accept`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -305,7 +305,7 @@ export default function TutorDashboardPage() {
     if (!rejectModalBooking) return;
     setBookingActionLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/bookings/${rejectModalBooking.id}/reject`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/bookings/${rejectModalBooking.id}/reject`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -331,7 +331,7 @@ export default function TutorDashboardPage() {
   const handleReportNoShow = async (bookingId: string) => {
     if (!confirm("هل أنت متأكد من توثيق عدم حضور الطالب بعد انتظارك 15 دقيقة؟\nسيتم توثيق الغياب وصرف 50% من قيمة الحصة لك كتعويض مباشر عن وقتك المحجوز.")) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/bookings/${bookingId}/report-no-show`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/bookings/${bookingId}/report-no-show`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -355,7 +355,7 @@ export default function TutorDashboardPage() {
     setActionLoading(true);
     setActionMessage("");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/tutor/wallet/payout-request`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/tutor/wallet/payout-request`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1098,7 +1098,7 @@ ${serviceUrl}`;
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           onClick={() => {
-                                            fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/bookings/${booking.id}/log-attendance`, {
+                                            fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/bookings/${booking.id}/log-attendance`, {
                                               method: "POST",
                                               headers: { "Authorization": `Bearer ${session?.access_token}` }
                                             }).catch(() => {});

@@ -32,7 +32,7 @@ export default function DashboardTitleBar({
       setLectureTitle(titleInput.trim());
       setIsEditingTitle(false);
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/history/${currentHistoryId}/title`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/history/${currentHistoryId}/title`,
         {
           method: "PATCH",
           headers: {

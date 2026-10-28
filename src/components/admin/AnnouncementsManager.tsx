@@ -126,7 +126,7 @@ export default function AnnouncementsManager({ session }: Props) {
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const [previewDismissed, setPreviewDismissed] = useState(false);
 
-  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   useEffect(() => {
     fetchAnnouncement();

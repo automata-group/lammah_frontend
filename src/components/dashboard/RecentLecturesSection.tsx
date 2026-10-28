@@ -204,7 +204,7 @@ export default function RecentLecturesSection({
 
                     return (
                       <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}${downloadPath}`}
+                        href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${downloadPath}`}
                         download={filename}
                         target="_blank"
                         rel="noopener noreferrer"

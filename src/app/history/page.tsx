@@ -18,7 +18,7 @@ const StudyFocusTimer = dynamic(() => import("@/components/dashboard/StudyFocusT
   ssr: false,
 });
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function HistoryPage() {
   const { user, session, loading } = useAuth();

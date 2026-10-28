@@ -119,7 +119,7 @@ export default function SubscriptionContactModal({
     setSubmitting(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };

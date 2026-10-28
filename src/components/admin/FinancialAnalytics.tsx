@@ -57,7 +57,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
   const fetchFinancials = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/admin/analytics/financial`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/admin/analytics/financial`, {
         headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
       const json = await res.json();
@@ -80,7 +80,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
     if (!fulfillingPayout) return;
     setSubmittingFulfill(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/admin/payouts/${fulfillingPayout.id}/fulfill`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/admin/payouts/${fulfillingPayout.id}/fulfill`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

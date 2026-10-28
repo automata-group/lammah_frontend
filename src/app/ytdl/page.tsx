@@ -27,7 +27,7 @@ export default function YouTubeToMP3Page() {
 
   useEffect(() => {
     if (session) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/quota`, {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/quota`, {
         headers: { "Authorization": `Bearer ${session.access_token}` }
       })
       .then(r => r.json())
@@ -96,7 +96,7 @@ export default function YouTubeToMP3Page() {
     formData.append("url", url.trim());
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const response = await fetch(`${apiUrl}/api/v1/summarize/youtube-to-mp3`, {
         method: "POST",
         headers: {

@@ -145,7 +145,7 @@ export default function ProfilePage() {
   // Parallel resilient data fetching with background cache synchronization
   const refreshInfo = useCallback(async () => {
     if (!session?.access_token) return;
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     const headers = { "Authorization": `Bearer ${session.access_token}` };
 
     try {
@@ -192,7 +192,7 @@ export default function ProfilePage() {
     if (!session?.access_token) return;
     setLoadingNotebooks(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const res = await fetch(`${apiUrl}/api/v1/marketplace/my-notebooks`, {
         headers: { "Authorization": `Bearer ${session.access_token}` }
       });
@@ -221,7 +221,7 @@ export default function ProfilePage() {
     setIsUpdatingName(true);
     setNameError("");
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/transactions/update-name`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/transactions/update-name`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -246,7 +246,7 @@ export default function ProfilePage() {
   const handleDeleteNotebook = async (notebookId: string) => {
     if (!confirm("هل أنت متأكد من رغبتك في حذف هذا الدفتر نهائياً من المتجر؟")) return;
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/marketplace/${notebookId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/marketplace/${notebookId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
@@ -277,7 +277,7 @@ export default function ProfilePage() {
         finalDescription = finalDescription.replace(/🏫 الجامعة:\s*[^\n]+/, `🏫 الجامعة: ${editUniversity.trim()}`);
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/marketplace/${editingNotebook.id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/marketplace/${editingNotebook.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

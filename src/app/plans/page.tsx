@@ -40,7 +40,7 @@ export default function PlansPage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/plans`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/plans`)
       .then(r => r.json())
       .then(data => { 
         if (data && (data.weekly?.length || data.monthly?.length)) {
@@ -54,7 +54,7 @@ export default function PlansPage() {
       const fetchQuotaAndPlan = async () => {
         let planResolved = false;
         try {
-          const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/subscription/quota`, {
+          const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/quota`, {
             headers: { "Authorization": `Bearer ${session.access_token}` }
           });
           if (r.ok) {

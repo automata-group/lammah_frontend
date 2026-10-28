@@ -26,7 +26,7 @@ export default function Header({ user }: { user?: any }) {
   useEffect(() => {
     if (user) {
       // Check if user is an approved tutor
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003"}/api/v1/tutoring/my-status`, {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/my-status`, {
         headers: { "Authorization": `Bearer ${user.access_token || ""}` }
       })
         .then(res => res.json())

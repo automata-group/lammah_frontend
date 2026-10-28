@@ -25,7 +25,7 @@ export default function DashboardPdfViewer({
   isDocumentOnly,
 }: DashboardPdfViewerProps) {
   const router = useRouter();
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8003";
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   const [hasPdfError, setHasPdfError] = useState<boolean>(false);
   const [isPdfLoading, setIsPdfLoading] = useState<boolean>(true);
