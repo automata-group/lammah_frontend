@@ -60,16 +60,20 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
   const [isMounted, setIsMounted] = useState(false);
   const [fetchedQuota, setFetchedQuota] = useState<number | null>(() => {
     if (quota !== null && quota !== undefined) return quota;
-    if (typeof window !== "undefined") {
-      const cached = localStorage.getItem("cached_user_quota");
-      if (cached !== null && !isNaN(Number(cached))) return Number(cached);
-    }
     return null;
   });
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    if (quota === null || quota === undefined) {
+      if (typeof window !== "undefined") {
+        const cached = localStorage.getItem("cached_user_quota");
+        if (cached !== null && !isNaN(Number(cached))) {
+          setFetchedQuota(Number(cached));
+        }
+      }
+    }
+  }, [quota]);
 
   useEffect(() => {
     if (quota !== null && quota !== undefined) {
@@ -336,7 +340,7 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
               >
                 <Zap className={`w-3.5 h-3.5 shrink-0 fill-current ${(effectiveQuota ?? 0) > 0 ? "text-amber-500 animate-pulse" : "text-amber-500"}`} />
                 <span className="font-bold text-slate-500 dark:text-slate-400 hidden md:inline">الرصيد:</span>
-                <span className={`font-black ${(effectiveQuota ?? 0) > 0 ? "text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm" : "text-amber-600 dark:text-amber-400 text-xs sm:text-sm"}`}>
+                <span suppressHydrationWarning className={`font-black ${(effectiveQuota ?? 0) > 0 ? "text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm" : "text-amber-600 dark:text-amber-400 text-xs sm:text-sm"}`}>
                   {effectiveQuota !== null ? effectiveQuota.toLocaleString("en-US") : "..."}
                 </span>
                 <span className="font-bold text-slate-600 dark:text-slate-300 text-[11px] sm:text-xs hidden sm:inline">دقيقة</span>
@@ -404,7 +408,7 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
                             : "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800/40"
                         }`}>
                           <Zap className="w-3 h-3 fill-current text-amber-500" />
-                          <span>{effectiveQuota !== null ? `${effectiveQuota} دقيقة` : "..."}</span>
+                          <span suppressHydrationWarning>{effectiveQuota !== null ? `${effectiveQuota} دقيقة` : "..."}</span>
                         </span>
                       </div>
                     </div>

@@ -36,11 +36,11 @@ function SummarizeContent() {
   const [endPage, setEndPage] = useState<string>("");
   const [pdfDetectedPages, setPdfDetectedPages] = useState<number | null>(null);
 
-  // Modular Hooks
   const {
     quota,
     hasPaidPlan,
     isQuotaChecking,
+    isMounted,
     quotaCostBreakdown,
     fetchQuota,
   } = useSummarizeQuota({
@@ -151,6 +151,20 @@ function SummarizeContent() {
       onQuotaDeducted: () => fetchQuota(),
     });
   };
+
+  if (!isMounted) {
+    return (
+      <main
+        className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col relative transition-colors duration-300"
+        dir="rtl"
+      >
+        <AppHeader quota={null} activePage="summarize" />
+        <div className="flex-1 flex flex-col items-center justify-center p-12">
+          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main

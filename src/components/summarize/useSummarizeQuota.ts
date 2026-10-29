@@ -25,30 +25,26 @@ export function useSummarizeQuota({
   endPage,
   pdfDetectedPages,
 }: UseSummarizeQuotaProps) {
-  // Synchronous 0ms LocalStorage hydration
-  const [quota, setQuota] = useState<number | null>(() => {
+  const [isMounted, setIsMounted] = useState<boolean>(false);
+  const [quota, setQuota] = useState<number | null>(null);
+  const [planName, setPlanName] = useState<string>("");
+  const [isQuotaChecking, setIsQuotaChecking] = useState<boolean>(true);
+
+  // Load from localStorage only after initial mount to prevent SSR hydration mismatch (React error #418)
+  useEffect(() => {
+    setIsMounted(true);
     if (typeof window !== "undefined") {
       const cachedQuota = localStorage.getItem("cached_user_quota");
       if (cachedQuota !== null && !isNaN(Number(cachedQuota))) {
-        return Number(cachedQuota);
+        setQuota(Number(cachedQuota));
+        setIsQuotaChecking(false);
+      }
+      const cachedPlan = localStorage.getItem("cached_user_plan");
+      if (cachedPlan) {
+        setPlanName(cachedPlan);
       }
     }
-    return null;
-  });
-
-  const [planName, setPlanName] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("cached_user_plan") || "";
-    }
-    return "";
-  });
-
-  const [isQuotaChecking, setIsQuotaChecking] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("cached_user_quota") === null;
-    }
-    return true;
-  });
+  }, []);
 
   // Calculate live transparent quota deduction cost
   const quotaCostBreakdown: QuotaCostBreakdown = useMemo(() => {
@@ -220,6 +216,7 @@ export function useSummarizeQuota({
     planName,
     isQuotaChecking,
     hasPaidPlan,
+    isMounted,
     quotaCostBreakdown,
     fetchQuota,
   };
