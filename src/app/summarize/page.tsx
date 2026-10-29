@@ -26,7 +26,8 @@ import {
   PenTool,
   CreditCard,
   HelpCircle,
-  Layers
+  Layers,
+  Calculator
 } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
@@ -53,6 +54,7 @@ interface UploadedAudio {
   tempId?: string;
   progress: number;
   isUploading: boolean;
+  duration?: number;
 }
 
 function SummarizeContent() {
@@ -65,6 +67,10 @@ function SummarizeContent() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [multiAudioFiles, setMultiAudioFiles] = useState<UploadedAudio[]>([]);
   const [lectureTitle, setLectureTitle] = useState("");
+
+  // Real-time Duration & Page Count Detection States
+  const [audioDuration, setAudioDuration] = useState<number | null>(null);
+  const [pdfDetectedPages, setPdfDetectedPages] = useState<number | null>(null);
 
   // Slide Range Selection States
   const [startPage, setStartPage] = useState<string>("");
@@ -121,6 +127,96 @@ function SummarizeContent() {
       return Math.max(prev, clampedTarget);
     });
   }, []);
+
+  // Real-time Audio Duration Extractor (Instant client-side metadata decode in < 20ms)
+  const getAudioDuration = useCallback((file: File): Promise<number> => {
+    return new Promise((resolve) => {
+      if (typeof window === "undefined") {
+        resolve(0);
+        return;
+      }
+      try {
+        const audio = document.createElement("audio");
+        const objectUrl = URL.createObjectURL(file);
+        audio.preload = "metadata";
+        audio.src = objectUrl;
+        audio.onloadedmetadata = () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve(Math.round(audio.duration || 0));
+        };
+        audio.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          // Fallback estimate: ~16KB/s for 128kbps audio
+          resolve(Math.max(30, Math.round(file.size / 16000)));
+        };
+      } catch {
+        resolve(Math.max(30, Math.round(file.size / 16000)));
+      }
+    });
+  }, []);
+
+  const formatDuration = useCallback((totalSeconds: number) => {
+    if (!totalSeconds || totalSeconds <= 0) return "بضع ثوانٍ";
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    if (mins === 0) return `${secs} ثانية`;
+    if (secs === 0) return `${mins} دقيقة`;
+    return `${mins}:${secs.toString().padStart(2, "0")} دقيقة`;
+  }, []);
+
+  // Pre-flight Quota Consumption Breakdown (حساب استهلاك الرصيد الدقيق والشفاف قبل البدء)
+  const quotaCostBreakdown = useMemo(() => {
+    const hasAudio = !!audioFile || multiAudioFiles.length > 0;
+    const hasPdf = !!pdfFile || !!pdfTempId;
+
+    // 1. Audio duration & cost
+    let totalAudioSeconds = 0;
+    if (audioFile && audioDuration !== null) {
+      totalAudioSeconds = audioDuration;
+    } else if (multiAudioFiles.length > 0) {
+      totalAudioSeconds = multiAudioFiles.reduce((acc, f) => acc + (f.duration || 0), 0);
+    }
+
+    // 1 minute of quota per 1 minute of audio (minimum 1 minute if audio is attached)
+    const audioCostMinutes = hasAudio ? Math.max(1, Math.ceil(totalAudioSeconds / 60)) : 0;
+
+    // 2. Document page count & cost
+    let selectedPages = 0;
+    const s = parseInt(startPage, 10);
+    const e = parseInt(endPage, 10);
+
+    if (!isNaN(s) && !isNaN(e) && s >= 1 && e >= s) {
+      selectedPages = e - s + 1;
+    } else if (pdfDetectedPages) {
+      selectedPages = pdfDetectedPages;
+    } else if (hasPdf) {
+      selectedPages = 10;
+    }
+
+    // If audio is attached, slides are aligned with the audio (no extra quota charge)
+    // If document-only mode, 1 minute of quota per 2 slides/pages (minimum 3 minutes)
+    const docCostMinutes = hasPdf && !hasAudio ? Math.max(3, Math.ceil(selectedPages / 2)) : 0;
+
+    const totalCost = hasAudio ? audioCostMinutes : docCostMinutes;
+    const currentQuota = quota ?? 0;
+    const isSufficient = currentQuota >= totalCost;
+    const remainingAfter = Math.max(0, currentQuota - totalCost);
+    const missingMinutes = Math.max(0, totalCost - currentQuota);
+
+    return {
+      hasAudio,
+      hasPdf,
+      totalAudioSeconds,
+      audioCostMinutes,
+      selectedPages,
+      docCostMinutes,
+      totalCost,
+      currentQuota,
+      remainingAfter,
+      isSufficient,
+      missingMinutes,
+    };
+  }, [audioFile, audioDuration, multiAudioFiles, pdfFile, pdfTempId, startPage, endPage, pdfDetectedPages, quota]);
 
   // Multi-Audio Upload Computations
   const isMultiAudioUploading = multiAudioFiles.length > 0 && multiAudioFiles.some(f => f.isUploading || !f.tempId);
@@ -948,10 +1044,12 @@ function SummarizeContent() {
                               setAudioFile(files[0]);
                               setAudioUploadProgress(0);
                               setAudioTempId(null);
+                              getAudioDuration(files[0]).then(dur => setAudioDuration(dur));
                               uploadToTemp(files[0], 'audio');
                             } else {
                               setAudioFile(null);
                               setAudioTempId(null);
+                              setAudioDuration(null);
                               const newFiles = Array.from(files).map(file => ({
                                 id: Math.random().toString(36).substring(7),
                                 file,
@@ -959,8 +1057,10 @@ function SummarizeContent() {
                                 isUploading: true
                               }));
                               setMultiAudioFiles(prev => [...prev, ...newFiles]);
-                              newFiles.forEach(item => {
+                              newFiles.forEach(async item => {
                                 uploadSingleMultiAudio(item.id, item.file);
+                                const dur = await getAudioDuration(item.file);
+                                setMultiAudioFiles(prev => prev.map(f => f.id === item.id ? { ...f, duration: dur } : f));
                               });
                             }
                           }
@@ -990,19 +1090,24 @@ function SummarizeContent() {
                               <p className="font-bold text-slate-800 dark:text-slate-100 text-xs truncate" dir="ltr">
                                 {audioFile ? audioFile.name : `${multiAudioFiles.length} ملفات صوتية`}
                               </p>
-                              <p className="text-[11px] font-medium mt-0.5">
+                              <div className="flex flex-wrap items-center gap-1.5 mt-1">
                                 {isAnyAudioUploading ? (
-                                  audioFile ? (
-                                    <span className="text-indigo-600 dark:text-indigo-400 font-bold">جاري الرفع... ({audioUploadProgress}%)</span>
-                                  ) : (
-                                    <span className="text-indigo-600 dark:text-indigo-400 font-bold">
-                                      جاري الرفع... ({completedAudioCount} من {totalAudioCount} جاهزة)
-                                    </span>
-                                  )
+                                  <span className="text-[11px] font-medium text-indigo-600 dark:text-indigo-400">
+                                    جاري الرفع...
+                                  </span>
                                 ) : (
-                                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">جاهز للمعالجة ✔️</span>
+                                  <>
+                                    {quotaCostBreakdown.totalAudioSeconds > 0 && (
+                                      <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200/80 dark:border-indigo-800 px-2 py-0.5 rounded-md tabular-nums">
+                                        ⏱️ {formatDuration(quotaCostBreakdown.totalAudioSeconds)}
+                                      </span>
+                                    )}
+                                    <span className="text-[10px] font-black text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-800 px-2 py-0.5 rounded-md tabular-nums">
+                                      ⚡ خصم: {quotaCostBreakdown.audioCostMinutes} دقيقة
+                                    </span>
+                                  </>
                                 )}
-                              </p>
+                              </div>
                             </div>
                           </div>
                           <button
@@ -1011,6 +1116,7 @@ function SummarizeContent() {
                               e.stopPropagation();
                               setAudioFile(null);
                               setAudioTempId(null);
+                              setAudioDuration(null);
                               setMultiAudioFiles([]);
                             }}
                             className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition cursor-pointer shrink-0"
@@ -1069,9 +1175,26 @@ function SummarizeContent() {
                               </div>
                               <div className="min-w-0">
                                 <p className="font-bold text-slate-800 dark:text-slate-100 text-xs truncate" dir="ltr">{pdfFile.name}</p>
-                                <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                                  {isPdfUploading ? "جاري الرفع..." : "جاهز للبدء ✔️"}
-                                </p>
+                                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                  {isPdfUploading ? (
+                                    <span className="text-[11px] text-slate-400 font-medium">جاري الرفع...</span>
+                                  ) : (
+                                    <>
+                                      <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200/80 dark:border-indigo-800 px-2 py-0.5 rounded-md tabular-nums">
+                                        📄 {quotaCostBreakdown.selectedPages} شريحة
+                                      </span>
+                                      {quotaCostBreakdown.hasAudio ? (
+                                        <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/80 dark:border-emerald-800 px-2 py-0.5 rounded-md">
+                                          🎁 مجاني مع الصوت
+                                        </span>
+                                      ) : (
+                                        <span className="text-[10px] font-black text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-800 px-2 py-0.5 rounded-md tabular-nums">
+                                          ⚡ سيخصم: {quotaCostBreakdown.docCostMinutes} دقائق
+                                        </span>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
                             <button
@@ -1082,6 +1205,7 @@ function SummarizeContent() {
                                 setPdfTempId(null);
                                 setStartPage("");
                                 setEndPage("");
+                                setPdfDetectedPages(null);
                               }}
                               className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition cursor-pointer shrink-0"
                               title="إزالة"
@@ -1098,6 +1222,9 @@ function SummarizeContent() {
                             onRangeChange={(s, e) => {
                               setStartPage(s);
                               setEndPage(e);
+                            }}
+                            onTotalPagesDetected={(count) => {
+                              setPdfDetectedPages(count);
                             }}
                             disabled={isProcessing || isStreaming}
                           />
@@ -1118,6 +1245,141 @@ function SummarizeContent() {
                       )}
                     </div>
                   </div>
+
+                {/* Live Pre-Flight Quota Deduction Summary (شفافية كاملة قبل الموافقة على العملية) */}
+                {(audioFile || multiAudioFiles.length > 0 || pdfFile || pdfTempId) && (
+                  <div className={`mb-5 p-4 rounded-2xl border transition-all text-right ${
+                    quotaCostBreakdown.isSufficient
+                      ? "bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-slate-50 dark:from-indigo-950/40 dark:via-purple-950/20 dark:to-slate-900/40 border-indigo-200/80 dark:border-indigo-800/60 shadow-xs"
+                      : "bg-rose-50/90 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800/80"
+                  }`}>
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-indigo-100 dark:border-indigo-900/40">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                          quotaCostBreakdown.isSufficient
+                            ? "bg-indigo-600 text-white"
+                            : "bg-rose-600 text-white"
+                        }`}>
+                          <Calculator className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                            ملخص خصم الرصيد قبل بدء المعالجة
+                          </h4>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                            حساب شفاف ودقيق للمدة والدقائق المستهلكة من رصيدك
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-left">
+                        <span className="text-[10px] text-slate-400 block font-medium">رصيدك الحالي</span>
+                        <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 tabular-nums">
+                          {quota !== null ? `${quota} دقيقة` : "..."}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Breakdown Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
+                      {/* Audio Cost Badge */}
+                      {quotaCostBreakdown.hasAudio ? (
+                        <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FileAudio className="w-4 h-4 text-emerald-500 shrink-0" />
+                            <div className="min-w-0">
+                              <span className="text-[10px] text-slate-400 block leading-tight">تسجيل المحاضرة:</span>
+                              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate block">
+                                {formatDuration(quotaCostBreakdown.totalAudioSeconds)}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 shrink-0 tabular-nums bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-md">
+                            -{quotaCostBreakdown.audioCostMinutes} دقيقة
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="p-2.5 rounded-xl bg-slate-100/60 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700/60 flex items-center gap-2 text-slate-400 text-xs">
+                          <FileAudio className="w-4 h-4 shrink-0 opacity-50" />
+                          <span>لم يتم إرفاق تسجيل صوتي</span>
+                        </div>
+                      )}
+
+                      {/* PDF Cost Badge */}
+                      {quotaCostBreakdown.hasPdf ? (
+                        <div className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FileText className="w-4 h-4 text-indigo-500 shrink-0" />
+                            <div className="min-w-0">
+                              <span className="text-[10px] text-slate-400 block leading-tight">سلايدات المحاضرة:</span>
+                              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate block">
+                                {quotaCostBreakdown.selectedPages} شريحة مختارة
+                              </span>
+                            </div>
+                          </div>
+                          {quotaCostBreakdown.hasAudio ? (
+                            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-md">
+                              مجاني مع الصوت 🎁
+                            </span>
+                          ) : (
+                            <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 shrink-0 tabular-nums bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 px-2 py-0.5 rounded-md">
+                              -{quotaCostBreakdown.docCostMinutes} دقيقة
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="p-2.5 rounded-xl bg-slate-100/60 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700/60 flex items-center gap-2 text-slate-400 text-xs">
+                          <FileText className="w-4 h-4 shrink-0 opacity-50" />
+                          <span>لم يتم إرفاق سلايدات</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bottom Summary Bar: Total to Deduct vs Remaining Balance */}
+                    <div className="pt-2.5 border-t border-slate-200/80 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-600 dark:text-slate-300">
+                          إجمالي الخصم من الرصيد:
+                        </span>
+                        <span className="text-sm font-black text-indigo-600 dark:text-indigo-400 tabular-nums bg-white dark:bg-slate-800 px-2.5 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800 shadow-xs">
+                          {quotaCostBreakdown.totalCost} دقيقة
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 font-bold">
+                        {quotaCostBreakdown.isSufficient ? (
+                          <span className="text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            <span>رصيدك المتبقي بعد المعالجة: <strong className="font-black tabular-nums">{quotaCostBreakdown.remainingAfter} دقيقة</strong></span>
+                          </span>
+                        ) : (
+                          <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            <span>ينقصك {quotaCostBreakdown.missingMinutes} دقيقة لإتمام العملية!</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Insufficient Quota Action */}
+                    {!quotaCostBreakdown.isSufficient && (
+                      <div className="mt-3 pt-2 border-t border-rose-200 dark:border-rose-900/60 flex items-center justify-between gap-2">
+                        <p className="text-[11px] font-bold text-rose-700 dark:text-rose-300">
+                          ⚠️ رصيدك الحالي لا يكفي. يمكنك تقليل عدد الصفحات أو شحن باقتك للمتابعة.
+                        </p>
+                        <Link
+                          href="/plans"
+                          prefetch={true}
+                          className="shrink-0 text-xs font-black bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded-lg transition shadow-xs flex items-center gap-1 cursor-pointer"
+                        >
+                          <CreditCard className="w-3 h-3" />
+                          <span>شحن الرصيد</span>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Quota Lock Banner */}
                 {quota !== null && quota <= 0 && !hasPaidPlan && (
@@ -1143,7 +1405,8 @@ function SummarizeContent() {
                       (!audioFile && multiAudioFiles.length === 0 && !pdfFile && !pdfTempId) ||
                       isAnyAudioUploading ||
                       isPdfUploading ||
-                      isRangeInvalid
+                      isRangeInvalid ||
+                      ((audioFile || multiAudioFiles.length > 0 || pdfFile || pdfTempId) && !quotaCostBreakdown.isSufficient)
                     }
                     isProcessing={isProcessing}
                     quota={quota}
@@ -1156,6 +1419,8 @@ function SummarizeContent() {
                             : `جاري رفع الملف الصوتي (${audioUploadProgress}%)...`)
                         : isPdfUploading
                         ? `جاري رفع السلايدات (${pdfUploadProgress}%)...`
+                        : !quotaCostBreakdown.isSufficient && (audioFile || multiAudioFiles.length > 0 || pdfFile || pdfTempId)
+                        ? `🚫 رصيدك غير كافٍ (المطلوب: ${quotaCostBreakdown.totalCost} دقيقة | المتوفر: ${quotaCostBreakdown.currentQuota} دقيقة)`
                         : "ابدأ التلخيص الذكي وتوليد الملف المخطط"
                     }
                     loadingText="جاري التوليد والتلخيص..."

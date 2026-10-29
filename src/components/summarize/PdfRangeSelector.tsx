@@ -22,6 +22,7 @@ export interface PdfRangeSelectorProps {
   startPage: string;
   endPage: string;
   onRangeChange: (start: string, end: string) => void;
+  onTotalPagesDetected?: (pages: number | null) => void;
   disabled?: boolean;
 }
 
@@ -30,6 +31,7 @@ export default function PdfRangeSelector({
   startPage,
   endPage,
   onRangeChange,
+  onTotalPagesDetected,
   disabled = false,
 }: PdfRangeSelectorProps) {
   const [totalPages, setTotalPages] = useState<number | null>(null);
@@ -43,6 +45,7 @@ export default function PdfRangeSelector({
 
     if (!file) {
       setTotalPages(null);
+      onTotalPagesDetected?.(null);
       setIsDetecting(false);
       setDetectError(null);
       setIsPptxFile(false);
@@ -56,6 +59,7 @@ export default function PdfRangeSelector({
     if (isPptx) {
       setIsPptxFile(true);
       setTotalPages(null);
+      onTotalPagesDetected?.(null);
       setIsDetecting(false);
       setDetectError(null);
       return;
@@ -65,6 +69,7 @@ export default function PdfRangeSelector({
 
     if (!isPdf) {
       setTotalPages(null);
+      onTotalPagesDetected?.(null);
       setIsDetecting(false);
       return;
     }
@@ -80,6 +85,7 @@ export default function PdfRangeSelector({
         if (!isCancelled) {
           const count = pdfDoc.getPageCount();
           setTotalPages(count);
+          onTotalPagesDetected?.(count);
           setIsDetecting(false);
         }
       } catch (err: any) {
