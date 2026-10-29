@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, Lock, Download, Sparkles, AlertCircle, RefreshCw } from "lucide-react";
+import { getApiBaseUrl } from "@/lib/apiConfig";
 
 interface DashboardPdfViewerProps {
   pdfContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -25,7 +26,7 @@ export default function DashboardPdfViewer({
   isDocumentOnly,
 }: DashboardPdfViewerProps) {
   const router = useRouter();
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const apiUrl = getApiBaseUrl();
 
   const [hasPdfError, setHasPdfError] = useState<boolean>(false);
   const [isPdfLoading, setIsPdfLoading] = useState<boolean>(true);

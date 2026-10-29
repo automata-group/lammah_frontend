@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
 import { RecentLectureLog } from "@/types/dashboard";
+import { getApiBaseUrl } from "@/lib/apiConfig";
 
 interface RecentLecturesSectionProps {
   recentLogs: RecentLectureLog[];
@@ -204,7 +205,7 @@ export default function RecentLecturesSection({
 
                     return (
                       <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${downloadPath}`}
+                        href={`${getApiBaseUrl()}${downloadPath}`}
                         download={filename}
                         target="_blank"
                         rel="noopener noreferrer"
