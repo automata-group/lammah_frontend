@@ -25,7 +25,6 @@ import {
   MessageCircle,
   PenTool,
   CreditCard,
-  Link as LinkIcon,
   HelpCircle,
   Layers
 } from "lucide-react";
@@ -61,14 +60,10 @@ function SummarizeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Mode Selection: File upload or YouTube URL
-  const [activeTab, setActiveTab] = useState<"files" | "url">("files");
-
   // Upload States
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [multiAudioFiles, setMultiAudioFiles] = useState<UploadedAudio[]>([]);
-  const [lectureUrl, setLectureUrl] = useState("");
   const [lectureTitle, setLectureTitle] = useState("");
 
   // Slide Range Selection States
@@ -453,31 +448,28 @@ function SummarizeContent() {
     setError(null);
 
     // Validate uploads finished
-    if (activeTab === "files") {
-      if (isAudioUploading) {
-        setError("⏳ يرجى الانتظار حتى يكتمل رفع الملف الصوتي إلى السيرفر.");
+    if (isAudioUploading) {
+      setError("⏳ يرجى الانتظار حتى يكتمل رفع الملف الصوتي إلى السيرفر.");
+      return;
+    }
+    if (isPdfUploading) {
+      setError("⏳ يرجى الانتظار حتى يكتمل رفع ملف السلايدات إلى السيرفر.");
+      return;
+    }
+    if (multiAudioFiles.length > 0) {
+      const incomplete = multiAudioFiles.filter(item => item.isUploading || !item.tempId);
+      if (incomplete.length > 0) {
+        const completed = multiAudioFiles.length - incomplete.length;
+        setError(`⏳ يرجى الانتظار، جاري رفع التسجيلات الصوتية للسيرفر (تم اكتمال ${completed} من أصل ${multiAudioFiles.length} ملفات).`);
         return;
-      }
-      if (isPdfUploading) {
-        setError("⏳ يرجى الانتظار حتى يكتمل رفع ملف السلايدات إلى السيرفر.");
-        return;
-      }
-      if (multiAudioFiles.length > 0) {
-        const incomplete = multiAudioFiles.filter(item => item.isUploading || !item.tempId);
-        if (incomplete.length > 0) {
-          const completed = multiAudioFiles.length - incomplete.length;
-          setError(`⏳ يرجى الانتظار، جاري رفع التسجيلات الصوتية للسيرفر (تم اكتمال ${completed} من أصل ${multiAudioFiles.length} ملفات).`);
-          return;
-        }
       }
     }
 
     const hasAudioFile = !!audioFile || multiAudioFiles.length > 0;
-    const hasLectureUrl = activeTab === "url" && lectureUrl.trim().length > 0;
-    const hasPdfOnly = !hasAudioFile && !hasLectureUrl && (!!pdfFile || !!pdfTempId);
+    const hasPdfOnly = !hasAudioFile && (!!pdfFile || !!pdfTempId);
 
-    if (!hasAudioFile && !hasLectureUrl && !hasPdfOnly) {
-      setError(activeTab === "url" ? "يرجى إدخال رابط المحاضرة أولاً." : "يرجى إرفاق ملف صوتي أو ملف PDF/PPTX للمعالجة.");
+    if (!hasAudioFile && !hasPdfOnly) {
+      setError("يرجى إرفاق ملف صوتي أو ملف PDF/PPTX للمعالجة.");
       return;
     }
 
@@ -492,14 +484,6 @@ function SummarizeContent() {
       return;
     }
 
-    if (activeTab === "url") {
-      const lowerUrl = lectureUrl.trim().toLowerCase();
-      if (lowerUrl.includes("drive.google.com") || lowerUrl.includes("google.com/drive") || lowerUrl.includes("zoom.us")) {
-        setError("🚫 عذراً، يُرجى استخدام روابط يوتيوب فقط! 🎥");
-        return;
-      }
-    }
-
     // Initialize State Machine
     setIsProcessing(true);
     setIsStreaming(false);
@@ -509,7 +493,7 @@ function SummarizeContent() {
     setProgressMessage("جاري بدء المعالجة وتهيئة البيئة...");
 
     // Compute realistic initial time estimate
-    const isBatch = activeTab === "files" && multiAudioFiles.length > 1;
+    const isBatch = multiAudioFiles.length > 1;
     let estimatedSecs = 65;
     if (hasPdfOnly) {
       estimatedSecs = pdfFile ? Math.max(30, Math.min(80, Math.round(pdfFile.size / (1024 * 300)) * 4 + 25)) : 40;
@@ -539,16 +523,12 @@ function SummarizeContent() {
       }
       formData.append("audio_temp_ids", tempIds.join(","));
     } else {
-      if (activeTab === "url") {
-        formData.append("lecture_url", lectureUrl.trim());
-      } else {
-        const activeTempId = audioTempId || multiAudioFiles[0]?.tempId || null;
-        const activeFile = audioFile || multiAudioFiles[0]?.file || null;
-        if (!forceRawFiles && activeTempId) {
-          formData.append("audio_temp_id", activeTempId);
-        } else if (activeFile) {
-          formData.append("audio_file", activeFile);
-        }
+      const activeTempId = audioTempId || multiAudioFiles[0]?.tempId || null;
+      const activeFile = audioFile || multiAudioFiles[0]?.file || null;
+      if (!forceRawFiles && activeTempId) {
+        formData.append("audio_temp_id", activeTempId);
+      } else if (activeFile) {
+        formData.append("audio_file", activeFile);
       }
     }
 
@@ -717,16 +697,15 @@ function SummarizeContent() {
     }
   };
 
-  const isDocumentOnly = !audioFile && multiAudioFiles.length === 0 && activeTab !== "url" && (!!pdfFile || !!pdfTempId);
+  const isDocumentOnly = !audioFile && multiAudioFiles.length === 0 && (!!pdfFile || !!pdfTempId);
 
   const activeFileName = useMemo(() => {
-    if (activeTab === "url") return lectureUrl.trim() || "رابط يوتيوب";
     if (multiAudioFiles.length > 1) return `${multiAudioFiles.length} ملفات صوتية`;
     if (audioFile) return audioFile.name;
     if (multiAudioFiles[0]) return multiAudioFiles[0].file.name;
     if (pdfFile) return pdfFile.name;
     return "محاضرة جامعية";
-  }, [activeTab, lectureUrl, multiAudioFiles, audioFile, pdfFile]);
+  }, [multiAudioFiles, audioFile, pdfFile]);
 
   const currentPipelineSteps: PipelineStep[] = useMemo(() => {
     if (isDocumentOnly) {
@@ -949,116 +928,8 @@ function SummarizeContent() {
               <div className="w-full bg-white dark:bg-[#070b16]/90 backdrop-blur-2xl border border-slate-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_15px_45px_rgba(0,0,0,0.06)] relative overflow-hidden transition-all text-right">
                 <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
 
-                {/* Tab Switcher: Direct Files vs YouTube URL */}
-                <div className="flex items-center gap-2 mb-6 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 w-fit">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("files")}
-                    className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                      activeTab === "files"
-                        ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs"
-                        : "text-slate-500 hover:text-slate-700 dark:text-slate-400"
-                    }`}
-                  >
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>رفع ملفات المحاضرة</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("url")}
-                    className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                      activeTab === "url"
-                        ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs"
-                        : "text-slate-500 hover:text-slate-700 dark:text-slate-400"
-                    }`}
-                  >
-                    <LinkIcon className="w-3.5 h-3.5" />
-                    <span>رابط يوتيوب 🎥</span>
-                  </button>
-                </div>
-
-                {/* Upload Content Area */}
-                {activeTab === "url" ? (
-                  <div className="space-y-4 mb-6">
-                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800">
-                      <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-2">
-                        رابط محاضرة يوتيوب:
-                      </label>
-                      <input
-                        type="url"
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        value={lectureUrl}
-                        onChange={(e) => setLectureUrl(e.target.value)}
-                        className="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-left"
-                        dir="ltr"
-                      />
-                      <p className="text-[11px] text-slate-400 mt-2 font-medium">
-                        💡 سيقوم لمّاح بسحب الصوت بدقة وتفريغه ومطابقته بالسلايدات تلقائياً.
-                      </p>
-                    </div>
-
-                    {/* Slides Upload (Optional Attachment with URL) */}
-                    <div className="relative group rounded-2xl p-4 transition-all duration-200 border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/30">
-                      <input
-                        type="file"
-                        accept="application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            setPdfFile(file);
-                            setPdfUploadProgress(0);
-                            setPdfTempId(null);
-                            uploadToTemp(file, 'pdf');
-                          }
-                        }}
-                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                      />
-                      {pdfFile ? (
-                        <div className="w-full z-20 relative flex flex-col gap-2">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
-                              <span className="font-bold text-xs truncate" dir="ltr">{pdfFile.name}</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setPdfFile(null);
-                                setPdfTempId(null);
-                                setStartPage("");
-                                setEndPage("");
-                              }}
-                              className="p-1 text-slate-400 hover:text-rose-500 rounded-lg cursor-pointer"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                          <PdfRangeSelector
-                            file={pdfFile}
-                            startPage={startPage}
-                            endPage={endPage}
-                            onRangeChange={(s, e) => { setStartPage(s); setEndPage(e); }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between py-1">
-                          <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-indigo-500" />
-                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                              إرفاق ملف السلايدات (اختياري، يوتيوب + PDF)
-                            </span>
-                          </div>
-                          <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold underline cursor-pointer">
-                            اختر ملفاً
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  /* Two File Upload Cards: Audio + Slides */
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {/* Two File Upload Cards: Audio + Slides */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     {/* Audio Upload */}
                     <div className={`relative group rounded-2xl p-5 transition-all duration-200 border flex flex-col justify-center min-h-[160px] ${
                       audioFile || multiAudioFiles.length > 0
@@ -1247,7 +1118,6 @@ function SummarizeContent() {
                       )}
                     </div>
                   </div>
-                )}
 
                 {/* Quota Lock Banner */}
                 {quota !== null && quota <= 0 && !hasPaidPlan && (
@@ -1270,8 +1140,7 @@ function SummarizeContent() {
                   <SmartGenerateButton
                     onClick={() => handleProcess()}
                     disabled={
-                      (activeTab === "files" && !audioFile && multiAudioFiles.length === 0 && !pdfFile && !pdfTempId) ||
-                      (activeTab === "url" && !lectureUrl.trim()) ||
+                      (!audioFile && multiAudioFiles.length === 0 && !pdfFile && !pdfTempId) ||
                       isAnyAudioUploading ||
                       isPdfUploading ||
                       isRangeInvalid
