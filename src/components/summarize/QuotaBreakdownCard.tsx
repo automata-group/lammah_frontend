@@ -123,8 +123,8 @@ export default function QuotaBreakdownCard({
                   </div>
                 </div>
                 {hasAudio ? (
-                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-md">
-                    مجاني مع الصوت 🎁
+                  <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 shrink-0 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 px-2 py-0.5 rounded-md">
+                    مشمولة برصيد الصوت (0 دقيقة إضافية)
                   </span>
                 ) : (
                   <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 shrink-0 tabular-nums bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 px-2 py-0.5 rounded-md">

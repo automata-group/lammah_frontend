@@ -58,10 +58,54 @@ export default function PdfRangeSelector({
 
     if (isPptx) {
       setIsPptxFile(true);
-      setTotalPages(null);
-      onTotalPagesDetected?.(null);
-      setIsDetecting(false);
+      setIsDetecting(true);
       setDetectError(null);
+
+      const detectPptx = async () => {
+        try {
+          const buffer = await file.arrayBuffer();
+          const decoder = new TextDecoder("latin1");
+          const text = decoder.decode(buffer);
+
+          // 1. Scan for slide xml files in ZIP central directory / local headers
+          const regex = /ppt\/slides\/slide([0-9]+)\.xml/g;
+          const slideNumbers = new Set<number>();
+          let match;
+          while ((match = regex.exec(text)) !== null) {
+            slideNumbers.add(parseInt(match[1], 10));
+          }
+
+          // 2. Scan for <Slides>N</Slides> in docProps/app.xml
+          const slidesTagMatch = text.match(/<Slides>(\d+)<\/Slides>/i);
+          const tagCount = slidesTagMatch ? parseInt(slidesTagMatch[1], 10) : 0;
+
+          const detected = Math.max(
+            slideNumbers.size,
+            slideNumbers.size > 0 ? Math.max(...Array.from(slideNumbers)) : 0,
+            tagCount
+          );
+
+          if (!isCancelled) {
+            if (detected > 0) {
+              setTotalPages(detected);
+              onTotalPagesDetected?.(detected);
+            } else {
+              setTotalPages(null);
+              onTotalPagesDetected?.(null);
+            }
+            setIsDetecting(false);
+          }
+        } catch (err: any) {
+          console.warn("[PdfRangeSelector] PPTX slide detection warning:", err);
+          if (!isCancelled) {
+            setTotalPages(null);
+            onTotalPagesDetected?.(null);
+            setIsDetecting(false);
+          }
+        }
+      };
+
+      detectPptx();
       return;
     }
 
@@ -222,6 +266,7 @@ export default function PdfRangeSelector({
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60">
               <Layers className="w-3 h-3 text-emerald-500" />
               <span>{totalPages} شريحة</span>
+              {isPptxFile && <span className="opacity-75 text-[9px] font-bold">(PPTX)</span>}
             </span>
           ) : isPptxFile ? (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/50">
@@ -400,7 +445,7 @@ export default function PdfRangeSelector({
               type="number"
               min="1"
               max={totalPages ?? undefined}
-              placeholder={totalPages ? String(totalPages) : "النهاية"}
+              placeholder={totalPages ? String(totalPages) : "الكل"}
               value={endPage}
               disabled={disabled}
               onChange={(e) => onRangeChange(startPage, e.target.value)}

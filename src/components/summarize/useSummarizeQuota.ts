@@ -66,7 +66,7 @@ export function useSummarizeQuota({
     }
 
     // 2. Selected pages calculation
-    let selectedPages = 10;
+    let selectedPages = pdfDetectedPages && pdfDetectedPages > 0 ? pdfDetectedPages : 0;
     if (pdfDetectedPages && pdfDetectedPages > 0) {
       const s = parseInt(startPage, 10);
       const e = parseInt(endPage, 10);
@@ -79,6 +79,8 @@ export function useSummarizeQuota({
       if (!isNaN(s) && !isNaN(e) && e >= s) {
         selectedPages = Math.max(1, e - s + 1);
       }
+    } else if (hasPdf) {
+      selectedPages = 1;
     }
 
     // 3. Document-only mode: 1 minute per 2 slides, minimum 3 minutes. Free if audio is attached!
