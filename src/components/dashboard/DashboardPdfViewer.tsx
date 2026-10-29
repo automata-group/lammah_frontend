@@ -32,7 +32,7 @@ export default function DashboardPdfViewer({
 
   const cleanTitle = (lectureTitle || "المادة الدراسية")
     .replace(/^محاضرة\s+/, "")
-    .replace(/^دفتر\s+/, "")
+    .replace(/^(?:دفتر|ملف)\s+/, "")
     .replace(/[\\/*?:"<>|]/g, " ")
     .trim() || "المادة الدراسية";
   const isPrep = !!isDocumentOnly;
@@ -44,29 +44,46 @@ export default function DashboardPdfViewer({
     let isMounted = true;
     if (!downloadUrl) return;
 
-    // Fast HEAD check to verify PDF availability without downloading redundant payload
-    fetch(fullDownloadUrl, { method: "HEAD" })
-      .then((res) => {
-        if (!isMounted) return;
-        // Never falsely hide PDF on 405 Method Not Allowed or proxy issues
-        if (res.status === 405) {
-          setHasPdfError(false);
-          return;
-        }
-        const contentType = res.headers.get("content-type") || "";
-        if (!res.ok || contentType.includes("application/json")) {
-          setHasPdfError(true);
-        } else {
-          setHasPdfError(false);
-        }
-      })
-      .catch(() => {
-        // If fetch fails (e.g. CORS), let the iframe attempt normally
-        if (isMounted) setHasPdfError(false);
-      });
+    let retryTimer: NodeJS.Timeout | null = null;
+    let attempts = 0;
+
+    const verifyPdf = () => {
+      fetch(fullDownloadUrl, { method: "HEAD" })
+        .then((res) => {
+          if (!isMounted) return;
+          // If 404, retry up to twice in case the file is still flushing to disk
+          if (res.status === 404 && attempts < 2) {
+            attempts++;
+            retryTimer = setTimeout(verifyPdf, 1200);
+            return;
+          }
+          if (res.status === 405 || res.status === 0) {
+            setHasPdfError(false);
+            return;
+          }
+          const contentType = res.headers.get("content-type") || "";
+          if (!res.ok && res.status === 404) {
+            setHasPdfError(true);
+          } else if (res.ok && contentType.includes("application/json")) {
+            setHasPdfError(true);
+          } else {
+            setHasPdfError(false);
+          }
+        })
+        .catch(() => {
+          // If fetch fails (e.g. CORS preflight or network), NEVER hide the PDF: let iframe load directly!
+          if (isMounted) setHasPdfError(false);
+        })
+        .finally(() => {
+          if (isMounted) setIsPdfLoading(false);
+        });
+    };
+
+    verifyPdf();
 
     return () => {
       isMounted = false;
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [fullDownloadUrl, downloadUrl]);
 
