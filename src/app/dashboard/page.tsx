@@ -717,7 +717,7 @@ function DashboardContent() {
         ? cachedMeta.has_pdf
         : cachedMeta.annotations?.slide_explanations?.length > 0;
       selectInitialTab(cachedMeta.annotations, !!hasPdf);
-      const cachedDirectUrl = cachedPayload?.downloadUrl || cachedMeta?.downloadUrl || cachedMeta?.download_url;
+      const cachedDirectUrl = cachedMeta?.downloadUrl || cachedMeta?.download_url;
       setResult({
         transcript: cachedMeta.transcript || "",
         downloadUrl: hasPdf
