@@ -30,6 +30,8 @@ export default function DashboardPdfViewer({
 
   const [hasPdfError, setHasPdfError] = useState<boolean>(false);
   const [isPdfLoading, setIsPdfLoading] = useState<boolean>(true);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState<number>(0);
 
   const cleanTitle = (lectureTitle || "المادة الدراسية")
     .replace(/^محاضرة\s+/, "")
@@ -43,50 +45,76 @@ export default function DashboardPdfViewer({
 
   useEffect(() => {
     let isMounted = true;
+    let currentObjectUrl: string | null = null;
+    const abortController = new AbortController();
+
     if (!downloadUrl) return;
 
     let retryTimer: NodeJS.Timeout | null = null;
     let attempts = 0;
 
-    const verifyPdf = () => {
-      fetch(fullDownloadUrl, { method: "HEAD" })
-        .then((res) => {
-          if (!isMounted) return;
-          // If 404, retry up to 3 times in case the file is still flushing to disk
-          if (res.status === 404 && attempts < 3) {
-            attempts++;
-            retryTimer = setTimeout(verifyPdf, attempts * 1000);
-            return;
-          }
-          if (res.status === 405 || res.status === 0) {
-            setHasPdfError(false);
-            return;
-          }
-          const contentType = res.headers.get("content-type") || "";
-          if (!res.ok && res.status === 404) {
-            setHasPdfError(true);
-          } else if (res.ok && contentType.includes("application/json")) {
-            setHasPdfError(true);
-          } else {
-            setHasPdfError(false);
-          }
-        })
-        .catch(() => {
-          // If fetch fails (e.g. CORS preflight or network), NEVER hide the PDF: let iframe load directly!
-          if (isMounted) setHasPdfError(false);
-        })
-        .finally(() => {
-          if (isMounted) setIsPdfLoading(false);
+    const loadPdfBlob = async () => {
+      setIsPdfLoading(true);
+      setHasPdfError(false);
+
+      try {
+        const res = await fetch(fullDownloadUrl, {
+          signal: abortController.signal,
         });
+
+        if (!isMounted) return;
+
+        // If 404, retry up to 3 times in case the file is still flushing to disk
+        if (res.status === 404 && attempts < 3) {
+          attempts++;
+          retryTimer = setTimeout(loadPdfBlob, attempts * 1000);
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const contentType = res.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          throw new Error("Received JSON instead of PDF");
+        }
+
+        const blob = await res.blob();
+        if (!isMounted) return;
+
+        if (blob.size < 100) {
+          throw new Error("PDF blob too small or corrupted");
+        }
+
+        const objectUrl = URL.createObjectURL(blob);
+        currentObjectUrl = objectUrl;
+        setBlobUrl(objectUrl);
+        setHasPdfError(false);
+      } catch (err: any) {
+        if (err.name === "AbortError") return;
+        console.error("Error loading PDF blob:", err);
+        if (isMounted) {
+          setHasPdfError(true);
+        }
+      } finally {
+        if (isMounted) {
+          setIsPdfLoading(false);
+        }
+      }
     };
 
-    verifyPdf();
+    loadPdfBlob();
 
     return () => {
       isMounted = false;
+      abortController.abort();
       if (retryTimer) clearTimeout(retryTimer);
+      if (currentObjectUrl) {
+        URL.revokeObjectURL(currentObjectUrl);
+      }
     };
-  }, [fullDownloadUrl, downloadUrl]);
+  }, [fullDownloadUrl, downloadUrl, retryCount]);
 
   return (
     <div
@@ -165,7 +193,10 @@ export default function DashboardPdfViewer({
               </a>
               <button
                 type="button"
-                onClick={() => setHasPdfError(false)}
+                onClick={() => {
+                  setHasPdfError(false);
+                  setRetryCount((c) => c + 1);
+                }}
                 className="px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition cursor-pointer flex items-center gap-1.5"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
@@ -190,12 +221,16 @@ export default function DashboardPdfViewer({
                 </span>
               </div>
             )}
-            <iframe
-              key={downloadUrl}
-              src={`${fullDownloadUrl}#page=${pdfPage || 1}`}
-              onLoad={() => setIsPdfLoading(false)}
-              className="w-full h-[400px] sm:h-[550px] lg:h-[700px] rounded-lg bg-white dark:bg-slate-950 transition-all border border-slate-200 dark:border-slate-900"
-            />
+            {blobUrl ? (
+              <iframe
+                key={blobUrl}
+                src={`${blobUrl}#page=${pdfPage || 1}`}
+                onLoad={() => setIsPdfLoading(false)}
+                className="w-full h-[400px] sm:h-[550px] lg:h-[700px] rounded-lg bg-white dark:bg-slate-950 transition-all border border-slate-200 dark:border-slate-900"
+              />
+            ) : (
+              <div className="w-full h-[400px] sm:h-[550px] lg:h-[700px] rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-900" />
+            )}
           </div>
         )}
       </div>
