@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ProcessingPhase, UploadedAudio } from "./types";
 import { getFingerprint as getThumbmark } from "@thumbmarkjs/thumbmarkjs";
+import { getApiBaseUrl } from "@/lib/apiConfig";
 
 interface StartProcessingParams {
   audioFile: File | null;
@@ -176,8 +177,8 @@ export function useSummarizeStream() {
       if (!pdfTempId && pdfFile) formData.append("pdf_file", pdfFile);
 
       const endpoint = isBatchMode
-        ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/summarize/batch-lecture`
-        : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/summarize/process-lecture`;
+        ? `${getApiBaseUrl()}/api/v1/summarize/batch-lecture`
+        : `${getApiBaseUrl()}/api/v1/summarize/process-lecture`;
 
       const response = await fetch(endpoint, {
         method: "POST",

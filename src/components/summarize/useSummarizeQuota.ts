@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase";
 import { UploadedAudio, QuotaCostBreakdown } from "./types";
+import { getApiBaseUrl } from "@/lib/apiConfig";
 
 interface UseSummarizeQuotaProps {
   session: any;
@@ -119,7 +120,7 @@ export function useSummarizeQuota({
     // 1. Try Backend API
     try {
       const fp = typeof window !== "undefined" ? localStorage.getItem("device_id_v3") || "" : "";
-      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/quota`, {
+      const r = await fetch(`${getApiBaseUrl()}/api/v1/subscription/quota`, {
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
           "X-Fingerprint": String(fp),
@@ -177,29 +178,33 @@ export function useSummarizeQuota({
           return;
         }
 
-        // Profile quota check
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("quota_remaining, current_plan_id")
-          .eq("id", session.user.id)
-          .maybeSingle();
+        // Profile quota check (safeguarded against RLS recursion)
+        try {
+          const { data: prof, error: profErr } = await supabase
+            .from("profiles")
+            .select("quota_remaining, current_plan_id")
+            .eq("id", session.user.id)
+            .maybeSingle();
 
-        if (prof) {
-          const pQuota = prof.quota_remaining ?? 0;
-          setQuota(pQuota);
-          if (pQuota > 0) setPlanName("باقة نشطة");
-          setIsQuotaChecking(false);
-          resolved = true;
-          if (typeof window !== "undefined") {
-            try {
-              localStorage.setItem("cached_user_quota", String(pQuota));
-              if (pQuota > 0) localStorage.setItem("cached_user_plan", "باقة نشطة");
-            } catch {}
+          if (!profErr && prof) {
+            const pQuota = prof.quota_remaining ?? 0;
+            setQuota(pQuota);
+            if (pQuota > 0) setPlanName("باقة نشطة");
+            setIsQuotaChecking(false);
+            resolved = true;
+            if (typeof window !== "undefined") {
+              try {
+                localStorage.setItem("cached_user_quota", String(pQuota));
+                if (pQuota > 0) localStorage.setItem("cached_user_plan", "باقة نشطة");
+              } catch {}
+            }
+            return;
           }
-          return;
+        } catch (profErr) {
+          console.warn("Supabase profile check skipped:", profErr);
         }
       } catch (sbErr) {
-        console.error("Direct Supabase fallback error:", sbErr);
+        console.warn("Direct Supabase fallback error:", sbErr);
       }
     }
 

@@ -4,6 +4,7 @@ import React, { useCallback, useRef } from "react";
 import { FileText, CheckCircle, X } from "lucide-react";
 import PdfRangeSelector from "./PdfRangeSelector";
 import { QuotaCostBreakdown } from "./types";
+import { getUploaderBaseUrl } from "@/lib/apiConfig";
 
 interface SlidesUploadCardProps {
   pdfFile: File | null;
@@ -62,7 +63,7 @@ export default function SlidesUploadCard({
     const xhr = new XMLHttpRequest();
     activeXhrRef.current = xhr;
 
-    const uploaderUrl = process.env.NEXT_PUBLIC_UPLOADER_URL || "http://localhost:8080";
+    const uploaderUrl = getUploaderBaseUrl();
     xhr.open("POST", `${uploaderUrl}/api/v1/summarize/upload-temp`, true);
 
     if (session?.access_token) {

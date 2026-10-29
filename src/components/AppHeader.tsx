@@ -13,6 +13,7 @@ import {
   Sparkles, CheckCircle2, Shield, HelpCircle, Zap, Clock, Palette, Layers, CheckSquare
 } from "lucide-react";
 import { createClient } from "@/lib/supabase";
+import { getApiBaseUrl } from "@/lib/apiConfig";
 
 interface AppHeaderProps {
   quota?: number | null;
@@ -90,7 +91,7 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
     const syncQuota = async () => {
       // 1. Try Backend API
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/quota`, {
+        const res = await fetch(`${getApiBaseUrl()}/api/v1/subscription/quota`, {
           headers: { "Authorization": `Bearer ${session.access_token}` }
         });
         if (res.ok) {
@@ -133,20 +134,24 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
           return;
         }
 
-        // 3. Direct Profiles Fallback
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("quota_remaining")
-          .eq("id", session.user.id)
-          .maybeSingle();
+        // 3. Direct Profiles Fallback (safeguarded against RLS recursion)
+        try {
+          const { data: prof, error: profErr } = await supabase
+            .from("profiles")
+            .select("quota_remaining")
+            .eq("id", session.user.id)
+            .maybeSingle();
 
-        if (prof && prof.quota_remaining !== undefined && isSubscribed) {
-          setFetchedQuota(prof.quota_remaining);
-          if (typeof window !== "undefined") {
-            try {
-              localStorage.setItem("cached_user_quota", String(prof.quota_remaining));
-            } catch {}
+          if (!profErr && prof && prof.quota_remaining !== undefined && isSubscribed) {
+            setFetchedQuota(prof.quota_remaining);
+            if (typeof window !== "undefined") {
+              try {
+                localStorage.setItem("cached_user_quota", String(prof.quota_remaining));
+              } catch {}
+            }
           }
+        } catch (profCatch) {
+          console.warn("Direct profiles quota check skipped:", profCatch);
         }
       } catch (err) {
         console.warn("Direct Supabase quota sync in AppHeader:", err);

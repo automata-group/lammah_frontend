@@ -4,6 +4,8 @@ import React, { useCallback, useRef } from "react";
 import { FileAudio, CheckCircle, X } from "lucide-react";
 import { UploadedAudio } from "./types";
 
+import { getUploaderBaseUrl } from "@/lib/apiConfig";
+
 interface AudioUploadCardProps {
   audioFile: File | null;
   setAudioFile: (file: File | null) => void;
@@ -82,7 +84,7 @@ export default function AudioUploadCard({
     const xhr = new XMLHttpRequest();
     activeXhrMap.current.set("single", xhr);
 
-    const uploaderUrl = process.env.NEXT_PUBLIC_UPLOADER_URL || "http://localhost:8080";
+    const uploaderUrl = getUploaderBaseUrl();
     xhr.open("POST", `${uploaderUrl}/api/v1/summarize/upload-temp`, true);
 
     if (session?.access_token) {
@@ -131,7 +133,7 @@ export default function AudioUploadCard({
     const xhr = new XMLHttpRequest();
     activeXhrMap.current.set(id, xhr);
 
-    const uploaderUrl = process.env.NEXT_PUBLIC_UPLOADER_URL || "http://localhost:8080";
+    const uploaderUrl = getUploaderBaseUrl();
     xhr.open("POST", `${uploaderUrl}/api/v1/summarize/upload-temp`, true);
 
     if (session?.access_token) {
