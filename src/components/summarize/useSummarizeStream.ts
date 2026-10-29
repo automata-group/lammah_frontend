@@ -6,6 +6,7 @@ import { ProcessingPhase, UploadedAudio } from "./types";
 import { getFingerprint as getThumbmark } from "@thumbmarkjs/thumbmarkjs";
 import { getApiBaseUrl } from "@/lib/apiConfig";
 import { fetchWithRetry } from "@/lib/fetchWithRetry";
+import { createClient } from "@/lib/supabase";
 
 interface StartProcessingParams {
   audioFile: File | null;
@@ -123,7 +124,17 @@ export function useSummarizeStream() {
       return;
     }
 
-    if (!session?.access_token) {
+    // Get fresh token from Supabase client to guarantee freshness even in long-lived tabs
+    let token = session?.access_token;
+    try {
+      const supabase = createClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.access_token) {
+        token = sessionData.session.access_token;
+      }
+    } catch {}
+
+    if (!token) {
       router.replace("/login");
       return;
     }
@@ -186,17 +197,18 @@ export function useSummarizeStream() {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${token}`,
             "X-Fingerprint": fp,
             "X-Device-Metadata": metaJson,
           },
           body: formData,
         },
         {
-          retries: 2,
-          initialDelayMs: 600,
+          retries: 3,
+          initialDelayMs: 1000,
+          maxDelayMs: 4000,
           onRetry: (attempt) => {
-            setProgressMessage(`جاري إعادة الاتصال بالسيرفر (محاولة ${attempt} من 2)...`);
+            setProgressMessage(`جاري إعادة الاتصال بالسيرفر (محاولة ${attempt} من 3)...`);
           },
         }
       );
