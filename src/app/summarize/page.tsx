@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo, Suspense } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback, Suspense } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -25,39 +25,65 @@ import {
   MessageCircle,
   PenTool,
   CreditCard,
+  Link as LinkIcon,
+  HelpCircle,
+  Layers
 } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
 import DashboardProcessingScreen from "@/components/dashboard/DashboardProcessingScreen";
+import PdfRangeSelector from "@/components/summarize/PdfRangeSelector";
 import { PipelineStep } from "@/types/dashboard";
 import { createClient } from "@/lib/supabase";
+
+// Monotonic Machine Phase
+type ProcessingPhase =
+  | "idle"
+  | "uploading"
+  | "queued"
+  | "audio"
+  | "slides"
+  | "ai"
+  | "pdf"
+  | "done"
+  | "error";
+
+interface UploadedAudio {
+  id: string;
+  file: File;
+  tempId?: string;
+  progress: number;
+  isUploading: boolean;
+}
 
 function SummarizeContent() {
   const { user, session, loading, signOut } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Mode Selection: File upload or YouTube URL
+  const [activeTab, setActiveTab] = useState<"files" | "url">("files");
+
   // Upload States
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
-  const [lectureUrl, setLectureUrl] = useState("");
-  
-  interface UploadedAudio {
-    id: string;
-    file: File;
-    tempId?: string;
-    progress: number;
-    isUploading: boolean;
-  }
   const [multiAudioFiles, setMultiAudioFiles] = useState<UploadedAudio[]>([]);
-  const [lectureUrls, setLectureUrls] = useState<string[]>([""]);
+  const [lectureUrl, setLectureUrl] = useState("");
   const [lectureTitle, setLectureTitle] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [queuePosition, setQueuePosition] = useState(0);
-  const [progressStep, setProgressStep] = useState("");
+
+  // Slide Range Selection States
+  const [startPage, setStartPage] = useState<string>("");
+  const [endPage, setEndPage] = useState<string>("");
+
+  // Pre-upload Temporary IDs and Progress
+  const [audioUploadProgress, setAudioUploadProgress] = useState(0);
+  const [pdfUploadProgress, setPdfUploadProgress] = useState(0);
+  const [audioTempId, setAudioTempId] = useState<string | null>(null);
+  const [pdfTempId, setPdfTempId] = useState<string | null>(null);
+  const [isAudioUploading, setIsAudioUploading] = useState(false);
+  const [isPdfUploading, setIsPdfUploading] = useState(false);
+
+  // Quota & Subscription States
   const [quota, setQuota] = useState<number | null>(() => {
     if (typeof window !== "undefined") {
       const cachedQuota = localStorage.getItem("cached_user_quota");
@@ -67,9 +93,6 @@ function SummarizeContent() {
     }
     return null;
   });
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const [initialEstimate, setInitialEstimate] = useState<number>(38);
-  const [serverProgressPercent, setServerProgressPercent] = useState<number | null>(null);
   const [planName, setPlanName] = useState<string>(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("cached_user_plan") || "";
@@ -82,26 +105,27 @@ function SummarizeContent() {
     }
     return true;
   });
-  // Pre-upload States
-  const [audioUploadProgress, setAudioUploadProgress] = useState(0);
-  const [pdfUploadProgress, setPdfUploadProgress] = useState(0);
-  const [audioTempId, setAudioTempId] = useState<string | null>(null);
-  const [pdfTempId, setPdfTempId] = useState<string | null>(null);
-  const [isAudioUploading, setIsAudioUploading] = useState(false);
-  const [isPdfUploading, setIsPdfUploading] = useState(false);
-  const [startPage, setStartPage] = useState<string>("");
-  const [endPage, setEndPage] = useState<string>("");
 
-  const hasQuota = quota !== null ? quota > 0 : false;
-  const hasPaidPlan = Boolean(
-    hasQuota ||
-    (planName &&
-      planName !== "free" &&
-      planName !== "مجاني" &&
-      !planName.includes("مجاني") &&
-      !planName.toLowerCase().includes("free"))
-  );
-  const isDemoMode = !hasPaidPlan && !hasQuota && (quota !== null && quota <= 0);
+  // ==========================================
+  // SINGLE MONOTONIC PROGRESS STATE MACHINE
+  // ==========================================
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [phase, setPhase] = useState<ProcessingPhase>("idle");
+  const [displayedProgress, setDisplayedProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState("");
+  const [queuePosition, setQueuePosition] = useState(0);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [initialEstimate, setInitialEstimate] = useState<number>(75);
+  const [error, setError] = useState<string | null>(null);
+
+  // Monotonic Progress Updater (Enforces Mathematical Invariant: displayed >= prev)
+  const setMonotonicProgress = useCallback((incomingTarget: number) => {
+    setDisplayedProgress(prev => {
+      const clampedTarget = Math.min(100, Math.max(0, incomingTarget));
+      return Math.max(prev, clampedTarget);
+    });
+  }, []);
 
   // Multi-Audio Upload Computations
   const isMultiAudioUploading = multiAudioFiles.length > 0 && multiAudioFiles.some(f => f.isUploading || !f.tempId);
@@ -112,8 +136,26 @@ function SummarizeContent() {
     ? Math.round(multiAudioFiles.reduce((acc, f) => acc + (f.progress || 0), 0) / totalAudioCount)
     : 0;
 
+  const hasQuota = quota !== null ? quota > 0 : false;
+  const hasPaidPlan = Boolean(
+    hasQuota ||
+    (planName &&
+      planName !== "free" &&
+      planName !== "مجاني" &&
+      !planName.includes("مجاني") &&
+      !planName.toLowerCase().includes("free"))
+  );
 
+  // Range validation check
+  const isRangeInvalid = useMemo(() => {
+    const s = parseInt(startPage, 10);
+    const e = parseInt(endPage, 10);
+    if (!isNaN(s) && !isNaN(e) && s > e) return true;
+    if (!isNaN(s) && s < 1) return true;
+    return false;
+  }, [startPage, endPage]);
 
+  // Fingerprint & Device Metadata Helpers
   const getFingerprint = async () => {
     if (typeof window === "undefined") return "";
     let fp = localStorage.getItem("device_id_v3");
@@ -142,24 +184,43 @@ function SummarizeContent() {
     return JSON.stringify(metadata);
   };
 
-  // Progress Countdown Timer (Intelligent, asymptotic countdown)
+  // Continuous Asymptotic Creep Engine (Smooth, Living AI Feel with Zero Frozen State)
   useEffect(() => {
     if (!isProcessing && !isStreaming) return;
-    if (timeLeft === null) return;
-    const intervalMs = timeLeft <= 10 ? 3000 : 1000;
-    const timer = setInterval(() => {
+    if (phase === "idle" || phase === "done" || phase === "error") return;
+
+    // Define phase target ceilings to ensure asymptotic deceleration
+    let ceiling = 92;
+    if (phase === "queued") ceiling = 15;
+    else if (phase === "audio") ceiling = 52;
+    else if (phase === "slides") ceiling = 64;
+    else if (phase === "ai") ceiling = 88;
+    else if (phase === "pdf") ceiling = 98;
+
+    const interval = setInterval(() => {
+      // 1. Monotonic Smooth Progress Creep
+      setDisplayedProgress(prev => {
+        if (prev >= ceiling) return prev;
+        // Asymptotic increment
+        const step = Math.max(0.12, (ceiling - prev) * 0.04);
+        return Math.min(ceiling, Number((prev + step).toFixed(1)));
+      });
+
+      // 2. Truthful Countdown Tick
       setTimeLeft(prev => {
         if (prev === null) return null;
-        if (prev <= 5) return 5; // Hold at 5s minimum grace period while awaiting server response
+        if (prev <= 1) return null; // Transition to finishing message rather than freezing
         return prev - 1;
       });
-    }, intervalMs);
-    return () => clearInterval(timer);
-  }, [isProcessing, isStreaming, timeLeft]);
+    }, 400);
 
+    return () => clearInterval(interval);
+  }, [isProcessing, isStreaming, phase]);
+
+  // Pre-upload Audio/PDF to Temp Directory via XMLHttpRequest for Real Progress
   const uploadToTemp = (file: File, type: 'audio' | 'pdf') => {
     if (!hasPaidPlan || quota === null || quota <= 0) {
-      setError("🔒 يلزم وجود اشتراك نشط لرفع ومعالجة المحاضرات. يرجى الاشتراك وتأكيد الدفع عبر واتساب لنفعّل حسابك.");
+      setError("🔒 يلزم وجود اشتراك نشط لرفع ومعالجة المحاضرات. يرجى الاشتراك وتأكيد الدفع لتفعيل حسابك.");
       return;
     }
     const isAudio = type === 'audio';
@@ -191,16 +252,22 @@ function SummarizeContent() {
 
     xhr.onload = () => {
       if (xhr.status === 200) {
-        const data = JSON.parse(xhr.responseText);
-        if (isAudio) {
-          setAudioTempId(data.temp_id);
-          setIsAudioUploading(false);
-        } else {
-          setPdfTempId(data.temp_id);
-          setIsPdfUploading(false);
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (isAudio) {
+            setAudioTempId(data.temp_id);
+            setIsAudioUploading(false);
+          } else {
+            setPdfTempId(data.temp_id);
+            setIsPdfUploading(false);
+          }
+        } catch (e) {
+          setError("فشل فك استجابة السيرفر بعد الرفع.");
+          if (isAudio) setIsAudioUploading(false);
+          else setIsPdfUploading(false);
         }
       } else {
-        setError(`فشل رفع الملف: ${xhr.statusText}`);
+        setError(`فشل رفع الملف: ${xhr.statusText || xhr.status}`);
         if (isAudio) setIsAudioUploading(false);
         else setIsPdfUploading(false);
       }
@@ -217,7 +284,7 @@ function SummarizeContent() {
 
   const uploadSingleMultiAudio = (id: string, file: File) => {
     if (!hasPaidPlan || quota === null || quota <= 0) {
-      setError("🔒 يلزم وجود اشتراك نشط لرفع ومعالجة المحاضرات. يرجى الاشتراك وتأكيد الدفع عبر واتساب لنفعّل حسابك.");
+      setError("🔒 يلزم وجود اشتراك نشط لرفع ومعالجة المحاضرات.");
       return;
     }
     const formData = new FormData();
@@ -244,8 +311,12 @@ function SummarizeContent() {
 
     xhr.onload = () => {
       if (xhr.status === 200) {
-        const data = JSON.parse(xhr.responseText);
-        setMultiAudioFiles(prev => prev.map(item => item.id === id ? { ...item, tempId: data.temp_id, isUploading: false, progress: 100 } : item));
+        try {
+          const data = JSON.parse(xhr.responseText);
+          setMultiAudioFiles(prev => prev.map(item => item.id === id ? { ...item, tempId: data.temp_id, isUploading: false, progress: 100 } : item));
+        } catch {
+          setMultiAudioFiles(prev => prev.filter(item => item.id !== id));
+        }
       } else {
         setError(`فشل رفع الملف ${file.name}: ${xhr.statusText}`);
         setMultiAudioFiles(prev => prev.filter(item => item.id !== id));
@@ -260,7 +331,8 @@ function SummarizeContent() {
     xhr.send(formData);
   };
 
-  const fetchQuota = React.useCallback(async () => {
+  // Fetch Quota with Backend + Direct Supabase Fallback
+  const fetchQuota = useCallback(async () => {
     if (!session?.access_token) return;
     let resolved = false;
 
@@ -329,7 +401,7 @@ function SummarizeContent() {
           return;
         }
 
-        // Check profile quota
+        // Profile quota check
         const { data: prof } = await supabase
           .from("profiles")
           .select("quota_remaining, current_plan_id")
@@ -339,9 +411,7 @@ function SummarizeContent() {
         if (prof) {
           const pQuota = prof.quota_remaining ?? 0;
           setQuota(pQuota);
-          if (pQuota > 0) {
-            setPlanName("باقة إنقاذ الكويزات (Essential)");
-          }
+          if (pQuota > 0) setPlanName("باقة إنقاذ الكويزات (Essential)");
           setIsQuotaChecking(false);
           resolved = true;
           if (typeof window !== "undefined") {
@@ -353,7 +423,7 @@ function SummarizeContent() {
           return;
         }
       } catch (sbErr) {
-        console.error("Direct Supabase fallback failed in summarize:", sbErr);
+        console.error("Direct Supabase fallback error:", sbErr);
       }
     }
 
@@ -370,15 +440,20 @@ function SummarizeContent() {
     }
   }, [loading, user, router]);
 
+  // Main Processing Handler with Bulletproof SSE Stream
   const handleProcess = async (forceRawFiles: boolean = false) => {
     if (quota !== null && quota <= 0) {
-      setError("🚫 رصيدك صفر دقيقة — لا يمكن رفع ومعالجة ملفات خاصة. يرجى شحن الرصيد للمتابعة.");
+      setError("🚫 رصيدك الحالي 0 دقيقة — يرجى شحن الرصيد للمتابعة.");
+      return;
+    }
+    if (isRangeInvalid) {
+      setError("🚫 نطاق الصفحات غير صالح. تأكد أن صفحة البداية أصغر من أو تساوي صفحة النهاية.");
       return;
     }
     setError(null);
 
-    // Validation: Enforce uploads to finish before processing
-    if (uploadMode === "file") {
+    // Validate uploads finished
+    if (activeTab === "files") {
       if (isAudioUploading) {
         setError("⏳ يرجى الانتظار حتى يكتمل رفع الملف الصوتي إلى السيرفر.");
         return;
@@ -398,10 +473,11 @@ function SummarizeContent() {
     }
 
     const hasAudioFile = !!audioFile || multiAudioFiles.length > 0;
-    const hasLectureUrl = (uploadMode === "url" && lectureUrl.trim().length > 0) || (uploadMode === "url" && lectureUrls.filter(u => u.trim()).length > 0);
+    const hasLectureUrl = activeTab === "url" && lectureUrl.trim().length > 0;
     const hasPdfOnly = !hasAudioFile && !hasLectureUrl && (!!pdfFile || !!pdfTempId);
+
     if (!hasAudioFile && !hasLectureUrl && !hasPdfOnly) {
-      setError(uploadMode === "url" ? "يرجى إدخال رابط المحاضرة أولاً." : "يرجى إرفاق ملف صوتي أو ملف PDF/PPTX للمعالجة.");
+      setError(activeTab === "url" ? "يرجى إدخال رابط المحاضرة أولاً." : "يرجى إرفاق ملف صوتي أو ملف PDF/PPTX للمعالجة.");
       return;
     }
 
@@ -411,39 +487,36 @@ function SummarizeContent() {
       return;
     }
 
-    if (!session) { router.replace("/login"); return; }
+    if (!session) {
+      router.replace("/login");
+      return;
+    }
 
-    if (uploadMode === "url") {
-      const urlsToCheck = [];
-      if (lectureUrl.trim()) urlsToCheck.push(lectureUrl.trim());
-      lectureUrls.filter(u => u.trim()).forEach(u => urlsToCheck.push(u.trim()));
-
-      for (const url of urlsToCheck) {
-        const lowerUrl = url.toLowerCase();
-        if (lowerUrl.includes("drive.google.com") || lowerUrl.includes("google.com/drive") || lowerUrl.includes("zoom.us")) {
-          setError("🚫 يرجى استخدام روابط يوتيوب فقط! 🎥");
-          return;
-        }
+    if (activeTab === "url") {
+      const lowerUrl = lectureUrl.trim().toLowerCase();
+      if (lowerUrl.includes("drive.google.com") || lowerUrl.includes("google.com/drive") || lowerUrl.includes("zoom.us")) {
+        setError("🚫 عذراً، يُرجى استخدام روابط يوتيوب فقط! 🎥");
+        return;
       }
     }
 
+    // Initialize State Machine
     setIsProcessing(true);
-    setError(null);
     setIsStreaming(false);
+    setPhase("uploading");
+    setDisplayedProgress(5);
     setQueuePosition(0);
-    setProgressStep("جاري بدء المعالجة...");
-    setServerProgressPercent(null);
-    const isBatch = (uploadMode === "file" && multiAudioFiles.length > 1) || (uploadMode === "url" && lectureUrls.filter(u => u.trim()).length > 1);
-    
-    // حساب تقدير زمني دقيق وصادق بناءً على المدخلات الفعلية
-    let estimatedSecs = 75;
+    setProgressMessage("جاري بدء المعالجة وتهيئة البيئة...");
+
+    // Compute realistic initial time estimate
+    const isBatch = activeTab === "files" && multiAudioFiles.length > 1;
+    let estimatedSecs = 65;
     if (hasPdfOnly) {
-      estimatedSecs = pdfFile ? Math.max(35, Math.min(85, Math.round(pdfFile.size / (1024 * 300)) * 5 + 30)) : 45;
+      estimatedSecs = pdfFile ? Math.max(30, Math.min(80, Math.round(pdfFile.size / (1024 * 300)) * 4 + 25)) : 40;
     } else if (isBatch) {
-      const audioCount = uploadMode === "file" ? multiAudioFiles.length : lectureUrls.filter(u => u.trim()).length;
-      estimatedSecs = Math.max(120, audioCount * 50 + (pdfFile || pdfTempId ? 45 : 30));
+      estimatedSecs = Math.max(110, multiAudioFiles.length * 45 + (pdfFile || pdfTempId ? 40 : 25));
     } else {
-      estimatedSecs = (pdfFile || pdfTempId) ? 100 : 75;
+      estimatedSecs = (pdfFile || pdfTempId) ? 85 : 65;
     }
 
     setTimeLeft(estimatedSecs);
@@ -457,22 +530,17 @@ function SummarizeContent() {
     formData.append("metadata", await getDeviceMetadata());
 
     if (isBatch) {
-      if (uploadMode === "url") {
-        const urls = lectureUrls.filter(u => u.trim());
-        formData.append("lecture_urls", urls.join(","));
-      } else {
-        const tempIds = multiAudioFiles.map(item => item.tempId).filter(Boolean);
-        if (tempIds.length === 0 && !hasPdfOnly) {
-          setError("🚫 لم يتم استلام أي تسجيلات صوتية صالحة من السيرفر. يرجى الانتظار حتى اكتمال الرفع والمحاولة مجدداً.");
-          setIsProcessing(false);
-          return;
-        }
-        formData.append("audio_temp_ids", tempIds.join(","));
+      const tempIds = multiAudioFiles.map(item => item.tempId).filter(Boolean);
+      if (tempIds.length === 0 && !hasPdfOnly) {
+        setError("🚫 لم يتم استلام أي تسجيلات صوتية صالحة من السيرفر. يرجى المحاولة مجدداً.");
+        setIsProcessing(false);
+        setPhase("idle");
+        return;
       }
+      formData.append("audio_temp_ids", tempIds.join(","));
     } else {
-      if (uploadMode === "url") {
-        const activeUrl = lectureUrl.trim() || lectureUrls.filter(u => u.trim())[0] || "";
-        formData.append("lecture_url", activeUrl);
+      if (activeTab === "url") {
+        formData.append("lecture_url", lectureUrl.trim());
       } else {
         const activeTempId = audioTempId || multiAudioFiles[0]?.tempId || null;
         const activeFile = audioFile || multiAudioFiles[0]?.file || null;
@@ -484,12 +552,14 @@ function SummarizeContent() {
       }
     }
 
-    if (!forceRawFiles && pdfTempId) formData.append("pdf_temp_id", pdfTempId);
-    else if (pdfFile) formData.append("pdf_file", pdfFile);
+    if (!forceRawFiles && pdfTempId) {
+      formData.append("pdf_temp_id", pdfTempId);
+    } else if (pdfFile) {
+      formData.append("pdf_file", pdfFile);
+    }
 
     if (startPage.trim()) formData.append("start_page", startPage.trim());
     if (endPage.trim()) formData.append("end_page", endPage.trim());
-
     formData.append("auto_generate_past_exams", "true");
 
     try {
@@ -518,9 +588,10 @@ function SummarizeContent() {
           if (userMsg) {
             setError(userMsg);
             setIsProcessing(false);
+            setPhase("error");
             return;
           }
-          throw new Error(typeof errData.detail === 'string' ? errData.detail : "فشلت المعالجة");
+          throw new Error(typeof errData.detail === "string" ? errData.detail : "فشلت المعالجة على السيرفر");
         } catch (e: any) {
           throw new Error(e.message || "حدث خطأ غير متوقع.");
         }
@@ -529,18 +600,20 @@ function SummarizeContent() {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder("utf-8");
       let streamBuffer = "";
-      if (!reader) throw new Error("فشل فتح البث.");
+      if (!reader) throw new Error("فشل فتح بث البيانات من السيرفر.");
 
       setIsStreaming(true);
       setIsProcessing(false);
 
       let hasReceivedDone = false;
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         streamBuffer += decoder.decode(value, { stream: true });
-        let boundary = streamBuffer.indexOf('\n\n');
+        let boundary = streamBuffer.indexOf("\n\n");
+
         while (boundary !== -1) {
           const rawEvent = streamBuffer.slice(0, boundary);
           streamBuffer = streamBuffer.slice(boundary + 2);
@@ -554,30 +627,56 @@ function SummarizeContent() {
                   setError(p.message || "حدث خطأ أثناء معالجة المحاضرة.");
                   setIsProcessing(false);
                   setIsStreaming(false);
+                  setPhase("error");
                   return;
+
                 case "queued":
                 case "queue_update":
-                  setQueuePosition(p.position);
-                  setProgressStep(`📋 الطابور: #${p.position}`);
+                  setPhase("queued");
+                  setQueuePosition(p.position || 1);
+                  setProgressMessage(p.message || `📋 في طابور المعالجة: #${p.position || 1}`);
+                  setMonotonicProgress(10);
                   break;
+
                 case "processing":
                 case "progress":
                   setQueuePosition(0);
-                  if (p.message) setProgressStep(`${p.message}`);
-                  if (typeof p.progress_percent === "number") {
-                    setServerProgressPercent(p.progress_percent);
+                  if (p.message) setProgressMessage(p.message);
+
+                  // Update phase based on step identifier
+                  if (p.step) {
+                    if (p.step.includes("5/5") || p.step.includes("رسم") || p.step.includes("تلوين")) {
+                      setPhase("pdf");
+                    } else if (p.step.includes("4/5") || p.step.includes("استنتاج") || p.step.includes("يفكّر")) {
+                      setPhase("ai");
+                    } else if (p.step.includes("2/5") || p.step.includes("3/5") || p.step.includes("الشرائح")) {
+                      setPhase("slides");
+                    } else if (p.step.includes("1/5") || p.step.includes("تفريغ") || p.step.includes("يستمع")) {
+                      setPhase("audio");
+                    }
                   }
+
+                  // Monotonic progress update
+                  if (typeof p.progress_percent === "number") {
+                    setMonotonicProgress(p.progress_percent);
+                  }
+
+                  // Accurate time estimate update
                   if (typeof p.time_estimate === "number") {
                     setTimeLeft(p.time_estimate);
                     setInitialEstimate(prev => Math.max(prev, p.time_estimate));
                   }
                   break;
+
                 case "done":
                   hasReceivedDone = true;
+                  setMonotonicProgress(100);
+                  setPhase("done");
                   setIsStreaming(false);
                   setIsProcessing(false);
+
                   if (p.history_id && typeof p.history_id === "string") {
-                    // World-Class Instant Handoff Cache (0ms navigation)
+                    // World-Class Instant Handoff Cache (0ms navigation lag)
                     try {
                       const instantPayload = {
                         metadata: {
@@ -594,51 +693,40 @@ function SummarizeContent() {
                     } catch {}
                     router.push(`/dashboard?history_id=${p.history_id}`);
                   } else {
-                    router.push(`/dashboard`);
+                    router.push("/dashboard");
                   }
                   return;
               }
             } catch {}
           }
-          boundary = streamBuffer.indexOf('\n\n');
+          boundary = streamBuffer.indexOf("\n\n");
         }
       }
 
       if (!hasReceivedDone) {
-        if (streamBuffer.trim()) {
-          for (const line of streamBuffer.split("\n")) {
-            if (!line.startsWith("data: ")) continue;
-            try {
-              const p = JSON.parse(line.slice(6));
-              if (p.type === "error") {
-                setError(p.message || "حدث خطأ أثناء معالجة المحاضرة.");
-                setIsProcessing(false);
-                setIsStreaming(false);
-                return;
-              }
-            } catch {}
-          }
-        }
         setIsStreaming(false);
         setIsProcessing(false);
-        setError("⚠️ انقطع الاتصال بالخادم أثناء المعالجة، أو لم تكتمل المهمة. يرجى المحاولة مجدداً.");
+        setPhase("error");
+        setError("⚠️ انقطع الاتصال بالخادم أثناء المعالجة. يرجى إعادة المحاولة.");
       }
     } catch (err: any) {
       setError(err.message || "حدث خطأ أثناء معالجة المحاضرة.");
       setIsProcessing(false);
       setIsStreaming(false);
+      setPhase("error");
     }
   };
 
-  const isDocumentOnly = !audioFile && multiAudioFiles.length === 0 && uploadMode !== "url" && (!!pdfFile || !!pdfTempId);
+  const isDocumentOnly = !audioFile && multiAudioFiles.length === 0 && activeTab !== "url" && (!!pdfFile || !!pdfTempId);
+
   const activeFileName = useMemo(() => {
-    if (uploadMode === "url") return lectureUrl.trim() || lectureUrls.find(u => u.trim()) || "رابط يوتيوب";
+    if (activeTab === "url") return lectureUrl.trim() || "رابط يوتيوب";
     if (multiAudioFiles.length > 1) return `${multiAudioFiles.length} ملفات صوتية`;
     if (audioFile) return audioFile.name;
     if (multiAudioFiles[0]) return multiAudioFiles[0].file.name;
     if (pdfFile) return pdfFile.name;
     return "محاضرة جامعية";
-  }, [uploadMode, lectureUrl, lectureUrls, multiAudioFiles, audioFile, pdfFile]);
+  }, [activeTab, lectureUrl, multiAudioFiles, audioFile, pdfFile]);
 
   const currentPipelineSteps: PipelineStep[] = useMemo(() => {
     if (isDocumentOnly) {
@@ -697,50 +785,16 @@ function SummarizeContent() {
     ];
   }, [isDocumentOnly]);
 
-  const progressPercent = useMemo(() => {
-    // 1. الأولوية للنسبة المئوية الحقيقية القادمة من السيرفر
-    if (serverProgressPercent !== null && typeof serverProgressPercent === "number") {
-      return Math.min(100, Math.max(5, Math.round(serverProgressPercent)));
-    }
-    // 2. الحساب التدريجي المحسوب بدقة حسب مرحلة المعالجة الفعلية
-    if (timeLeft === null || initialEstimate <= 0) return 8;
-    const elapsed = Math.max(0, initialEstimate - timeLeft);
-    const ratio = Math.min(1.0, elapsed / initialEstimate);
-
-    // سقف منطقي بحسب المرحلة الفعلية حتى لا يقفز العداد إلى 98% أثناء تفريغ الصوت
-    let ceiling = 85;
-    if (progressStep) {
-      if (progressStep.includes("5/5") || progressStep.includes("رسم") || progressStep.includes("تلوين") || progressStep.includes("المخطط") || progressStep.includes("تجهيز ملفك")) {
-        ceiling = 96;
-      } else if (progressStep.includes("4/5") || progressStep.includes("استنتاج") || progressStep.includes("يطابق") || progressStep.includes("يفكّر")) {
-        ceiling = 82;
-      } else if (progressStep.includes("2/5") || progressStep.includes("3/5") || progressStep.includes("قراءة") || progressStep.includes("الشرائح")) {
-        ceiling = 65;
-      } else if (progressStep.includes("1/5") || progressStep.includes("تفريغ") || progressStep.includes("يستمع") || progressStep.includes("المحاضرة #")) {
-        ceiling = 55;
-      } else if (progressStep.includes("0/5") || progressStep.includes("طابور") || progressStep.includes("بدء")) {
-        ceiling = 20;
-      }
-    } else {
-      ceiling = 60;
-    }
-
-    return Math.min(ceiling, Math.max(8, Math.round(ratio * ceiling)));
-  }, [serverProgressPercent, timeLeft, initialEstimate, progressStep]);
-
   const activeStepIdx = useMemo(() => {
-    if (progressStep) {
-      if (progressStep.includes("5/5") || progressStep.includes("رسم") || progressStep.includes("تلوين") || progressStep.includes("المخطط") || progressStep.includes("تجهيز ملفك")) return 3;
-      if (progressStep.includes("4/5") || progressStep.includes("استنتاج") || progressStep.includes("يطابق") || progressStep.includes("يفكّر")) return 2;
-      if (progressStep.includes("2/5") || progressStep.includes("3/5") || progressStep.includes("قراءة") || progressStep.includes("الشرائح")) return 1;
-      if (progressStep.includes("1/5") || progressStep.includes("تفريغ") || progressStep.includes("يستمع") || progressStep.includes("المحاضرة #")) return 0;
-    }
-    // عدم القفز للخطوة الأخيرة إلا إذا أكد السيرفر ذلك
-    if (progressPercent >= 88) return 3;
-    if (progressPercent >= 65) return 2;
-    if (progressPercent >= 35) return 1;
+    if (phase === "done" || phase === "pdf") return 3;
+    if (phase === "ai") return 2;
+    if (phase === "slides") return 1;
+    if (phase === "audio" || phase === "queued") return 0;
+    if (displayedProgress >= 88) return 3;
+    if (displayedProgress >= 65) return 2;
+    if (displayedProgress >= 35) return 1;
     return 0;
-  }, [progressStep, progressPercent]);
+  }, [phase, displayedProgress]);
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col relative transition-colors duration-300 selection:bg-indigo-500/20" dir="rtl">
@@ -776,8 +830,7 @@ function SummarizeContent() {
                 : "ارفع التسجيل الصوتي أو السلايدات لتجهيز ملفك وشرحك التفاعلي فوراً"}
             </p>
           </div>
-
-                  </div>
+        </div>
 
         {/* Main Processing or Upload Section */}
         <AnimatePresence mode="wait">
@@ -814,11 +867,11 @@ function SummarizeContent() {
                     معالجة المحاضرات مقفلة حالياً
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-md mx-auto">
-                    رصيدك الحالي 0 دقيقة. رفع وتلخيص المحاضرات بواسطة الذكاء الاصطناعي يتطلب باقة نشطة. اختر باقتك وتواصل معنا عبر واتساب لتفعيل الحساب.
+                    رصيدك الحالي 0 دقيقة. رفع وتلخيص المحاضرات بواسطة الذكاء الاصطناعي يتطلب باقة نشطة. اختر باقتك للمتابعة.
                   </p>
                 </div>
 
-                {/* Free Tool Callout: دوّن ملاحظاتك */}
+                {/* Free Tool Callout */}
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-right flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div className="space-y-0.5 text-right">
                     <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
@@ -867,8 +920,8 @@ function SummarizeContent() {
               activeFileName={activeFileName}
               queuePosition={queuePosition}
               timeLeft={timeLeft}
-              progressStep={progressStep}
-              progressPercent={progressPercent}
+              progressStep={progressMessage}
+              progressPercent={Math.round(displayedProgress)}
               currentPipelineSteps={currentPipelineSteps}
               activeStepIdx={activeStepIdx}
             />
@@ -886,7 +939,7 @@ function SummarizeContent() {
                     <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
                     <span>{error}</span>
                   </div>
-                  <button onClick={() => setError(null)} className="p-1 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-lg">
+                  <button onClick={() => setError(null)} className="p-1 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-lg cursor-pointer">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -896,10 +949,118 @@ function SummarizeContent() {
               <div className="w-full bg-white dark:bg-[#070b16]/90 backdrop-blur-2xl border border-slate-200/90 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_15px_45px_rgba(0,0,0,0.06)] relative overflow-hidden transition-all text-right">
                 <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
 
-                {/* Two File Upload Cards: Audio + Slides */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {/* Tab Switcher: Direct Files vs YouTube URL */}
+                <div className="flex items-center gap-2 mb-6 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 w-fit">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("files")}
+                    className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      activeTab === "files"
+                        ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs"
+                        : "text-slate-500 hover:text-slate-700 dark:text-slate-400"
+                    }`}
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>رفع ملفات المحاضرة</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("url")}
+                    className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      activeTab === "url"
+                        ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs"
+                        : "text-slate-500 hover:text-slate-700 dark:text-slate-400"
+                    }`}
+                  >
+                    <LinkIcon className="w-3.5 h-3.5" />
+                    <span>رابط يوتيوب 🎥</span>
+                  </button>
+                </div>
+
+                {/* Upload Content Area */}
+                {activeTab === "url" ? (
+                  <div className="space-y-4 mb-6">
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800">
+                      <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-2">
+                        رابط محاضرة يوتيوب:
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        value={lectureUrl}
+                        onChange={(e) => setLectureUrl(e.target.value)}
+                        className="w-full text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-left"
+                        dir="ltr"
+                      />
+                      <p className="text-[11px] text-slate-400 mt-2 font-medium">
+                        💡 سيقوم لمّاح بسحب الصوت بدقة وتفريغه ومطابقته بالسلايدات تلقائياً.
+                      </p>
+                    </div>
+
+                    {/* Slides Upload (Optional Attachment with URL) */}
+                    <div className="relative group rounded-2xl p-4 transition-all duration-200 border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/30">
+                      <input
+                        type="file"
+                        accept="application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setPdfFile(file);
+                            setPdfUploadProgress(0);
+                            setPdfTempId(null);
+                            uploadToTemp(file, 'pdf');
+                          }
+                        }}
+                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                      />
+                      {pdfFile ? (
+                        <div className="w-full z-20 relative flex flex-col gap-2">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                              <span className="font-bold text-xs truncate" dir="ltr">{pdfFile.name}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPdfFile(null);
+                                setPdfTempId(null);
+                                setStartPage("");
+                                setEndPage("");
+                              }}
+                              className="p-1 text-slate-400 hover:text-rose-500 rounded-lg cursor-pointer"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <PdfRangeSelector
+                            file={pdfFile}
+                            startPage={startPage}
+                            endPage={endPage}
+                            onRangeChange={(s, e) => { setStartPage(s); setEndPage(e); }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between py-1">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-indigo-500" />
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                              إرفاق ملف السلايدات (اختياري، يوتيوب + PDF)
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold underline cursor-pointer">
+                            اختر ملفاً
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  /* Two File Upload Cards: Audio + Slides */
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     {/* Audio Upload */}
-                    <div className={`relative group rounded-2xl p-5 transition-all duration-200 border flex flex-col justify-center min-h-[155px] ${
+                    <div className={`relative group rounded-2xl p-5 transition-all duration-200 border flex flex-col justify-center min-h-[160px] ${
                       audioFile || multiAudioFiles.length > 0
                         ? 'bg-slate-50/90 dark:bg-slate-900/60 border-indigo-500/60 dark:border-indigo-500/40 ring-1 ring-indigo-500/20'
                         : 'bg-white dark:bg-slate-900/30 border-slate-200/90 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/30'
@@ -1003,8 +1164,8 @@ function SummarizeContent() {
                       )}
                     </div>
 
-                    {/* Slides Upload */}
-                    <div className={`relative group rounded-2xl p-5 transition-all duration-200 border flex flex-col justify-center min-h-[155px] ${
+                    {/* Slides Upload with Smart Zero-Lag PdfRangeSelector */}
+                    <div className={`relative group rounded-2xl p-5 transition-all duration-200 border flex flex-col justify-center min-h-[160px] ${
                       pdfFile
                         ? 'bg-slate-50/90 dark:bg-slate-900/60 border-indigo-500/60 dark:border-indigo-500/40 ring-1 ring-indigo-500/20'
                         : 'bg-white dark:bg-slate-900/30 border-slate-200/90 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/30'
@@ -1025,7 +1186,7 @@ function SummarizeContent() {
                       />
 
                       {pdfFile ? (
-                        <div className="w-full z-20 relative flex flex-col gap-3">
+                        <div className="w-full z-20 relative flex flex-col gap-2">
                           <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200/80 dark:border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
@@ -1038,7 +1199,7 @@ function SummarizeContent() {
                               <div className="min-w-0">
                                 <p className="font-bold text-slate-800 dark:text-slate-100 text-xs truncate" dir="ltr">{pdfFile.name}</p>
                                 <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                                  {isPdfUploading ? "جاري الرفع..." : "جاهز للبدء"}
+                                  {isPdfUploading ? "جاري الرفع..." : "جاهز للبدء ✔️"}
                                 </p>
                               </div>
                             </div>
@@ -1058,56 +1219,17 @@ function SummarizeContent() {
                             </button>
                           </div>
 
-                          {/* Page / Slide Range Selector */}
-                          <div className="pt-2.5 border-t border-slate-200/80 dark:border-slate-800 text-right" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                                <span>📖</span>
-                                <span>تحديد صفحات معينة (اختياري)</span>
-                              </span>
-                              {(startPage || endPage) && (
-                                <button
-                                  type="button"
-                                  onClick={() => { setStartPage(""); setEndPage(""); }}
-                                  className="text-[10px] text-rose-500 hover:text-rose-600 font-bold transition"
-                                >
-                                  إلغاء التحديد (الكل)
-                                </button>
-                              )}
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div>
-                                <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">من صفحة/شريحة:</label>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  placeholder="1"
-                                  value={startPage}
-                                  onChange={(e) => setStartPage(e.target.value)}
-                                  className="w-full text-xs font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-center focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-0.5">إلى صفحة/شريحة:</label>
-                                <input
-                                  type="number"
-                                  min="1"
-                                  placeholder="النهاية"
-                                  value={endPage}
-                                  onChange={(e) => setEndPage(e.target.value)}
-                                  className="w-full text-xs font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 text-center focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                />
-                              </div>
-                            </div>
-                            <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium mt-1.5 flex items-center gap-1">
-                              <span>💡</span>
-                              <span>
-                                {startPage || endPage
-                                  ? `سيتم تلخيص النطاق من ${startPage || 1} إلى ${endPage || "النهاية"} واحتساب رصيدك عليه فقط.`
-                                  : "حدد صفحات محددة إذا لم تكن بحاجة لتلخيص الكتاب كاملاً لتوفير رصيدك."}
-                              </span>
-                            </p>
-                          </div>
+                          {/* Zero-Lag PDF Range Selector Component */}
+                          <PdfRangeSelector
+                            file={pdfFile}
+                            startPage={startPage}
+                            endPage={endPage}
+                            onRangeChange={(s, e) => {
+                              setStartPage(s);
+                              setEndPage(e);
+                            }}
+                            disabled={isProcessing || isStreaming}
+                          />
                         </div>
                       ) : (
                         <div className="flex flex-col items-center justify-center text-center py-2">
@@ -1125,6 +1247,7 @@ function SummarizeContent() {
                       )}
                     </div>
                   </div>
+                )}
 
                 {/* Quota Lock Banner */}
                 {quota !== null && quota <= 0 && !hasPaidPlan && (
@@ -1147,14 +1270,18 @@ function SummarizeContent() {
                   <SmartGenerateButton
                     onClick={() => handleProcess()}
                     disabled={
-                      (!audioFile && multiAudioFiles.length === 0 && !pdfFile && !pdfTempId) ||
+                      (activeTab === "files" && !audioFile && multiAudioFiles.length === 0 && !pdfFile && !pdfTempId) ||
+                      (activeTab === "url" && !lectureUrl.trim()) ||
                       isAnyAudioUploading ||
-                      isPdfUploading
+                      isPdfUploading ||
+                      isRangeInvalid
                     }
                     isProcessing={isProcessing}
                     quota={quota}
                     text={
-                      isAnyAudioUploading
+                      isRangeInvalid
+                        ? "⚠️ نطاق الصفحات غير صحيح (البداية أكبر من النهاية)"
+                        : isAnyAudioUploading
                         ? (multiAudioFiles.length > 0
                             ? `جاري رفع التسجيلات (${completedAudioCount}/${totalAudioCount})...`
                             : `جاري رفع الملف الصوتي (${audioUploadProgress}%)...`)
