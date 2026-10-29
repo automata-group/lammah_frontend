@@ -51,10 +51,10 @@ export default function DashboardPdfViewer({
       fetch(fullDownloadUrl, { method: "HEAD" })
         .then((res) => {
           if (!isMounted) return;
-          // If 404, retry up to twice in case the file is still flushing to disk
-          if (res.status === 404 && attempts < 2) {
+          // If 404, retry up to 3 times in case the file is still flushing to disk
+          if (res.status === 404 && attempts < 3) {
             attempts++;
-            retryTimer = setTimeout(verifyPdf, 1200);
+            retryTimer = setTimeout(verifyPdf, attempts * 1000);
             return;
           }
           if (res.status === 405 || res.status === 0) {
@@ -149,21 +149,31 @@ export default function DashboardPdfViewer({
               تعذّر عرض ملف الـ PDF المخطط حالياً
             </h3>
             <p className="text-xs text-slate-600 dark:text-slate-300 max-w-md leading-relaxed mb-4">
-              حدث انقطاع مؤقت في الاتصال بخدمة معالجة الملفات أثناء حفظ هذا الملف، أو تمت إعادة تشغيل الخادم. يمكنك مراجعة مواضع الأسئلة والتركيز والبطاقات والاختبار مباشرة من القائمة، أو إعادة رفع وتلخيص المحاضرة.
+              قد يكون الملف قيد الحفظ على الخادم، أو حدث تأخير في الاتصال. يمكنك مراجعة مواضع الأسئلة والتركيز والبطاقات والاختبار مباشرة، أو تجربة تحميل الملف أو إعادة المحاولة.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-2.5">
+              <a
+                href={fullDownloadUrl}
+                download={suggestedFilename}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>تحميل الملف المخطط</span>
+              </a>
               <button
                 type="button"
                 onClick={() => setHasPdfError(false)}
                 className="px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition cursor-pointer flex items-center gap-1.5"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span>إعادة المحاولة</span>
+                <span>إعادة المحاولة وعرض الملف</span>
               </button>
               <Link
                 href="/summarize"
                 prefetch={true}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80 text-xs font-bold transition cursor-pointer"
               >
                 <span>إعادة تلخيص المحاضرة</span>
               </Link>

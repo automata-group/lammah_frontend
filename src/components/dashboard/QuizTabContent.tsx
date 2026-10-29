@@ -142,7 +142,7 @@ export default function QuizTabContent({
               gradeMessage = "جيد! راجع الأسئلة التي تعثرت بها وشريحة الشرح لترسيخ الفهم 📚";
               gradeBadge = "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300";
             } else {
-              gradeMessage = "بداية جيدة! ارجع لشريحة الشرح المخصصة بالدفتر ثم أعد المحاولة لتصل للعلامة الكاملة 💪";
+              gradeMessage = "بداية جيدة! ارجع لشريحة الشرح المخصصة بالملف المخطط ثم أعد المحاولة لتصل للعلامة الكاملة 💪";
               gradeBadge = "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-300";
             }
 
@@ -253,9 +253,9 @@ export default function QuizTabContent({
                       type="button"
                       onClick={() => jumpToPdfSlide(currentQ.page_number!, "slide")}
                       className="text-[10px] font-black bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/15 dark:hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-500/30 px-2 py-0.5 rounded-md transition-colors flex items-center gap-1 cursor-pointer"
-                      title={`انتقل للشريحة ${getActualSlidePage(currentQ.page_number, 1, slidePageMap)} في ملف الـ PDF`}
+                      title={`انتقل للشريحة ${currentQ.page_number} في ملف الـ PDF المخطط (صفحة ${getActualSlidePage(currentQ.page_number, 1, slidePageMap)})`}
                     >
-                      <span>شريحة {getActualSlidePage(currentQ.page_number, 1, slidePageMap)}</span>
+                      <span>شريحة {currentQ.page_number}</span>
                       <ExternalLink className="w-2.5 h-2.5" />
                     </button>
                   )}
@@ -267,9 +267,9 @@ export default function QuizTabContent({
                         jumpToPdfSlide(currentQ.page_number || 1, "comp1");
                       }}
                       className="text-[10px] font-bold bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/15 dark:hover:bg-emerald-500/25 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-500/30 px-2 py-0.5 rounded-md transition-colors flex items-center gap-1 cursor-pointer"
-                      title={`انتقل لشريحة الشرح ${getActualCompPage(currentQ.page_number, 1, companionPageMap, slidePageMap)} المخصصة لهذه الشريحة داخل الدفتر`}
+                      title={`انتقل لشريحة الشرح ${getActualCompPage(currentQ.page_number, 1, companionPageMap, slidePageMap)} المخصصة لهذه الشريحة داخل الملف المخطط`}
                     >
-                      <span>شريحة الشرح {getActualCompPage(currentQ.page_number, 1, companionPageMap, slidePageMap)} 📖</span>
+                      <span>شريحة الشرح (صـ {getActualCompPage(currentQ.page_number, 1, companionPageMap, slidePageMap)}) 📖</span>
                     </button>
                   )}
                 </div>

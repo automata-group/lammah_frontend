@@ -57,7 +57,10 @@ export default function NotesTabContent({
                   <div className="mb-2.5 pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
                     <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
                       <span className="text-[10px] font-black bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/40 px-2 py-0.5 rounded-md shrink-0">
-                        شريحة {actualPage}
+                        شريحة {pageNum}
+                        {actualPage !== pageNum && (
+                          <span className="text-[9px] text-slate-400 mr-1">(صـ {actualPage})</span>
+                        )}
                       </span>
 
                       <div className="flex items-center gap-1.5 shrink-0">
@@ -65,9 +68,9 @@ export default function NotesTabContent({
                           type="button"
                           onClick={() => jumpToPdfSlide(pageNum, "slide")}
                           className="text-[10px] font-black bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-500/20 dark:hover:bg-indigo-500/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 px-2 py-0.5 rounded-md transition-colors flex items-center gap-1 cursor-pointer"
-                          title="انقر للانتقال لهذه الشريحة وتوسيطها في الملف"
+                          title={`انقر للانتقال للشريحة ${pageNum} (صفحة ${actualPage})`}
                         >
-                          <span>شريحة {actualPage}</span>
+                          <span>عرض الشريحة {pageNum}</span>
                           <ExternalLink className="w-2.5 h-2.5" />
                         </button>
 

@@ -169,7 +169,10 @@ export default function FocusPointsTabContent({
 
                     {fp.page_number && (
                       <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-200/70 dark:border-slate-700/60 shrink-0">
-                        شريحة {actualSlide}
+                        شريحة {fp.page_number}
+                        {actualSlide !== fp.page_number && (
+                          <span className="text-[10px] text-slate-400 mr-1">(صـ {actualSlide})</span>
+                        )}
                       </span>
                     )}
                   </div>
@@ -230,9 +233,9 @@ export default function FocusPointsTabContent({
                         type="button"
                         onClick={() => jumpToPdfSlide(fp.page_number, "slide")}
                         className="text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
-                        title={`انتقل للشريحة ${actualSlide} في ملف الـ PDF`}
+                        title={`انتقل للشريحة ${fp.page_number} في ملف الـ PDF المخطط (صفحة ${actualSlide})`}
                       >
-                        <span>عرض الشريحة {actualSlide}</span>
+                        <span>عرض الشريحة {fp.page_number}</span>
                         <ExternalLink className="w-3 h-3 text-slate-400" />
                       </button>
                     )}
@@ -245,9 +248,9 @@ export default function FocusPointsTabContent({
                           jumpToPdfSlide(fp.page_number, "comp1");
                         }}
                         className="text-xs font-bold bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-500/15 dark:hover:bg-emerald-500/25 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-500/30 px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
-                        title={`انتقل لشريحة الشرح ${actualComp} المخصصة لهذه الشريحة داخل الدفتر`}
+                        title={`انتقل لشريحة الشرح ${actualComp} المخصصة لهذه الشريحة داخل الملف المخطط`}
                       >
-                        <span>شريحة الشرح {actualComp} 📖</span>
+                        <span>شريحة الشرح (صـ {actualComp}) 📖</span>
                       </button>
                     )}
                   </div>

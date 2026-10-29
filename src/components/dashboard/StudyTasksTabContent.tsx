@@ -433,7 +433,7 @@ export default function StudyTasksTabContent({
     list.push({
       id: "task_final_wrapup",
       title: "التلخيص النهائي وإغلاق المذاكرة بثقة",
-      description: "إلقاء نظرة شاملة على الدفتر وتدوين الملاحظات اليدوية للتثبيت الأخير",
+      description: "إلقاء نظرة شاملة على الملف المخطط وتدوين الملاحظات اليدوية للتثبيت الأخير",
       completed: false,
       order: orderCounter++,
       highlightColor: null,

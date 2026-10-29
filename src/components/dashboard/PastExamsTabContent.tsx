@@ -238,10 +238,10 @@ export default function PastExamsTabContent({
                           type="button"
                           onClick={() => jumpToPdfSlide(q.page_number!, "slide")}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/15 dark:hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
-                          title={`الانتقال إلى شريحة ${getActualSlidePage(q.page_number, 1, slidePageMap)} في الدفتر لمراجعة الشرح الأصلي`}
+                          title={`الانتقال إلى شريحة ${q.page_number} في الملف المخطط (صفحة ${getActualSlidePage(q.page_number, 1, slidePageMap)})`}
                         >
                           <FileText className="w-3.5 h-3.5 text-indigo-500" />
-                          <span>انتقل للشريحة {getActualSlidePage(q.page_number, 1, slidePageMap)} 📄</span>
+                          <span>انتقل للشريحة {q.page_number} 📄</span>
                         </button>
                       )}
                     </div>
@@ -330,7 +330,7 @@ export default function PastExamsTabContent({
                               className="inline-flex items-center gap-2 text-xs font-black text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 cursor-pointer"
                             >
                               <span>
-                                افتح شريحة {getActualSlidePage(q.page_number, 1, slidePageMap)} في الدفتر لمراجعة الفقرة نصياً
+                                افتح شريحة {q.page_number} في الملف المخطط لمراجعة الفقرة نصياً
                               </span>
                               <ChevronLeft className="w-4 h-4" />
                             </button>

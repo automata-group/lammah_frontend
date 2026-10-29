@@ -199,7 +199,7 @@ export default function DashboardProcessingScreen({
 
                 {/* Title & Desc */}
                 <h4
-                  className={`text-xs sm:text-[13px] font-black leading-snug truncate ${
+                  className={`text-xs sm:text-[13px] font-black leading-snug line-clamp-2 min-h-[2.1rem] flex items-center justify-center text-center ${
                     isActive
                       ? "text-indigo-950 dark:text-indigo-200"
                       : isDone
@@ -209,7 +209,7 @@ export default function DashboardProcessingScreen({
                 >
                   {step.title}
                 </h4>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed text-center">
                   {step.shortDesc}
                 </p>
               </div>

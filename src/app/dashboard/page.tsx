@@ -335,26 +335,26 @@ function DashboardContent() {
       return [
         {
           id: 1,
-          title: "فحص الشرائح والصفحات",
-          shortDesc: "قراءة النصوص والجداول والرسومات بدقة هندسية",
+          title: "فحص وتدقيق الشرائح",
+          shortDesc: "قراءة النصوص والجداول بدقة",
           icon: FileText,
         },
         {
           id: 2,
-          title: "استيعاب المفاهيم والمصطلحات",
-          shortDesc: "فصل الأفكار الرئيسية وتحليل المعادلات والتعاريف",
+          title: "استيعاب المفاهيم",
+          shortDesc: "تحليل الأفكار والمعادلات والتعاريف",
           icon: BrainCircuit,
         },
         {
           id: 3,
-          title: "صياغة الشرح وفخاخ الامتحان",
-          shortDesc: "كتابة الشرح بالعامية والكبسولات وبنك الأسئلة",
+          title: "الشرح وفخاخ الاختبار",
+          shortDesc: "صياغة الشرح والكبسولات والأسئلة",
           icon: Lightbulb,
         },
         {
           id: 4,
-          title: "التظليل وإخراج الملف المخطط",
-          shortDesc: "تلوين الملاحظات وإعداد الملف المخطط والمظلل الفائق",
+          title: "إخراج الملف المخطط",
+          shortDesc: "تجهيز وتلوين الملف المخطط والمظلل",
           icon: Sparkles,
         },
       ];
@@ -362,26 +362,26 @@ function DashboardContent() {
       return [
         {
           id: 1,
-          title: "تدقيق ومعالجة الصوت",
-          shortDesc: "تصفية النقاء الصوتي وتهيئة المسار للمحرك الذكي",
+          title: "معالجة وتصفية الصوت",
+          shortDesc: "تنقية التسجيل للمحرك الذكي",
           icon: FileAudio,
         },
         {
           id: 2,
-          title: "التفريغ الذكي فائق الدقة",
-          shortDesc: "تحويل كلام المحاضر لنص دقيق ومصحح لغوياً",
+          title: "التفريغ الصوتي الذكي",
+          shortDesc: "تحويل الصوت لنص دقيق ومصحح",
           icon: BrainCircuit,
         },
         {
           id: 3,
-          title: "مطابقة الشرح بالسلايدات",
-          shortDesc: "ربط كل دقيقة صوتية مع الشريحة الخاصة بها تلقائياً",
+          title: "مطابقة الصوت بالشرائح",
+          shortDesc: "ربط الدقائق الصوتية بالشرائح",
           icon: Target,
         },
         {
           id: 4,
-          title: "التظليل والملف المخطط النهائي",
-          shortDesc: "استخراج فخاخ الامتحان وإخراج الملف المخطط والمظلل",
+          title: "إخراج الملف المخطط",
+          shortDesc: "توليد الأسئلة وتلوين الملف المخطط",
           icon: Sparkles,
         },
       ];
@@ -717,9 +717,12 @@ function DashboardContent() {
         ? cachedMeta.has_pdf
         : cachedMeta.annotations?.slide_explanations?.length > 0;
       selectInitialTab(cachedMeta.annotations, !!hasPdf);
+      const cachedDirectUrl = cachedPayload?.downloadUrl || cachedMeta?.downloadUrl || cachedMeta?.download_url;
       setResult({
         transcript: cachedMeta.transcript || "",
-        downloadUrl: hasPdf ? `/api/v1/summarize/download/${cachedMeta.job_id || historyId}.pdf` : null,
+        downloadUrl: hasPdf
+          ? (cachedDirectUrl || `/api/v1/summarize/download/${cachedMeta.job_id || historyId}.pdf`)
+          : null,
         annotations: cachedMeta.annotations,
         isDocumentOnly: !cachedMeta.transcript?.trim(),
       });
@@ -766,9 +769,12 @@ function DashboardContent() {
               ? !!data.metadata.is_prep
               : (data.metadata.has_audio !== undefined ? !data.metadata.has_audio : !data.metadata.transcript?.trim());
 
+            const serverDirectUrl = data.metadata.downloadUrl || data.metadata.download_url;
             setResult({
               transcript: data.metadata.transcript || "",
-              downloadUrl: hasPdf ? `/api/v1/summarize/download/${data.metadata.job_id}.pdf` : null,
+              downloadUrl: hasPdf
+                ? (serverDirectUrl || (data.metadata.job_id ? `/api/v1/summarize/download/${data.metadata.job_id}.pdf` : `/api/v1/summarize/download/${historyId}.pdf`))
+                : null,
               annotations: data.metadata.annotations,
               isDocumentOnly: isDocOnly,
             });

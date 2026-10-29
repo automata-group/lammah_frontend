@@ -199,8 +199,8 @@ export default function RecentLecturesSection({
                       ? `${cleanTitle} - ${isPrep ? "دفتر تحضير سلايدات" : "دفتر مخطط فويسات"} - لمّاح.pdf`
                       : `${cleanTitle} - ${isPrep ? "تحضير سلايدات" : "مخططة فويسات"} - لمّاح.pdf`;
                     const downloadPath = isNotebook
-                      ? `/api/v1/notebook/download/${log.metadata?.job_id}.pdf?download=true&title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`
-                      : `/api/v1/summarize/download/${log.metadata?.job_id}.pdf?title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`;
+                      ? `/api/v1/notebook/download/${log.metadata?.job_id || log.id}.pdf?download=true&title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`
+                      : `/api/v1/summarize/download/${log.metadata?.job_id || log.id}.pdf?title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`;
 
                     return (
                       <a
