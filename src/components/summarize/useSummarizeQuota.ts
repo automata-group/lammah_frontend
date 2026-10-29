@@ -177,32 +177,6 @@ export function useSummarizeQuota({
           }
           return;
         }
-
-        // Profile quota check (safeguarded against RLS recursion)
-        try {
-          const { data: prof, error: profErr } = await supabase
-            .from("profiles")
-            .select("quota_remaining, current_plan_id")
-            .eq("id", session.user.id)
-            .maybeSingle();
-
-          if (!profErr && prof) {
-            const pQuota = prof.quota_remaining ?? 0;
-            setQuota(pQuota);
-            if (pQuota > 0) setPlanName("باقة نشطة");
-            setIsQuotaChecking(false);
-            resolved = true;
-            if (typeof window !== "undefined") {
-              try {
-                localStorage.setItem("cached_user_quota", String(pQuota));
-                if (pQuota > 0) localStorage.setItem("cached_user_plan", "باقة نشطة");
-              } catch {}
-            }
-            return;
-          }
-        } catch (profErr) {
-          console.warn("Supabase profile check skipped:", profErr);
-        }
       } catch (sbErr) {
         console.warn("Direct Supabase fallback error:", sbErr);
       }

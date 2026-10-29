@@ -92,19 +92,13 @@ export default function PlansPage() {
             console.error("Direct Supabase plan query error:", sbErr);
           }
         }
-        // Also fetch profile name and phone number
-        if (session?.user?.id) {
-          try {
-            const supabase = createClient();
-            const { data: prof } = await supabase
-              .from("profiles")
-              .select("full_name, phone_number")
-              .eq("id", session.user.id)
-              .maybeSingle();
-            if (prof) {
-              setUserProfile({ full_name: prof.full_name, phone_number: prof.phone_number });
-            }
-          } catch {}
+        // Extract profile name and phone number from session metadata
+        if (session?.user) {
+          const metaName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || "";
+          const metaPhone = session.user.phone || session.user.user_metadata?.phone || session.user.user_metadata?.phone_number || "";
+          if (metaName || metaPhone) {
+            setUserProfile({ full_name: metaName, phone_number: metaPhone });
+          }
         }
       };
 

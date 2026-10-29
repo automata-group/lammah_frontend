@@ -133,26 +133,6 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
           }
           return;
         }
-
-        // 3. Direct Profiles Fallback (safeguarded against RLS recursion)
-        try {
-          const { data: prof, error: profErr } = await supabase
-            .from("profiles")
-            .select("quota_remaining")
-            .eq("id", session.user.id)
-            .maybeSingle();
-
-          if (!profErr && prof && prof.quota_remaining !== undefined && isSubscribed) {
-            setFetchedQuota(prof.quota_remaining);
-            if (typeof window !== "undefined") {
-              try {
-                localStorage.setItem("cached_user_quota", String(prof.quota_remaining));
-              } catch {}
-            }
-          }
-        } catch (profCatch) {
-          console.warn("Direct profiles quota check skipped:", profCatch);
-        }
       } catch (err) {
         console.warn("Direct Supabase quota sync in AppHeader:", err);
       }
