@@ -76,7 +76,7 @@ export default function PricingSection() {
             <p className="text-slate-500 font-bold text-sm animate-pulse">جاري تحميل الباقات...</p>
           </div>
         ) : (
-          <div className="flex md:grid md:grid-cols-3 gap-5 lg:gap-6 items-stretch max-w-6xl mx-auto overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-6 pt-2 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0">
+          <div className="flex md:grid md:grid-cols-3 gap-5 lg:gap-6 items-stretch max-w-6xl mx-auto overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scroll-smooth scrollbar-none touch-pan-x overscroll-x-contain [-webkit-overflow-scrolling:touch] scroll-px-4 sm:scroll-px-6 pb-6 pt-2 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0">
             {activePlans.map((plan: any) => {
               const isGoldPlan = plan.price_ils === 100 || plan.name.includes("الذهبية") || plan.name.includes("النخبة") || plan.name.includes("Elite");
               const isMidPlan = plan.price_ils === 60 || plan.name.includes("الميدتيرم") || plan.name.includes("التفوق") || plan.name.includes("Premium");
@@ -97,7 +97,7 @@ export default function PricingSection() {
               return (
                 <div 
                   key={plan.id}
-                  className={`relative shrink-0 w-[290px] sm:w-[330px] md:w-auto snap-center bg-white dark:bg-[#0c111d] rounded-3xl p-5 sm:p-6 md:p-7 flex flex-col justify-between transition-all duration-300 group ${
+                  className={`relative shrink-0 w-[290px] sm:w-[330px] md:w-auto snap-start bg-white dark:bg-[#0c111d] rounded-3xl p-5 sm:p-6 md:p-7 flex flex-col justify-between transition-all duration-300 group ${
                     isGoldPlan 
                       ? "border border-amber-300/80 dark:border-amber-500/30 shadow-md shadow-amber-500/5 hover:border-amber-400 dark:hover:border-amber-500/50 md:-translate-y-1.5" 
                       : isMidPlan

@@ -1,13 +1,22 @@
+"use client";
+
+import { useState, useRef, useCallback } from "react";
 import { 
   PenTool, 
   Target, 
   BookOpen, 
   Brain, 
   Zap, 
-  Coins 
+  Coins,
+  ChevronRight,
+  ChevronLeft
 } from "lucide-react";
 
 export default function FeaturesSection() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
   const features = [
     {
       title: "تخطيط السلايدات وكتابة كلام الدكتور",
@@ -71,8 +80,51 @@ export default function FeaturesSection() {
     }
   ];
 
+  // Precise active card tracking using screen coordinates (bulletproof in RTL)
+  const handleScroll = useCallback(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const containerRect = container.getBoundingClientRect();
+    const containerCenter = containerRect.left + containerRect.width / 2;
+    let minDiff = Infinity;
+    let closestIdx = 0;
+
+    cardRefs.current.forEach((card, idx) => {
+      if (!card) return;
+      const rect = card.getBoundingClientRect();
+      const cardCenter = rect.left + rect.width / 2;
+      const diff = Math.abs(containerCenter - cardCenter);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIdx = idx;
+      }
+    });
+
+    setActiveIndex(closestIdx);
+  }, []);
+
+  const scrollToCard = useCallback((index: number) => {
+    const targetCard = cardRefs.current[index];
+    if (targetCard) {
+      targetCard.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest"
+      });
+      setActiveIndex(index);
+    }
+  }, []);
+
+  const scrollNext = () => {
+    scrollToCard(Math.min(features.length - 1, activeIndex + 1));
+  };
+
+  const scrollPrev = () => {
+    scrollToCard(Math.max(0, activeIndex - 1));
+  };
+
   return (
-    <section id="features" className="relative scroll-mt-24 py-24 sm:py-32 px-4 sm:px-6 overflow-hidden z-20">
+    <section id="features" className="relative scroll-mt-24 py-20 sm:py-32 px-4 sm:px-6 overflow-hidden z-20">
       {/* Background Decor */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr from-indigo-500/5 to-purple-500/5 blur-[120px] rounded-full" />
@@ -81,8 +133,7 @@ export default function FeaturesSection() {
       <div className="max-w-7xl mx-auto relative z-10">
         
         {/* Section Header */}
-        <div className="text-center mb-16 sm:mb-20 flex flex-col items-center">
-          
+        <div className="text-center mb-12 sm:mb-20 flex flex-col items-center">
           <h2 className="text-4xl sm:text-5xl font-black mb-6 text-slate-900 dark:text-white tracking-tight leading-tight">
             لماذا تختار <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 pb-2">لمّاح؟</span>
           </h2>
@@ -94,11 +145,16 @@ export default function FeaturesSection() {
 
         {/* Features Grid / Mobile Horizontal Carousel */}
         <div className="relative">
-          <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-7 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-6 pt-2 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0">
+          <div 
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-7 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scroll-smooth scrollbar-none touch-pan-x overscroll-x-contain [-webkit-overflow-scrolling:touch] scroll-px-4 sm:scroll-px-6 pb-6 pt-2 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0"
+          >
             {features.map((feature, idx) => (
               <div
                 key={idx}
-                className="w-[82vw] max-w-[320px] sm:w-[340px] sm:max-w-none md:w-auto md:max-w-none snap-center shrink-0 group relative bg-white/85 dark:bg-[#070b16]/85 backdrop-blur-2xl rounded-[1.75rem] sm:rounded-[2rem] p-6 sm:p-7 border border-indigo-200/60 dark:border-white/15 md:border-slate-200/80 md:dark:border-white/10 md:hover:border-indigo-300 shadow-xl shadow-indigo-900/5 dark:shadow-[0_10px_35px_rgba(0,0,0,0.6)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl overflow-hidden flex flex-col justify-between"
+                ref={(el) => { cardRefs.current[idx] = el; }}
+                className="w-[84vw] max-w-[325px] sm:w-[340px] sm:max-w-none md:w-auto md:max-w-none snap-start shrink-0 group relative bg-white/85 dark:bg-[#070b16]/85 backdrop-blur-2xl rounded-[1.75rem] sm:rounded-[2rem] p-6 sm:p-7 border border-indigo-200/60 dark:border-white/15 md:border-slate-200/80 md:dark:border-white/10 md:hover:border-indigo-300 shadow-xl shadow-indigo-900/5 dark:shadow-[0_10px_35px_rgba(0,0,0,0.6)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl overflow-hidden flex flex-col justify-between"
               >
                 {/* Card Hover Gradient Background */}
                 <div className={`absolute inset-0 opacity-10 md:opacity-0 md:group-hover:opacity-10 transition-opacity duration-700 bg-gradient-to-br ${feature.color}`} />
@@ -109,6 +165,10 @@ export default function FeaturesSection() {
                     <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl shrink-0 flex items-center justify-center border shadow-inner transition-transform duration-500 scale-105 rotate-2 md:scale-100 md:rotate-0 md:group-hover:scale-110 md:group-hover:rotate-3 ${feature.bgLight} ${feature.bgDark} ${feature.borderColor}`}>
                       <feature.icon className={`w-6 h-6 sm:w-7 sm:h-7 ${feature.iconColor}`} />
                     </div>
+                    {/* Step indicator on mobile */}
+                    <span className="md:hidden text-xs font-bold text-slate-600 dark:text-slate-400 font-mono bg-slate-100 dark:bg-white/5 px-2.5 py-1 rounded-full">
+                      {idx + 1} / {features.length}
+                    </span>
                   </div>
                   
                   {/* Content */}
@@ -130,11 +190,54 @@ export default function FeaturesSection() {
             ))}
           </div>
 
-          {/* Mobile Swipe Hint */}
-          <div className="flex md:hidden items-center justify-center gap-1.5 mt-2">
-            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1 bg-slate-100 dark:bg-white/5 px-3 py-1 rounded-full border border-slate-200/60 dark:border-white/5">
-              اسحب لرؤية باقي المميزات الـ 6 ←
-            </span>
+          {/* Interactive Mobile Navigation Bar (Dots + Arrows) */}
+          <div className="flex md:hidden items-center justify-between mt-3 px-2">
+            {/* Prev Button (In RTL, previous feature is to the right) */}
+            <button
+              type="button"
+              onClick={scrollPrev}
+              disabled={activeIndex === 0}
+              aria-label="الميزة السابقة"
+              className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all ${
+                activeIndex === 0
+                  ? "opacity-30 border-slate-200 dark:border-white/5 text-slate-400 cursor-not-allowed"
+                  : "border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-200 active:scale-95 bg-white/60 dark:bg-white/5 shadow-xs"
+              }`}
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+
+            {/* Pagination Dots */}
+            <div className="flex items-center gap-1.5">
+              {features.map((_, i) => (
+                <button
+                  type="button"
+                  key={i}
+                  onClick={() => scrollToCard(i)}
+                  aria-label={`الانتقال إلى الميزة ${i + 1}`}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    activeIndex === i 
+                      ? "w-6 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400" 
+                      : "w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Next Button (In RTL, next feature is to the left) */}
+            <button
+              type="button"
+              onClick={scrollNext}
+              disabled={activeIndex === features.length - 1}
+              aria-label="الميزة التالية"
+              className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all ${
+                activeIndex === features.length - 1
+                  ? "opacity-30 border-slate-200 dark:border-white/5 text-slate-400 cursor-not-allowed"
+                  : "border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-200 active:scale-95 bg-white/60 dark:bg-white/5 shadow-xs"
+              }`}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
           </div>
         </div>
         

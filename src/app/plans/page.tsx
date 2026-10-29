@@ -199,7 +199,7 @@ export default function PlansPage() {
             <p className="text-slate-500 font-bold text-sm animate-pulse">جاري تحميل الباقات...</p>
           </div>
         ) : (
-          <div className="flex md:grid md:grid-cols-3 gap-5 lg:gap-6 items-stretch max-w-6xl mx-auto overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-6 pt-2 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0">
+          <div className="flex md:grid md:grid-cols-3 gap-5 lg:gap-6 items-stretch max-w-6xl mx-auto overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scroll-smooth scrollbar-none touch-pan-x overscroll-x-contain [-webkit-overflow-scrolling:touch] scroll-px-4 sm:scroll-px-6 pb-6 pt-2 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0">
             {activePlans.map((plan: any) => {
               const isGoldPlan = plan.price_ils === 100 || plan.name.includes("الذهبية") || plan.name.includes("النخبة") || plan.name.includes("Elite");
               const isMidPlan = plan.price_ils === 60 || plan.name.includes("الميدتيرم") || plan.name.includes("التفوق") || plan.name.includes("Premium");
@@ -221,7 +221,7 @@ export default function PlansPage() {
               return (
                 <div 
                   key={plan.id}
-                  className={`relative shrink-0 w-[275px] sm:w-[320px] md:w-auto snap-center bg-white/80 dark:bg-[#070b16]/85 backdrop-blur-2xl rounded-2xl sm:rounded-[1.75rem] p-4 sm:p-6 md:p-7 flex flex-col justify-between transition-all duration-300 group shadow-lg ${
+                  className={`relative shrink-0 w-[275px] sm:w-[320px] md:w-auto snap-start bg-white/80 dark:bg-[#070b16]/85 backdrop-blur-2xl rounded-2xl sm:rounded-[1.75rem] p-4 sm:p-6 md:p-7 flex flex-col justify-between transition-all duration-300 group shadow-lg ${
                     isActive
                       ? "border-2 border-emerald-500 ring-4 ring-emerald-500/10 shadow-emerald-500/15"
                       : isGoldPlan 
