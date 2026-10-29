@@ -117,7 +117,7 @@ export default function FeaturesSection() {
     if (targetCard) {
       targetCard.scrollIntoView({
         behavior: "smooth",
-        inline: "center",
+        inline: "start",
         block: "nearest"
       });
     }
@@ -129,6 +129,34 @@ export default function FeaturesSection() {
 
   const scrollPrev = () => {
     scrollToCard(Math.max(0, activeIndex - 1));
+  };
+
+  // Optional mouse drag for desktop preview without interfering with mobile touch
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeftPos = useRef(0);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!scrollRef.current) return;
+    isDragging.current = true;
+    startX.current = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeftPos.current = scrollRef.current.scrollLeft;
+  };
+
+  const handleMouseLeave = () => {
+    isDragging.current = false;
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging.current || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5;
+    scrollRef.current.scrollLeft = scrollLeftPos.current - walk;
   };
 
   return (
@@ -156,14 +184,18 @@ export default function FeaturesSection() {
           {/* Zero JS on scroll - 100% Native Hardware Acceleration */}
           <div 
             ref={scrollRef}
-            className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-7 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scroll-smooth scrollbar-none touch-pan-x overscroll-x-contain [-webkit-overflow-scrolling:touch] scroll-px-4 sm:scroll-px-6 pb-6 pt-2 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0"
+            onMouseDown={handleMouseDown}
+            onMouseLeave={handleMouseLeave}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-7 overflow-x-auto md:overflow-x-visible snap-x snap-proximity scrollbar-none [-webkit-overflow-scrolling:touch] scroll-px-4 sm:scroll-px-6 pb-6 pt-2 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0"
           >
             {features.map((feature, idx) => (
               <div
                 key={idx}
                 data-index={idx}
                 ref={(el) => { cardRefs.current[idx] = el; }}
-                className="w-[84vw] max-w-[325px] sm:w-[340px] sm:max-w-none md:w-auto md:max-w-none snap-center shrink-0 [scroll-snap-stop:always] group relative bg-white dark:bg-[#0c111d] md:bg-white/85 md:dark:bg-[#070b16]/85 md:backdrop-blur-xl rounded-[1.75rem] sm:rounded-[2rem] p-6 sm:p-7 border border-indigo-200/60 dark:border-white/10 md:hover:border-indigo-300 shadow-lg shadow-indigo-950/5 dark:shadow-[0_10px_35px_rgba(0,0,0,0.5)] transition-transform duration-300 hover:-translate-y-1.5 overflow-hidden flex flex-col justify-between"
+                className="w-[84vw] max-w-[325px] sm:w-[340px] sm:max-w-none md:w-auto md:max-w-none snap-start shrink-0 group relative bg-white dark:bg-[#0c111d] md:bg-white/85 md:dark:bg-[#070b16]/85 md:backdrop-blur-xl rounded-[1.75rem] sm:rounded-[2rem] p-6 sm:p-7 border border-indigo-200/60 dark:border-white/10 md:hover:border-indigo-300 shadow-lg shadow-indigo-950/5 dark:shadow-[0_10px_35px_rgba(0,0,0,0.5)] md:transition-transform md:duration-300 md:hover:-translate-y-1.5 overflow-hidden flex flex-col justify-between"
               >
                 {/* Card Hover Gradient Background */}
                 <div className={`absolute inset-0 opacity-10 md:opacity-0 md:group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-br ${feature.color}`} />
@@ -197,6 +229,8 @@ export default function FeaturesSection() {
                 </div>
               </div>
             ))}
+            {/* End Spacer for RTL mobile scroll padding */}
+            <div className="shrink-0 w-2 md:hidden" aria-hidden="true" />
           </div>
 
           {/* Interactive Mobile Navigation Bar (Dots + Arrows) */}
