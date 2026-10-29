@@ -175,13 +175,19 @@ export function useSummarizeStream() {
       if (startPage) formData.append("start_page", startPage);
       if (endPage) formData.append("end_page", endPage);
 
-      const isBatchMode = multiAudioFiles.length > 0;
-      if (isBatchMode) {
+      const isBatchMode = multiAudioFiles.length > 1;
+      if (multiAudioFiles.length > 0) {
         const tempIds = multiAudioFiles
           .map((f) => f.tempId)
           .filter(Boolean)
           .join(",");
-        formData.append("audio_temp_ids", tempIds);
+        if (tempIds) {
+          formData.append("audio_temp_ids", tempIds);
+        }
+        // Also provide audio_temp_id if single file in multi-list
+        if (!audioTempId && multiAudioFiles[0]?.tempId) {
+          formData.append("audio_temp_id", multiAudioFiles[0].tempId);
+        }
       }
 
       // If temp files are somehow not present, append original files
@@ -189,7 +195,7 @@ export function useSummarizeStream() {
       if (!pdfTempId && pdfFile) formData.append("pdf_file", pdfFile);
 
       const endpoint = isBatchMode
-        ? `${getApiBaseUrl()}/api/v1/summarize/batch-lecture`
+        ? `${getApiBaseUrl()}/api/v1/summarize/process-batch-lectures`
         : `${getApiBaseUrl()}/api/v1/summarize/process-lecture`;
 
       const response = await fetchWithRetry(
@@ -217,7 +223,15 @@ export function useSummarizeStream() {
         let errMsg = "حدث خطأ أثناء معالجة المحاضرة";
         try {
           const errData = await response.json();
-          errMsg = errData.detail?.user_message || errData.detail || errMsg;
+          if (errData?.detail?.user_message) {
+            errMsg = errData.detail.user_message;
+          } else if (typeof errData?.detail === "string") {
+            if (response.status === 404 || errData.detail === "Not Found") {
+              errMsg = "تعذر الوصول إلى خدمة معالجة المحاضرات المتعددة. يرجى إعادة المحاولة.";
+            } else {
+              errMsg = errData.detail;
+            }
+          }
         } catch {}
         throw new Error(errMsg);
       }
