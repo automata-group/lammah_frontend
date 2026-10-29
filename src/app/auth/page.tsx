@@ -3,12 +3,14 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Loader2,
   Mail,
   Lock,
   Sparkles,
   Zap,
+  ArrowLeft,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/landing/Header";
@@ -72,15 +74,32 @@ function AuthForm() {
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-40 dark:opacity-60" />
             
             <div className="relative z-10 max-w-xs sm:max-w-sm mx-auto space-y-5">
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.2 }}
-                className="w-full flex items-center justify-center pt-1"
+              <Link
+                href="/"
+                prefetch={true}
+                className="w-full flex items-center justify-center pt-1 group cursor-pointer"
+                title="العودة للصفحة الرئيسية"
               >
-                <Image src="/lammah-logo.png" alt="لمّاح" width={64} height={64} className="w-14 h-14 object-contain drop-shadow-md" />
-              </motion.div>
+                <motion.div 
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Image src="/lammah-logo.png" alt="لمّاح" width={64} height={64} className="w-14 h-14 object-contain drop-shadow-md group-hover:drop-shadow-indigo-500/30 transition-all" />
+                </motion.div>
+              </Link>
 
               <div>
+                <div className="flex justify-center -mt-1 mb-2">
+                  <Link
+                    href="/"
+                    prefetch={true}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors py-1 px-3 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 active:scale-95 cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-white/10"
+                  >
+                    <span>العودة للصفحة الرئيسية</span>
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-snug mb-1.5">
                   أهلاً بك في منصة لمّاح
                 </h2>

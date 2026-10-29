@@ -35,11 +35,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // 1. Check localStorage or system preference
-    const savedTheme = localStorage.getItem("lammah_theme") as Theme | null;
+    // 1. Check DOM reality set by inline script, localStorage or system preference
+    const isDarkInDom = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+    const savedTheme = typeof window !== "undefined" ? (localStorage.getItem("lammah_theme") as Theme | null) : null;
     const initialTheme: Theme = savedTheme === "dark" || savedTheme === "light" 
       ? savedTheme 
-      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      : (isDarkInDom || (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light");
     
     setThemeState(initialTheme);
     applyTheme(initialTheme);
@@ -48,12 +49,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem("lammah_theme", newTheme);
+    try {
+      localStorage.setItem("lammah_theme", newTheme);
+    } catch {}
     applyTheme(newTheme);
   };
 
   const toggleTheme = () => {
-    const nextTheme: Theme = theme === "light" ? "dark" : "light";
+    // Always check actual DOM truth to prevent inverted state / placebo click
+    const isCurrentlyDark = typeof document !== "undefined"
+      ? document.documentElement.classList.contains("dark")
+      : theme === "dark";
+    const nextTheme: Theme = isCurrentlyDark ? "light" : "dark";
     setTheme(nextTheme);
   };
 

@@ -28,6 +28,7 @@ export default function Header({ user: propUser }: HeaderProps = {}) {
 
   // 1. Proactive Route Prefetching (0ms Network Latency)
   useEffect(() => {
+    router.prefetch("/");
     router.prefetch("/auth");
     router.prefetch("/dashboard");
     router.prefetch("/faq");
@@ -283,6 +284,15 @@ export default function Header({ user: propUser }: HeaderProps = {}) {
                 <ArrowLeft className="w-3.5 h-3.5" />
               </Link>
             </div>
+          ) : pathname === "/auth" ? (
+            <Link
+              href="/"
+              prefetch={true}
+              className="px-4 py-2 rounded-full bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold text-xs border border-indigo-200/80 dark:border-indigo-500/30 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer active:scale-95 shadow-2xs"
+            >
+              <span>الرئيسية</span>
+              <ArrowLeft className="w-3.5 h-3.5" />
+            </Link>
           ) : (
             <>
               <Link
@@ -387,6 +397,16 @@ export default function Header({ user: propUser }: HeaderProps = {}) {
                   {isTutor ? <GraduationCap className="w-4 h-4" /> : <LayoutDashboard className="w-4 h-4" />}
                   <span>{isTutor ? "لوحة المعلم" : "لوحة التحكم"}</span>
                   <ArrowLeft className="w-4 h-4" />
+                </Link>
+              ) : pathname === "/auth" ? (
+                <Link
+                  href="/"
+                  prefetch={true}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center text-xs shadow-md shadow-indigo-500/20 active:scale-95 transition-transform flex items-center justify-center gap-1.5"
+                >
+                  <span>العودة للصفحة الرئيسية</span>
+                  <ArrowLeft className="w-3.5 h-3.5" />
                 </Link>
               ) : (
                 <div className="grid grid-cols-2 gap-2">

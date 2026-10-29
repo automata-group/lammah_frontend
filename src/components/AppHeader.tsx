@@ -12,7 +12,6 @@ import {
   GraduationCap, Video, PenTool, ChevronDown, Menu, X,
   Sparkles, CheckCircle2, Shield, HelpCircle, Zap, Clock, Palette, Layers, CheckSquare
 } from "lucide-react";
-import StudentProfileModal from "@/components/StudentProfileModal";
 import { createClient } from "@/lib/supabase";
 
 interface AppHeaderProps {
@@ -47,13 +46,16 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
   }, [pathname, propActivePage]);
   const [isTutor, setIsTutor] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [studyMenuOpen, setStudyMenuOpen] = useState(false);
-  const [servicesMenuOpen, setServicesMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [optimisticTab, setOptimisticTab] = useState<string | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const studyMenuRef = useRef<HTMLDivElement>(null);
-  const servicesMenuRef = useRef<HTMLDivElement>(null);
+
+  // Sync optimistic tab whenever pathname or activePage changes
+  useEffect(() => {
+    setOptimisticTab(null);
+  }, [pathname, activePage]);
+
+  const currentTab = optimisticTab || activePage || "dashboard";
 
   const [isMounted, setIsMounted] = useState(false);
   const [fetchedQuota, setFetchedQuota] = useState<number | null>(() => {
@@ -196,12 +198,6 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setUserMenuOpen(false);
       }
-      if (studyMenuRef.current && !studyMenuRef.current.contains(event.target as Node)) {
-        setStudyMenuOpen(false);
-      }
-      if (servicesMenuRef.current && !servicesMenuRef.current.contains(event.target as Node)) {
-        setServicesMenuOpen(false);
-      }
       if (navRef.current && !navRef.current.contains(event.target as Node)) {
         setMobileMenuOpen(false);
       }
@@ -212,6 +208,13 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
 
   // Proactive background prefetching for instantaneous 0ms perceived latency
   useEffect(() => {
+    router.prefetch("/dashboard");
+    router.prefetch("/summarize");
+    router.prefetch("/notebook");
+    router.prefetch("/tasks");
+    router.prefetch("/study");
+    router.prefetch("/kiosk");
+    router.prefetch("/marketplace");
     if (userMenuOpen) {
       router.prefetch("/profile");
       router.prefetch("/plans");
@@ -221,89 +224,25 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
     }
   }, [userMenuOpen, router, isTutor]);
 
-  useEffect(() => {
-    if (studyMenuOpen) {
-      router.prefetch("/notebook");
-      router.prefetch("/tasks");
-      router.prefetch("/study");
+  const navItems = useMemo(() => {
+    if (isTutor) {
+      return [
+        { id: "tutor", label: "لوحة المعلم", icon: GraduationCap, path: "/tutor/dashboard", highlight: true },
+        { id: "dashboard", label: "الرئيسية", icon: LayoutDashboard, path: "/dashboard" },
+        { id: "notebook", label: "دفاتري", icon: BookOpen, path: "/notebook" },
+        { id: "marketplace", label: "المتجر", icon: Package, path: "/marketplace" },
+      ];
     }
-  }, [studyMenuOpen, router]);
-
-  useEffect(() => {
-    if (servicesMenuOpen) {
-      router.prefetch("/kiosk");
-      router.prefetch("/marketplace");
-    }
-  }, [servicesMenuOpen, router]);
-
-  const navItems = [
-    {
-      id: "dashboard",
-      label: "الرئيسية",
-      icon: LayoutDashboard,
-      path: isTutor ? "/tutor/dashboard" : "/dashboard",
-      show: true,
-    },
-    {
-      id: "summarize",
-      label: "لمّاح بخططلك",
-      icon: Sparkles,
-      path: "/summarize",
-      show: !isTutor,
-    },
-    {
-      id: "tutor",
-      label: "لوحة المعلم",
-      icon: GraduationCap,
-      path: "/tutor/dashboard",
-      show: isTutor,
-      highlight: true,
-    },
-    {
-      id: "notebook",
-      label: "الدفتر",
-      icon: BookOpen,
-      path: "/notebook",
-      show: true,
-    },
-    {
-      id: "study",
-      label: "دوّن ملاحظاتك",
-      icon: PenTool,
-      path: "/study",
-      show: true,
-    },
-    {
-      id: "marketplace",
-      label: "المتجر",
-      icon: Package,
-      path: "/marketplace",
-      show: true,
-    },
-    {
-      id: "kiosk",
-      label: "كشك المشاريع",
-      icon: Store,
-      path: "/kiosk",
-      show: true,
-      badge: "جديد",
-    },
-    {
-      id: "sessions",
-      label: "حصصي",
-      icon: Video,
-      path: "/sessions",
-      show: false,
-      badge: "قريباً",
-    },
-    {
-      id: "ytdl",
-      label: "تحميل MP3",
-      icon: Download,
-      path: "/ytdl",
-      show: false,
-    },
-  ];
+    return [
+      { id: "dashboard", label: "الرئيسية", icon: LayoutDashboard, path: "/dashboard" },
+      { id: "summarize", label: "لمّاح بخططلك", icon: Sparkles, path: "/summarize", highlight: true },
+      { id: "notebook", label: "دفاتري", icon: BookOpen, path: "/notebook" },
+      { id: "tasks", label: "مهامي", icon: CheckSquare, path: "/tasks" },
+      { id: "study", label: "الملاحظات", icon: PenTool, path: "/study" },
+      { id: "kiosk", label: "كشك المشاريع", icon: Store, path: "/kiosk", badge: "جديد" },
+      { id: "marketplace", label: "المتجر", icon: Package, path: "/marketplace" },
+    ];
+  }, [isTutor]);
 
   return (
     <header className="sticky top-0 z-50 w-full px-2 sm:px-6 pt-2.5 sm:pt-4 pb-2" dir="rtl">
@@ -337,221 +276,46 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
             </div>
           </Link>
 
-          {/* ── ZONE 2: Re-engineered Clean Navigation Tabs (Desktop & Laptop) ── */}
-          <div className="hidden lg:flex items-center gap-1.5 bg-slate-100/80 dark:bg-white/5 p-1 rounded-full border border-slate-200/60 dark:border-white/10 shadow-2xs">
-            
-            {/* 1. الرئيسية */}
-            <Link
-              href={isTutor ? "/tutor/dashboard" : "/dashboard"}
-              prefetch={true}
-              onClick={() => {
-                setStudyMenuOpen(false);
-                setServicesMenuOpen(false);
-              }}
-              className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
-                activePage === "dashboard"
-                  ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-xs border border-slate-200/60 dark:border-slate-700"
-                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/10"
-              }`}
-            >
-              <LayoutDashboard className={`w-3.5 h-3.5 ${activePage === "dashboard" ? "text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400"}`} />
-              <span>الرئيسية</span>
-            </Link>
-
-            {/* 2. لمّاح بخططلك (Hero Action) */}
-            {!isTutor && (
-              <Link
-                href="/summarize"
-                prefetch={true}
-                onClick={() => {
-                  setStudyMenuOpen(false);
-                  setServicesMenuOpen(false);
-                }}
-                className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
-                  activePage === "summarize"
-                    ? "bg-indigo-600 text-white shadow-xs"
-                    : "text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-white hover:bg-white/80 dark:hover:bg-white/10"
-                }`}
-              >
-                <Sparkles className={`w-3.5 h-3.5 ${activePage === "summarize" ? "text-white" : "text-indigo-500"}`} />
-                <span>لمّاح بخططلك</span>
-              </Link>
-            )}
-
-            {/* 3. كتابة الملاحظات (Featured Direct Study Workspace) */}
-            <Link
-              href="/study"
-              prefetch={true}
-              onClick={() => {
-                setStudyMenuOpen(false);
-                setServicesMenuOpen(false);
-              }}
-              className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
-                activePage === "study"
-                  ? "bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-300 shadow-xs border border-purple-200/80 dark:border-purple-800/60 ring-1 ring-purple-500/20"
-                  : "text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-300 hover:bg-white/60 dark:hover:bg-white/10"
-              }`}
-              title="مساحة تدوين الملاحظات والمذاكرة المركزة"
-            >
-              <PenTool className={`w-3.5 h-3.5 ${activePage === "study" ? "text-purple-600 dark:text-purple-400" : "text-purple-500"}`} />
-              <span>كتابة الملاحظات</span>
-            </Link>
-
-            {/* 4. Dropdown: المذاكرة (الدفاتر + المهام) */}
-            <div className="relative" ref={studyMenuRef}>
-              <button
-                onClick={() => {
-                  setStudyMenuOpen(!studyMenuOpen);
-                  setServicesMenuOpen(false);
-                  setUserMenuOpen(false);
-                }}
-                className={`px-3 py-1.5 rounded-full flex items-center gap-1 text-xs font-bold transition-all duration-200 cursor-pointer ${
-                  activePage === "notebook" || activePage === "tasks" || studyMenuOpen
-                    ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-xs border border-slate-200/60 dark:border-slate-700"
-                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/10"
-                }`}
-              >
-                <BookOpen className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                <span>المذاكرة</span>
-                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${studyMenuOpen ? "rotate-180 text-indigo-600" : ""}`} />
-              </button>
-
-              {studyMenuOpen && (
-                <div className="absolute right-0 mt-2.5 w-60 bg-white/95 dark:bg-[#0c111d]/95 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-900/10 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                  <Link
-                    href="/notebook"
-                    prefetch={true}
-                    onClick={() => setStudyMenuOpen(false)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer text-right ${
-                      activePage === "notebook"
-                        ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"
-                        : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5"
-                    }`}
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                      <BookOpen className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-black">دفاتر المحاضرات</div>
-                      <div className="text-[10px] text-slate-400 font-normal">المحاضرات والملخصات المحفوظة</div>
-                    </div>
-                  </Link>
-
-                  <Link
-                    href="/tasks"
-                    prefetch={true}
-                    onClick={() => setStudyMenuOpen(false)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer mt-1 text-right ${
-                      activePage === "tasks"
-                        ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"
-                        : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5"
-                    }`}
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                      <CheckSquare className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-black">مهام المذاكرة</div>
-                      <div className="text-[10px] text-slate-400 font-normal">تنظيم وجدول إنجاز المهام</div>
-                    </div>
-                  </Link>
-
-                  <div className="border-t border-slate-100 dark:border-slate-800/80 my-1 mx-1" />
-
-                  <Link
-                    href="/study"
-                    prefetch={true}
-                    onClick={() => setStudyMenuOpen(false)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer text-right ${
-                      activePage === "study"
-                        ? "bg-purple-50 dark:bg-purple-500/15 text-purple-600 dark:text-purple-400"
-                        : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5"
-                    }`}
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-purple-50 dark:purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                      <PenTool className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-black flex items-center gap-1.5">
-                        <span>دوّن ملاحظاتك</span>
-                        <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300">
-                          تركيز
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-normal">مساحة المذاكرة والتركيز الذكية</div>
-                    </div>
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* 5. Dropdown: خدمات الجامعة (كشك المشاريع + المتجر) */}
-            <div className="relative" ref={servicesMenuRef}>
-              <button
-                onClick={() => {
-                  setServicesMenuOpen(!servicesMenuOpen);
-                  setStudyMenuOpen(false);
-                  setUserMenuOpen(false);
-                }}
-                className={`px-3 py-1.5 rounded-full flex items-center gap-1 text-xs font-bold transition-all duration-200 cursor-pointer ${
-                  activePage === "kiosk" || activePage === "marketplace" || activePage === "sessions" || servicesMenuOpen
-                    ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-xs border border-slate-200/60 dark:border-slate-700"
-                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/10"
-                }`}
-              >
-                <Store className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                <span>خدمات الجامعة</span>
-                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${servicesMenuOpen ? "rotate-180 text-indigo-600" : ""}`} />
-              </button>
-
-              {servicesMenuOpen && (
-                <div className="absolute right-0 mt-2.5 w-60 bg-white/95 dark:bg-[#0c111d]/95 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-900/10 dark:shadow-black/60 border border-slate-200/90 dark:border-slate-800 p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                  <Link
-                    href="/kiosk"
-                    prefetch={true}
-                    onClick={() => setServicesMenuOpen(false)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer text-right ${
-                      activePage === "kiosk"
-                        ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                        : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                        <Store className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="font-black">كشك المشاريع</div>
-                        <div className="text-[10px] text-slate-400 font-normal">مشاريع جامعية ملهمة ومتميزة</div>
-                      </div>
-                    </div>
-                    <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 shrink-0">
-                      جديد
+          {/* ── ZONE 2: Clean Direct Single-Click Navigation Tabs (Desktop & Laptop) ── */}
+          <div className="hidden lg:flex items-center gap-1 bg-slate-100/80 dark:bg-white/5 p-1 rounded-full border border-slate-200/60 dark:border-white/10 shadow-2xs">
+            {navItems.map((item) => {
+              const isActive = currentTab === item.id;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.id}
+                  href={item.path}
+                  prefetch={true}
+                  onClick={() => setOptimisticTab(item.id)}
+                  onMouseEnter={() => router.prefetch(item.path)}
+                  onTouchStart={() => router.prefetch(item.path)}
+                  className={`relative px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-transform duration-100 cursor-pointer active:scale-95 whitespace-nowrap select-none ${
+                    isActive
+                      ? "text-indigo-600 dark:text-indigo-300"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="appheader-active-pill"
+                      transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                      className="absolute inset-0 rounded-full bg-white dark:bg-slate-800 shadow-xs border border-slate-200/70 dark:border-slate-700 -z-10"
+                    />
+                  )}
+                  <Icon className={`w-3.5 h-3.5 relative z-10 ${
+                    isActive
+                      ? "text-indigo-600 dark:text-indigo-400"
+                      : item.highlight ? "text-indigo-500 animate-pulse" : "text-slate-500 dark:text-slate-400"
+                  }`} />
+                  <span className="relative z-10">{item.label}</span>
+                  {item.badge && (
+                    <span className="relative z-10 text-[9px] font-black px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 shrink-0">
+                      {item.badge}
                     </span>
-                  </Link>
-
-                  <Link
-                    href="/marketplace"
-                    prefetch={true}
-                    onClick={() => setServicesMenuOpen(false)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer mt-1 text-right ${
-                      activePage === "marketplace"
-                        ? "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400"
-                        : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5"
-                    }`}
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                      <Package className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-black">سوق الملخصات</div>
-                      <div className="text-[10px] text-slate-400 font-normal">متجر بيع وشراء الدوسيات</div>
-                    </div>
-                  </Link>
-                </div>
-              )}
-            </div>
-
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
           {/* ── ZONE 3: Quota, Quick Tools & User Profile Menu ── */}
@@ -582,22 +346,18 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
             {/* Theme Toggle Button */}
             <button 
               onClick={toggleTheme} 
-              className="text-slate-600 dark:text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-white/10 p-1.5 sm:p-2 rounded-full transition-all cursor-pointer shrink-0" 
+              className="text-slate-600 dark:text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-white/10 p-1.5 sm:p-2 rounded-full transition-all cursor-pointer shrink-0 active:scale-95 duration-100" 
               title={theme === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي'}
             >
-              {theme === 'dark' ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700" />}
+              {theme === 'dark' ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700 dark:text-slate-300" />}
             </button>
 
             {/* User Profile Dropdown Menu or Sign In */}
             {user ? (
               <div className="relative shrink-0" ref={userMenuRef}>
                 <button
-                  onClick={() => {
-                    setUserMenuOpen(!userMenuOpen);
-                    setStudyMenuOpen(false);
-                    setServicesMenuOpen(false);
-                  }}
-                  className={`flex items-center gap-1 sm:gap-2 p-1 sm:p-1.5 sm:pr-2 sm:pl-2.5 rounded-full border transition-all duration-200 cursor-pointer ${
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className={`flex items-center gap-1 sm:gap-2 p-1 sm:p-1.5 sm:pr-2 sm:pl-2.5 rounded-full border transition-all duration-200 cursor-pointer active:scale-95 ${
                     userMenuOpen || activePage === "profile"
                       ? "bg-indigo-50 dark:bg-indigo-500/20 border-indigo-300 dark:border-indigo-500/50 shadow-xs ring-2 ring-indigo-500/20"
                       : "border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white/80 dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10"
@@ -794,134 +554,48 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
               transition={{ duration: 0.22, ease: "easeOut" }}
               className="lg:hidden mt-3 pt-3 border-t border-slate-200/70 dark:border-slate-800/80 overflow-hidden space-y-3"
             >
-              {/* Category 1: Core Quick Access */}
+              {/* Direct Single-Click Student Tools */}
               <div className="space-y-1">
                 <span className="text-[10px] font-black text-slate-400 px-2 uppercase tracking-wider">
-                  الروابط السريعة
+                  الأقسام والخدمات الأكاديمية
                 </span>
-                <div className="grid grid-cols-3 gap-1.5">
-                  <Link
-                    href={isTutor ? "/tutor/dashboard" : "/dashboard"}
-                    prefetch={true}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`p-2 rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer ${
-                      activePage === "dashboard"
-                        ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-black border border-indigo-200 dark:border-indigo-800"
-                        : "bg-slate-50 dark:bg-white/5 text-slate-700 dark:text-slate-300"
-                    }`}
-                  >
-                    <LayoutDashboard className="w-4 h-4 text-indigo-500" />
-                    <span className="text-[11px] font-bold">الرئيسية</span>
-                  </Link>
-
-                  <Link
-                    href="/summarize"
-                    prefetch={true}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`p-2 rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer ${
-                      activePage === "summarize"
-                        ? "bg-indigo-600 text-white font-black shadow-xs"
-                        : "bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300"
-                    }`}
-                  >
-                    <Sparkles className="w-4 h-4 text-amber-500" />
-                    <span className="text-[11px] font-bold">لمّاح بخططلك</span>
-                  </Link>
-
-                  <Link
-                    href="/study"
-                    prefetch={true}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`p-2 rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer ${
-                      activePage === "study"
-                        ? "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-black border border-purple-200 dark:border-purple-800"
-                        : "bg-purple-50/60 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300"
-                    }`}
-                  >
-                    <PenTool className="w-4 h-4 text-purple-500" />
-                    <span className="text-[11px] font-bold">كتابة الملاحظات</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Category 2: Study Tools (Notebooks & Tasks) */}
-              <div className="space-y-1">
-                <span className="text-[10px] font-black text-slate-400 px-2 uppercase tracking-wider">
-                  أدوات المذاكرة
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    href="/notebook"
-                    prefetch={true}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`p-2.5 rounded-xl flex items-center gap-2.5 text-right transition cursor-pointer ${
-                      activePage === "notebook"
-                        ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-black border border-indigo-200 dark:border-indigo-800"
-                        : "bg-slate-50 dark:bg-white/5 text-slate-700 dark:text-slate-300"
-                    }`}
-                  >
-                    <BookOpen className="w-4 h-4 text-indigo-500 shrink-0" />
-                    <div className="min-w-0">
-                      <div className="text-xs font-bold truncate">دفاتر المحاضرات</div>
-                      <div className="text-[10px] text-slate-400 truncate">محاضراتك وملخصاتك</div>
-                    </div>
-                  </Link>
-
-                  <Link
-                    href="/tasks"
-                    prefetch={true}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`p-2.5 rounded-xl flex items-center gap-2.5 text-right transition cursor-pointer ${
-                      activePage === "tasks"
-                        ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-black border border-indigo-200 dark:border-indigo-800"
-                        : "bg-slate-50 dark:bg-white/5 text-slate-700 dark:text-slate-300"
-                    }`}
-                  >
-                    <CheckSquare className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <div className="min-w-0">
-                      <div className="text-xs font-bold truncate">مهام المذاكرة</div>
-                      <div className="text-[10px] text-slate-400 truncate">جدول إنجاز المهام</div>
-                    </div>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Category 3: Campus Services */}
-              <div className="space-y-1">
-                <span className="text-[10px] font-black text-slate-400 px-2 uppercase tracking-wider">
-                  خدمات الجامعة
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    href="/kiosk"
-                    prefetch={true}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`p-2 rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer ${
-                      activePage === "kiosk"
-                        ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-black border border-emerald-200"
-                        : "bg-slate-50 dark:bg-white/5 text-slate-700 dark:text-slate-300"
-                    }`}
-                  >
-                    <Store className="w-4 h-4 text-emerald-500" />
-                    <span className="text-[11px] font-bold">كشك المشاريع</span>
-                    <span className="text-[8px] font-black px-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
-                      جديد
-                    </span>
-                  </Link>
-
-                  <Link
-                    href="/marketplace"
-                    prefetch={true}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`p-2 rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer ${
-                      activePage === "marketplace"
-                        ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-black border border-indigo-200"
-                        : "bg-slate-50 dark:bg-white/5 text-slate-700 dark:text-slate-300"
-                    }`}
-                  >
-                    <Package className="w-4 h-4 text-indigo-500" />
-                    <span className="text-[11px] font-bold">متجر الملخصات</span>
-                  </Link>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  {navItems.map((item) => {
+                    const isActive = currentTab === item.id;
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.id}
+                        href={item.path}
+                        prefetch={true}
+                        onClick={() => {
+                          setOptimisticTab(item.id);
+                          setMobileMenuOpen(false);
+                        }}
+                        className={`p-2.5 rounded-xl flex items-center gap-2 text-right transition-transform active:scale-95 cursor-pointer ${
+                          isActive
+                            ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-black border border-indigo-200 dark:border-indigo-800 shadow-2xs"
+                            : "bg-slate-50 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10"
+                        }`}
+                      >
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                          isActive ? "bg-indigo-600 text-white" : "bg-slate-200/70 dark:bg-white/10 text-slate-600 dark:text-slate-300"
+                        }`}>
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-bold truncate flex items-center gap-1">
+                            <span>{item.label}</span>
+                            {item.badge && (
+                              <span className="text-[8px] font-black px-1 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                                {item.badge}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -935,7 +609,7 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
                   href="/profile"
                   prefetch={true}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-indigo-600 dark:text-indigo-400 font-bold text-[11px] hover:underline flex items-center gap-1 cursor-pointer"
+                  className="text-indigo-600 dark:text-indigo-400 font-bold text-[11px] hover:underline flex items-center gap-1 cursor-pointer active:scale-95"
                 >
                   <span>الملف الشخصي</span>
                   <span>←</span>
@@ -946,12 +620,6 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
         </AnimatePresence>
 
       </nav>
-
-      <StudentProfileModal
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        session={session}
-      />
     </header>
   );
 }
