@@ -244,7 +244,8 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                   <th className="p-3.5">الطالب</th>
                   <th className="p-3.5">الباقة</th>
                   <th className="p-3.5">طريقة الدفع</th>
-                  <th className="p-3.5 text-center">المبلغ</th>
+                  <th className="p-3.5 text-center">المبلغ المستلم</th>
+                  <th className="p-3.5 text-center">استهلاك التوكن والرصيد</th>
                   <th className="p-3.5 text-left">التاريخ</th>
                 </tr>
               </thead>
@@ -286,6 +287,29 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                           <td className="p-3.5 text-center font-bold text-slate-900 dark:text-white font-mono">
                             ₪{tx.amount}
                           </td>
+                          <td className="p-3.5 text-center">
+                            <div className="flex flex-col items-center">
+                              <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">
+                                {tx.tokens_used > 0 ? (
+                                  tx.tokens_used >= 1000 
+                                    ? `${(tx.tokens_used / 1000).toFixed(1)}K توكن` 
+                                    : `${tx.tokens_used} توكن`
+                                ) : (
+                                  "0 توكن"
+                                )}
+                              </span>
+                              <span className="text-[10px] text-rose-500 dark:text-rose-400 font-mono font-bold">
+                                {tx.ai_cost_usd > 0 
+                                  ? `-₪${tx.ai_cost_ils || (tx.ai_cost_usd * 3.75).toFixed(2)} ($${tx.ai_cost_usd.toFixed(3)})` 
+                                  : "₪0.00"}
+                              </span>
+                              {tx.lectures_processed > 0 && (
+                                <span className="text-[9px] text-slate-400">
+                                  ({tx.lectures_processed} محاضرة)
+                                </span>
+                              )}
+                            </div>
+                          </td>
                           <td className="p-3.5 text-left text-[11px] text-slate-400 font-mono" dir="ltr">
                             {dateStr}
                           </td>
@@ -294,7 +318,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                     })
                 ) : (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-slate-400 text-xs">
+                    <td colSpan={6} className="p-8 text-center text-slate-400 text-xs">
                       لا توجد اشتراكات مسجلة حتى الآن.
                     </td>
                   </tr>
