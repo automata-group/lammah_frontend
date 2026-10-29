@@ -162,6 +162,9 @@ export default function DashboardPdfViewer({
             <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight">
               ملف التلخيص المخطط
             </h2>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              💡 في حال استغرق العرض وقتاً إضافياً لكِبر حجم المحاضرة، يمكنك الضغط على «تحميل الملف» لتصفحه مباشرة على جهازك.
+            </p>
           </div>
         </div>
 
@@ -231,11 +234,22 @@ export default function DashboardPdfViewer({
         ) : (
           <div className="relative w-full">
             {isPdfLoading && (
-              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-xs rounded-lg transition-opacity duration-300">
-                <div className="w-8 h-8 rounded-full border-3 border-indigo-600 border-t-transparent animate-spin mb-3" />
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  جاري تحميل وعرض الملف المخطط...
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xs rounded-lg transition-opacity duration-300 p-6 text-center">
+                <div className="w-9 h-9 rounded-full border-3 border-indigo-600 border-t-transparent animate-spin mb-3" />
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">
+                  جاري تجهيز وعرض الملف المخطط...
                 </span>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-3.5 leading-relaxed">
+                  نظراً لكبر حجم المحاضرة وتفاصيل التخطيط، يمكنك فتح الملف مباشرة أو تنزيله لجهازك إذا تأخر العرض المباشر.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleDownloadPdf}
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>تحميل الملف المخطط الآن</span>
+                </button>
               </div>
             )}
             {blobUrl ? (

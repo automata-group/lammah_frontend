@@ -6,38 +6,28 @@ import {
   Search, 
   Ban, 
   CheckCircle, 
-  Shield, 
-  ShieldAlert,
-  ShieldCheck,
-  UserPlus, 
-  UserMinus, 
+  ShieldCheck, 
   Crown, 
-  X, 
   Users, 
   GraduationCap, 
   User, 
   Sparkles,
   Phone,
-  Calendar,
-  AlertTriangle,
   RefreshCw,
-  MoreVertical,
   Mail,
-  Copy,
-  Check,
   Download,
-  Zap
+  Zap,
+  Package,
+  Trash2
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import AssignSubscriptionModal from "./AssignSubscriptionModal";
 
 export default function UserManagement({ session }: { session: any }) {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "tutor" | "user" | "blocked">("all");
+  const [roleFilter, setRoleFilter] = useState<"all" | "subscribed" | "admin" | "user" | "blocked">("all");
   const [processing, setProcessing] = useState<string | null>(null);
-  const [copiedEmailId, setCopiedEmailId] = useState<string | null>(null);
   const [exportingExcel, setExportingExcel] = useState(false);
 
   // Assign Subscription & Minutes Modal State
@@ -119,81 +109,87 @@ export default function UserManagement({ session }: { session: any }) {
   };
 
   const toggleAdminRole = async (userId: string, currentlyAdmin: boolean) => {
-    const actionText = currentlyAdmin ? "سحب صلاحيات الأدمن من" : "ترقية هذا المستخدم إلى مسؤول (Admin)";
-    if (!confirm(`هل أنت متأكد من ${actionText}؟`)) return;
-
+    const action = currentlyAdmin ? "سحب صلاحيات الأدمن من" : "ترقية إلى أدمن لـ";
+    if (!confirm(`هل أنت متأكد من ${action} هذا المستخدم؟`)) return;
     setProcessing(userId);
     try {
-      const endpoint = currentlyAdmin ? "remove-admin" : "make-admin";
+      const endpoint = currentlyAdmin ? "demote-admin" : "promote-admin";
       const res = await fetch(`${API}/api/v1/admin/users/${userId}/${endpoint}`, {
          method: "POST",
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
-      const data = await res.json();
       if (res.ok) {
-        alert(data.message || "تم تحديث دور المستخدم بنجاح!");
         setUsers(users.map(u => u.id === userId ? { ...u, role: currentlyAdmin ? "user" : "admin" } : u));
-      } else {
-        alert(data.detail?.user_message || data.detail || "فشلت العملية");
       }
     } catch (err) {
-      alert("حدث خطأ أثناء تنفيذ العملية.");
+      alert("حدث خطأ أثناء تحديث الرتبة.");
     } finally {
       setProcessing(null);
     }
   };
 
-  const handleGrantAdminByQuery = async (e: React.FormEvent) => {
+  const handleCancelPlan = async (userId: string, userName: string) => {
+    if (!confirm(`هل أنت متأكد من إلغاء خطة المستخدم (${userName})؟ سيتم تصفير حصته وإلغاء باقته.`)) return;
+    setProcessing(userId);
+    try {
+      const res = await fetch(`${API}/api/v1/admin/users/${userId}/cancel-plan`, {
+         method: "POST",
+         headers: { "Authorization": `Bearer ${session?.access_token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "فشل إلغاء الخطة");
+      alert(data.message || "تم إلغاء الخطة بنجاح!");
+      fetchUsers();
+    } catch (e: any) {
+      alert(`خطأ: ${e.message}`);
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleSearchAndAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!adminQuery.trim()) return;
-
     setAdminSearchLoading(true);
     setAdminSearchMessage(null);
-
     try {
-      const res = await fetch(`${API}/api/v1/admin/users/grant-admin-by-query`, {
+      const res = await fetch(`${API}/api/v1/admin/users/assign-admin-by-email`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session?.access_token}` 
+        headers: {
+          "Authorization": `Bearer ${session?.access_token}`,
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ query: adminQuery.trim() })
+        body: JSON.stringify({ email: adminQuery.trim() })
       });
       const data = await res.json();
       if (res.ok) {
-        setAdminSearchMessage({ type: "success", text: data.message || "تمت ترقية المستخدم كمسؤول بنجاح!" });
+        setAdminSearchMessage({ type: "success", text: `تم ترقية ${adminQuery} كمسؤول أدمن بنجاح!` });
         setAdminQuery("");
         fetchUsers();
-        setTimeout(() => {
-          setShowAddAdminModal(false);
-          setAdminSearchMessage(null);
-        }, 1800);
       } else {
-        setAdminSearchMessage({ type: "error", text: data.detail?.user_message || data.detail || "لم يتم العثور على المستخدم." });
+        setAdminSearchMessage({ type: "error", text: data.detail || "تعذر العثور على المستخدم بهذا البريد الإلكتروني" });
       }
-    } catch (err) {
-      setAdminSearchMessage({ type: "error", text: "حدث خطأ أثناء الاتصال بالسيرفر." });
+    } catch (err: any) {
+      setAdminSearchMessage({ type: "error", text: "حدث خطأ أثناء محاولة الترقية" });
     } finally {
       setAdminSearchLoading(false);
     }
   };
 
-  // Metrics
   const adminCount = users.filter(u => u.role === "admin").length;
-  const tutorCount = users.filter(u => u.role === "tutor" || u.role === "teacher").length;
+  const activeSubsCount = users.filter(u => Boolean(u.subscription_plans || u.quota_remaining > 0)).length;
   const blockedCount = users.filter(u => u.is_blocked).length;
 
-  const filteredUsers = users.filter(u => {
-    const q = search.trim().toLowerCase();
+  const filteredUsers = users.filter((u) => {
+    const q = search.toLowerCase();
     const matchesSearch = 
-      !q ||
       (u.full_name || "").toLowerCase().includes(q) || 
       (u.email || "").toLowerCase().includes(q) || 
       (u.phone_number || "").includes(q) ||
       (u.id || "").toLowerCase().includes(q);
     
     if (roleFilter === "admin") return matchesSearch && u.role === "admin";
-    if (roleFilter === "tutor") return matchesSearch && (u.role === "tutor" || u.role === "teacher");
+    if (roleFilter === "subscribed") return matchesSearch && Boolean(u.subscription_plans || u.quota_remaining > 0);
     if (roleFilter === "user") return matchesSearch && (u.role === "user" || !u.role);
     if (roleFilter === "blocked") return matchesSearch && u.is_blocked;
     return matchesSearch;
@@ -202,53 +198,41 @@ export default function UserManagement({ session }: { session: any }) {
   return (
     <div className="space-y-6" dir="rtl">
       
-      {/* Top Banner & Quick Metrics */}
+      {/* 4 Quiet Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-bold text-slate-500">إجمالي المستخدمين</span>
-            <Users className="w-4 h-4 text-indigo-500" />
-          </div>
-          <span className="text-2xl font-black text-slate-900 dark:text-white">{users.length}</span>
+        <div className="bg-white dark:bg-[#0b0f19] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-2xs">
+          <span className="text-[11px] font-bold text-slate-500 block mb-1">إجمالي المسجلين</span>
+          <span className="text-2xl font-black text-slate-900 dark:text-white font-mono">{users.length}</span>
         </div>
 
-        <div className="bg-white dark:bg-[#0b0f19] border border-amber-500/30 rounded-2xl p-4 shadow-xs">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-bold text-amber-600 dark:text-amber-400">فريق الإدارة 👑</span>
-            <Crown className="w-4 h-4 text-amber-500" />
-          </div>
-          <span className="text-2xl font-black text-slate-900 dark:text-white">{adminCount}</span>
+        <div className="bg-white dark:bg-[#0b0f19] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-2xs">
+          <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 block mb-1">المشتركون النشطون</span>
+          <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400 font-mono">{activeSubsCount}</span>
         </div>
 
-        <div className="bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-bold text-slate-500">المعلمون</span>
-            <GraduationCap className="w-4 h-4 text-purple-500" />
-          </div>
-          <span className="text-2xl font-black text-slate-900 dark:text-white">{tutorCount}</span>
+        <div className="bg-white dark:bg-[#0b0f19] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-2xs">
+          <span className="text-[11px] font-bold text-slate-500 block mb-1">فريق الإدارة</span>
+          <span className="text-2xl font-black text-slate-900 dark:text-white font-mono">{adminCount}</span>
         </div>
 
-        <div className="bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-bold text-slate-500">المحظورون</span>
-            <Ban className="w-4 h-4 text-rose-500" />
-          </div>
-          <span className="text-2xl font-black text-slate-900 dark:text-white">{blockedCount}</span>
+        <div className="bg-white dark:bg-[#0b0f19] border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 shadow-2xs">
+          <span className="text-[11px] font-bold text-rose-500 block mb-1">المحظورون</span>
+          <span className="text-2xl font-black text-rose-600 dark:text-rose-400 font-mono">{blockedCount}</span>
         </div>
       </div>
 
       {/* Control Bar: Search, Filters, Add Admin */}
-      <div className="bg-white dark:bg-[#0b0f19] p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 shadow-xs">
+      <div className="bg-white dark:bg-[#0b0f19] p-4 sm:p-5 rounded-2xl border border-slate-200/90 dark:border-slate-800 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 shadow-2xs">
         
         {/* Search */}
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
           <input 
             type="text" 
-            placeholder="ابحث بالاسم، البريد الإلكتروني، أو رقم الهاتف..." 
+            placeholder="ابحث بالاسم، البريد الإلكتروني، أو الهاتف..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-2xl py-3 pr-10 pl-4 text-xs font-bold focus:outline-none focus:border-indigo-500 transition shadow-inner"
+            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-xl py-2.5 pr-10 pl-4 text-xs font-medium focus:outline-none focus:border-slate-400 transition"
           />
         </div>
 
@@ -259,39 +243,35 @@ export default function UserManagement({ session }: { session: any }) {
               setSelectedUserEmail("");
               setShowAssignModal(true);
             }}
-            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-amber-600 hover:from-indigo-500 hover:to-amber-500 text-white font-black text-xs shadow-lg shadow-indigo-600/20 flex items-center gap-2 transition cursor-pointer"
-            title="تفعيل واشتراك أي عميل عبر بريد جوجل وإيداع الدقائق في حسابه"
+            className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+            title="تفعيل باقة أو شحن رصيد بالبريد"
           >
-            <Zap className="w-4 h-4 text-amber-300" />
-            <span>شحن واشتراك عميل بالبريد ⚡</span>
+            <Zap className="w-3.5 h-3.5 text-amber-300" />
+            <span>شحن باقة بالبريد</span>
           </button>
 
           <button
             onClick={handleExportExcel}
             disabled={exportingExcel}
-            className="px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md shadow-emerald-600/20 flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
-            title="تصدير جميع الطلاب والمستخدمين مع اهتماماتهم ومعلوماتهم الكاملة إلى ملف إكسل"
+            className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+            title="تصدير كشف المستخدمين إلى ملف إكسل"
           >
-            {exportingExcel ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4" />
-            )}
-            <span>تصدير المستخدمين Excel 📥</span>
+            {exportingExcel ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            <span>تصدير Excel</span>
           </button>
 
           <button
             onClick={() => setShowAddAdminModal(true)}
-            className="px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 flex items-center gap-2 transition cursor-pointer"
+            className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
           >
-            <Crown className="w-4 h-4" />
-            <span>تعيين أدمن جديد</span>
+            <Crown className="w-3.5 h-3.5 text-amber-500" />
+            <span>تعيين أدمن</span>
           </button>
 
           <button
             onClick={fetchUsers}
-            className="p-3 text-slate-500 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 transition cursor-pointer"
-            title="تحديث القائمة"
+            className="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 transition cursor-pointer"
+            title="تحديث"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -299,56 +279,53 @@ export default function UserManagement({ session }: { session: any }) {
 
       </div>
 
-      {/* Role Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-        {(["all", "admin", "tutor", "user", "blocked"] as const).map((r) => (
+      {/* Role Filter Tabs (No Tutor) */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+        {(["all", "subscribed", "admin", "user", "blocked"] as const).map((r) => (
           <button
             key={r}
             onClick={() => setRoleFilter(r)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 ${
               roleFilter === r
-                ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs"
+                ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xs"
                 : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-slate-300"
             }`}
           >
-            {r === "all" && `جميع المستخدمين (${users.length})`}
-            {r === "admin" && `المسؤولون والأدمنية 👑 (${adminCount})`}
-            {r === "tutor" && `المعلمون 👨‍🏫 (${tutorCount})`}
-            {r === "user" && `الطلاب والزوار (${users.filter(u => u.role !== 'admin' && u.role !== 'tutor').length})`}
-            {r === "blocked" && `المحظورون 🚫 (${blockedCount})`}
+            {r === "all" && `الكل (${users.length})`}
+            {r === "subscribed" && `المشتركون النشطون (${activeSubsCount})`}
+            {r === "admin" && `فريق الإدارة (${adminCount})`}
+            {r === "user" && `الطلاب بدون باقة (${users.length - activeSubsCount - adminCount})`}
+            {r === "blocked" && `المحظورون (${blockedCount})`}
           </button>
         ))}
       </div>
 
       {/* Users Table */}
-      <div className="bg-white dark:bg-[#0b0f19] rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-[#0b0f19] rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xs overflow-hidden">
         {loading ? (
-          <div className="py-24 flex flex-col justify-center items-center gap-3">
-            <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-            <span className="text-xs font-bold text-slate-400">جاري جلب سجل المستخدمين...</span>
+          <div className="py-20 flex flex-col justify-center items-center gap-2">
+            <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
+            <span className="text-xs text-slate-400">جاري تحميل السجلات...</span>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-right border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
-                  <th className="p-4 pr-6">المستخدم</th>
-                  <th className="p-4">البريد الإلكتروني</th>
-                  <th className="p-4">الجامعة والتخصص</th>
-                  <th className="p-4">الاهتمامات الأكاديمية</th>
-                  <th className="p-4">رقم الهاتف</th>
-                  <th className="p-4">الرتبة والدور</th>
-                  <th className="p-4">الباقة والرصيد</th>
-                  <th className="p-4">تاريخ التسجيل</th>
-                  <th className="p-4 text-center pl-6">صلاحيات وإجراءات</th>
+                  <th className="p-3.5 pr-5">المستخدم</th>
+                  <th className="p-3.5">البريد الإلكتروني</th>
+                  <th className="p-3.5">رقم الهاتف</th>
+                  <th className="p-3.5">الرتبة</th>
+                  <th className="p-3.5">الباقة والرصيد</th>
+                  <th className="p-3.5">تاريخ التسجيل</th>
+                  <th className="p-3.5 text-center pl-5">إجراءات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                 {filteredUsers.map((u) => {
                   const isAdmin = u.role === "admin";
-                  const isTutor = u.role === "tutor" || u.role === "teacher";
-                  const avatarInitial = u.full_name?.charAt(0) || (u.email ? u.email.charAt(0).toUpperCase() : "U");
-                  const displayName = u.full_name || (u.email ? u.email.split("@")[0] : "مستخدم بدون اسم");
+                  const hasPlan = Boolean(u.subscription_plans || u.quota_remaining > 0);
+                  const displayName = u.full_name || (u.email ? u.email.split("@")[0] : "مستخدم");
 
                   return (
                     <tr 
@@ -357,181 +334,124 @@ export default function UserManagement({ session }: { session: any }) {
                         u.is_blocked ? "bg-rose-50/50 dark:bg-rose-950/20" : ""
                       }`}
                     >
-                      {/* Name & Avatar */}
-                      <td className="p-4 pr-6">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
+                      {/* Name */}
+                      <td className="p-3.5 pr-5">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
                             isAdmin 
-                              ? "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30"
-                              : isTutor
-                              ? "bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400"
+                              ? "bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300"
                               : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                           }`}>
-                            {isAdmin ? <Crown className="w-4 h-4 text-amber-500" /> : avatarInitial}
+                            {isAdmin ? <Crown className="w-3.5 h-3.5 text-amber-500" /> : displayName.charAt(0)}
                           </div>
                           <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-black text-slate-900 dark:text-white">
-                                {displayName}
-                              </span>
-                              {u.is_blocked && (
-                                <span className="bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-[10px] px-2 py-0.5 rounded-md font-bold">
-                                  محظور
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-[10px] text-slate-400 font-mono block mt-0.5">{u.id.substring(0, 12)}...</span>
+                            <span className="font-bold text-slate-900 dark:text-white block">
+                              {displayName}
+                            </span>
+                            {u.is_blocked && (
+                              <span className="text-[10px] text-rose-600 font-bold">محظور</span>
+                            )}
                           </div>
                         </div>
                       </td>
 
                       {/* Email */}
-                      <td className="p-4 font-mono text-slate-700 dark:text-slate-300 dir-ltr text-right">
-                        {u.email ? (
-                          <div className="inline-flex items-center justify-end gap-1.5 group bg-slate-50 dark:bg-slate-900/60 px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-slate-800">
-                            <Mail className="w-3 h-3 text-slate-400 group-hover:text-indigo-500 transition-colors shrink-0" />
-                            <a 
-                              href={`mailto:${u.email}`} 
-                              className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline"
-                              title={`إرسال بريد إلى: ${u.email}`}
-                            >
-                              {u.email}
-                            </a>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(u.email);
-                                setCopiedEmailId(u.id);
-                                setTimeout(() => setCopiedEmailId(null), 2000);
-                              }}
-                              className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer"
-                              title="نسخ البريد الإلكتروني"
-                            >
-                              {copiedEmailId === u.id ? (
-                                <Check className="w-3 h-3 text-emerald-500" />
-                              ) : (
-                                <Copy className="w-3 h-3" />
-                              )}
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-slate-400 text-xs italic font-sans">غير متوفر</span>
-                        )}
-                      </td>
-
-                      {/* University & Major */}
-                      <td className="p-4">
-                        <div className="space-y-0.5">
-                          <span className="font-bold text-slate-800 dark:text-slate-200 block text-xs">
-                            {u.academic_profile?.university || <span className="text-slate-400 font-normal italic">غير محدد</span>}
-                          </span>
-                          {u.academic_profile?.major && (
-                            <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium block">
-                              {u.academic_profile.major} {u.academic_profile.academic_year && `• ${u.academic_profile.academic_year}`}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Interests */}
-                      <td className="p-4 max-w-[180px]">
-                        {Array.isArray(u.academic_profile?.interests) && u.academic_profile.interests.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {u.academic_profile.interests.slice(0, 2).map((item: string, i: number) => (
-                              <span key={i} className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-200/50 dark:border-indigo-500/20 truncate max-w-[120px]">
-                                {item}
-                              </span>
-                            ))}
-                            {u.academic_profile.interests.length > 2 && (
-                              <span className="text-[9px] font-bold px-1 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500">
-                                +{u.academic_profile.interests.length - 2}
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-[10px] text-slate-400 font-normal italic">لم تُحدد</span>
-                        )}
+                      <td className="p-3.5 font-mono text-slate-600 dark:text-slate-300 text-[11px] dir-ltr text-right">
+                        {u.email || "---"}
                       </td>
 
                       {/* Phone */}
-                      <td className="p-4 font-mono font-bold text-slate-700 dark:text-slate-300 dir-ltr text-right">
-                        {u.phone_number || "غير متوفر"}
+                      <td className="p-3.5 font-mono text-slate-600 dark:text-slate-300 text-[11px] dir-ltr text-right">
+                        {u.phone_number || "---"}
                       </td>
 
                       {/* Role Badge */}
-                      <td className="p-4">
+                      <td className="p-3.5">
                         {isAdmin ? (
-                          <span className="inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 text-[11px] font-black px-2.5 py-1 rounded-xl">
-                            <ShieldCheck className="w-3.5 h-3.5" /> مسؤول أدمن 👑
-                          </span>
-                        ) : isTutor ? (
-                          <span className="inline-flex items-center gap-1 bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 text-purple-700 dark:text-purple-400 text-[11px] font-bold px-2.5 py-1 rounded-xl">
-                            <GraduationCap className="w-3.5 h-3.5" /> معلم معتمد
+                          <span className="inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[11px] font-bold px-2 py-0.5 rounded">
+                            مسؤول أدمن
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[11px] font-bold px-2.5 py-1 rounded-xl">
-                            <User className="w-3.5 h-3.5" /> طالب
+                          <span className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[11px] px-2 py-0.5 rounded">
+                            طالب
                           </span>
                         )}
                       </td>
 
                       {/* Plan & Quota */}
-                      <td className="p-4">
-                        <span className="font-bold text-slate-800 dark:text-slate-200 block">
-                          {u.subscription_plans?.name || "بدون باقة"}
-                        </span>
-                        <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">
-                          ({u.quota_remaining || 0} رصيد متبقي)
-                        </span>
+                      <td className="p-3.5">
+                        {hasPlan ? (
+                          <div>
+                            <span className="font-bold text-indigo-600 dark:text-indigo-400 block text-xs">
+                              {u.subscription_plans?.name || "باقة مخصصة"}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              متبقي: {u.quota_remaining || 0} دقيقة
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 text-[11px]">بدون اشتراك</span>
+                        )}
                       </td>
 
                       {/* Registration Date */}
-                      <td className="p-4 text-slate-500 dark:text-slate-400">
+                      <td className="p-3.5 text-slate-400 text-[11px] font-mono">
                         {new Date(u.created_at).toLocaleDateString("ar-EG")}
                       </td>
 
-                      {/* Actions: Make Admin & Ban */}
-                      <td className="p-4 pl-6 text-center">
-                        <div className="flex items-center justify-center gap-2">
+                      {/* Actions */}
+                      <td className="p-3.5 pl-5 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
                           
-                          {/* Quick Recharge / Assign Plan Button */}
+                          {/* Quick Recharge */}
                           <button
                             onClick={() => {
                               setSelectedUserEmail(u.email || "");
                               setShowAssignModal(true);
                             }}
-                            className="px-2.5 py-1.5 rounded-xl font-bold text-[11px] transition-all flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 cursor-pointer shrink-0"
-                            title="تفعيل باقة أو شحن دقائق لهذا الحساب"
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 transition cursor-pointer"
+                            title="شحن باقة ودقائق"
                           >
-                            <Zap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                            <span>شحن باقة ⚡</span>
+                            شحن
                           </button>
 
-                          {/* Make / Remove Admin Button */}
+                          {/* Cancel Plan (if subscribed) */}
+                          {hasPlan && (
+                            <button
+                              onClick={() => handleCancelPlan(u.id, displayName)}
+                              disabled={processing === u.id}
+                              className="px-2 py-1 rounded-lg text-[11px] text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                              title="إلغاء الخطة"
+                            >
+                              إلغاء
+                            </button>
+                          )}
+
+                          {/* Make / Remove Admin */}
                           <button
                             onClick={() => toggleAdminRole(u.id, isAdmin)}
                             disabled={processing === u.id}
-                            className={`px-3 py-1.5 rounded-xl font-black text-[11px] transition-all flex items-center gap-1 cursor-pointer ${
+                            className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
                               isAdmin
-                                ? "bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-200 border border-amber-300 dark:border-amber-500/30"
-                                : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 border border-transparent"
+                                ? "text-amber-600 bg-amber-50 hover:bg-amber-100"
+                                : "text-slate-400 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-800"
                             }`}
-                            title={isAdmin ? "سحب صلاحيات الأدمن" : "تعيين كمسؤول (Admin)"}
+                            title={isAdmin ? "سحب الأدمن" : "ترقية لأدمن"}
                           >
                             <Crown className="w-3.5 h-3.5" />
-                            <span>{isAdmin ? "سحب الأدمن" : "ترقية لأدمن"}</span>
                           </button>
 
-                          {/* Ban / Unban Button */}
+                          {/* Ban / Unban */}
                           {!isAdmin && (
                             <button
                               onClick={() => toggleBan(u.id, u.is_blocked)}
                               disabled={processing === u.id}
-                              className={`p-2 rounded-xl font-bold transition-all cursor-pointer ${
+                              className={`p-1.5 rounded-lg transition cursor-pointer ${
                                 u.is_blocked
-                                  ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100"
-                                  : "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-100"
+                                  ? "text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
+                                  : "text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                               }`}
-                              title={u.is_blocked ? "فك الحظر" : "حظر المستخدم"}
+                              title={u.is_blocked ? "فك الحظر" : "حظر"}
                             >
                               {u.is_blocked ? <CheckCircle className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}
                             </button>
@@ -546,110 +466,86 @@ export default function UserManagement({ session }: { session: any }) {
             </table>
 
             {filteredUsers.length === 0 && (
-              <div className="p-12 text-center text-slate-400 space-y-2">
-                <Users className="w-8 h-8 text-slate-400 mx-auto" />
-                <p className="text-xs font-bold">لا يوجد مستخدمون مطابقون لمعايير البحث.</p>
+              <div className="p-12 text-center text-slate-400 text-xs">
+                لا يوجد مستخدمون مطابقون لمعايير البحث.
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* ── Add Admin Modal ── */}
-      <AnimatePresence>
-        {showAddAdminModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5"
-            >
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2 text-amber-500 font-black text-base">
-                  <Crown className="w-5 h-5" />
-                  <h3 className="text-slate-900 dark:text-white">تعيين مسؤول (Admin) جديد</h3>
-                </div>
-                <button
-                  onClick={() => { setShowAddAdminModal(false); setAdminSearchMessage(null); }}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+      {/* Add Admin Modal */}
+      {showAddAdminModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="bg-white dark:bg-[#0b0f19] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-lg space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <Crown className="w-4 h-4 text-amber-500" />
+                <span>تعيين مسؤول أدمن جديد</span>
+              </h3>
+              <button 
+                onClick={() => { setShowAddAdminModal(false); setAdminSearchMessage(null); }}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleSearchAndAddAdmin} className="space-y-3">
+              <div>
+                <label className="text-xs text-slate-500 dark:text-slate-400 block mb-1">
+                  البريد الإلكتروني لحساب المستخدم:
+                </label>
+                <input 
+                  type="email"
+                  required
+                  placeholder="admin@example.com"
+                  value={adminQuery}
+                  onChange={(e) => setAdminQuery(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-slate-400"
+                />
               </div>
 
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                ابحث بالبريد الإلكتروني، أو رقم الهاتف، أو اسم المستخدم لمنحه صلاحيات كاملة لإدارة لوحة التحكم والطلبات والمعلمين.
-              </p>
-
-              <form onSubmit={handleGrantAdminByQuery} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-black text-slate-700 dark:text-slate-300">
-                    البريد الإلكتروني، رقم الهاتف أو الاسم الكامل:
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="مثال: user@example.com أو 0598298930 أو أحمد علي"
-                    value={adminQuery}
-                    onChange={(e) => setAdminQuery(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 text-xs font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-amber-500 shadow-inner"
-                  />
+              {adminSearchMessage && (
+                <div className={`p-2.5 rounded-lg text-xs font-bold ${
+                  adminSearchMessage.type === "success" 
+                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                    : "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                }`}>
+                  {adminSearchMessage.text}
                 </div>
+              )}
 
-                {adminSearchMessage && (
-                  <div className={`p-3.5 rounded-xl text-xs font-bold flex items-center gap-2 ${
-                    adminSearchMessage.type === "success" 
-                      ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30"
-                      : "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30"
-                  }`}>
-                    {adminSearchMessage.type === "success" ? <CheckCircle className="w-4 h-4 shrink-0" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
-                    <span>{adminSearchMessage.text}</span>
-                  </div>
-                )}
-
-                <div className="flex justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => { setShowAddAdminModal(false); setAdminSearchMessage(null); }}
-                    className="px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 cursor-pointer"
-                  >
-                    إلغاء
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={adminSearchLoading || !adminQuery.trim()}
-                    className="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 disabled:opacity-50 cursor-pointer"
-                  >
-                    {adminSearchLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>جاري البحث والترقية...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Crown className="w-4 h-4" />
-                        <span>ترقية إلى أدمن فوراً</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowAddAdminModal(false); setAdminSearchMessage(null); }}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={adminSearchLoading}
+                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {adminSearchLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>ترقية إلى أدمن</span>
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
       {/* Assign Subscription & Minutes Modal */}
       <AssignSubscriptionModal
         isOpen={showAssignModal}
-        onClose={() => {
-          setShowAssignModal(false);
-          setSelectedUserEmail("");
-        }}
+        onClose={() => setShowAssignModal(false)}
         sessionToken={session?.access_token}
-        initialEmail={selectedUserEmail}
         onSuccess={fetchUsers}
+        apiUrl={API}
+        initialEmail={selectedUserEmail}
       />
 
     </div>
