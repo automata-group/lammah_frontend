@@ -274,10 +274,14 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                               {tx.plan_name || "باقة أكاديمية"}
                             </span>
                           </td>
-                          <td className="p-3.5 text-slate-600 dark:text-slate-300 font-medium">
-                            {tx.payment_method === "reflect" ? "ريفلكت" :
-                             tx.payment_method === "jawwal_pay" ? "جوال باي" :
-                             tx.payment_method === "palpay" ? "بال باي" : "تحويل بنكي"}
+                          <td className="p-3.5 text-slate-700 dark:text-slate-300 font-medium">
+                            {tx.payment_method === "reflect" ? "📱 ريفلكت (Reflect)" :
+                             tx.payment_method === "jawwal_pay" ? "📲 جوال باي" :
+                             tx.payment_method === "palpay" ? "💳 بال باي" :
+                             tx.payment_method === "bank" ? "🏦 تحويل بنكي" :
+                             tx.payment_method === "whatsapp" ? "💬 تحويل واتساب" :
+                             tx.payment_method === "admin_direct" ? "⚡ شحن مباشر من الأدمن" :
+                             tx.payment_method || "تحويل مباشر"}
                           </td>
                           <td className="p-3.5 text-center font-bold text-slate-900 dark:text-white font-mono">
                             ₪{tx.amount}
