@@ -116,6 +116,27 @@ export default function DashboardPdfViewer({
     };
   }, [fullDownloadUrl, downloadUrl, retryCount]);
 
+  const handleDownloadPdf = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (blobUrl) {
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = suggestedFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+    const sepChar = fullDownloadUrl.includes("?") ? "&" : "?";
+    const serverDownloadUrl = `${fullDownloadUrl}${sepChar}download=true`;
+    const link = document.createElement("a");
+    link.href = serverDownloadUrl;
+    link.download = suggestedFilename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div
       ref={pdfContainerRef}
@@ -154,16 +175,14 @@ export default function DashboardPdfViewer({
           </Link>
         ) : (
           <div className="flex flex-wrap items-center gap-2">
-            <a
-              href={fullDownloadUrl}
-              download={suggestedFilename}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
               className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center shadow-xs shadow-indigo-500/20 hover:shadow-indigo-500/30 w-full sm:w-auto text-center justify-center text-xs cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 ml-1.5" />
               تحميل الملف
-            </a>
+            </button>
           </div>
         )}
       </div>
@@ -181,16 +200,14 @@ export default function DashboardPdfViewer({
               قد يكون الملف قيد الحفظ على الخادم، أو حدث تأخير في الاتصال. يمكنك مراجعة مواضع الأسئلة والتركيز والبطاقات والاختبار مباشرة، أو تجربة تحميل الملف أو إعادة المحاولة.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-2.5">
-              <a
-                href={fullDownloadUrl}
-                download={suggestedFilename}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
                 className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>تحميل الملف المخطط</span>
-              </a>
+              </button>
               <button
                 type="button"
                 onClick={() => {

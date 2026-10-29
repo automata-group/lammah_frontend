@@ -122,12 +122,17 @@ export function useSummarizeQuota({
     // 1. Try Backend API
     try {
       const fp = typeof window !== "undefined" ? localStorage.getItem("device_id_v3") || "" : "";
-      const r = await fetch(`${getApiBaseUrl()}/api/v1/subscription/quota`, {
-        headers: {
-          "Authorization": `Bearer ${session.access_token}`,
-          "X-Fingerprint": String(fp),
+      const { fetchWithRetry } = await import("@/lib/fetchWithRetry");
+      const r = await fetchWithRetry(
+        `${getApiBaseUrl()}/api/v1/subscription/quota`,
+        {
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`,
+            "X-Fingerprint": String(fp),
+          },
         },
-      });
+        { retries: 1, initialDelayMs: 400 }
+      );
 
       if (r.ok) {
         const data = await r.json();
@@ -147,8 +152,8 @@ export function useSummarizeQuota({
           return;
         }
       }
-    } catch (e) {
-      console.warn("Backend quota check fallback to Supabase:", e);
+    } catch {
+      // Quietly proceed to Supabase fallback without breaking UI
     }
 
     // 2. Direct Supabase Fallback

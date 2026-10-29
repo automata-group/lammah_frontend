@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ProcessingPhase, UploadedAudio } from "./types";
 import { getFingerprint as getThumbmark } from "@thumbmarkjs/thumbmarkjs";
 import { getApiBaseUrl } from "@/lib/apiConfig";
+import { fetchWithRetry } from "@/lib/fetchWithRetry";
 
 interface StartProcessingParams {
   audioFile: File | null;
@@ -180,15 +181,25 @@ export function useSummarizeStream() {
         ? `${getApiBaseUrl()}/api/v1/summarize/batch-lecture`
         : `${getApiBaseUrl()}/api/v1/summarize/process-lecture`;
 
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          "X-Fingerprint": fp,
-          "X-Device-Metadata": metaJson,
+      const response = await fetchWithRetry(
+        endpoint,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "X-Fingerprint": fp,
+            "X-Device-Metadata": metaJson,
+          },
+          body: formData,
         },
-        body: formData,
-      });
+        {
+          retries: 2,
+          initialDelayMs: 600,
+          onRetry: (attempt) => {
+            setProgressMessage(`جاري إعادة الاتصال بالسيرفر (محاولة ${attempt} من 2)...`);
+          },
+        }
+      );
 
       if (!response.ok) {
         let errMsg = "حدث خطأ أثناء معالجة المحاضرة";
@@ -292,7 +303,16 @@ export function useSummarizeStream() {
       setIsProcessing(false);
       setIsStreaming(false);
       setPhase("idle");
-      setError(err.message || "تعذر إكمال المعالجة. يرجى المحاولة مرة أخرى.");
+      let msg = err?.message || "تعذر إكمال المعالجة. يرجى المحاولة مرة أخرى.";
+      if (
+        msg.includes("Failed to fetch") ||
+        msg.includes("NetworkError") ||
+        msg.includes("net::ERR_FAILED") ||
+        msg.includes("Transient Server Error")
+      ) {
+        msg = "تعذّر الاتصال بخادم المعالجة. يرجى التحقق من اتصال الإنترنت أو المحاولة مرة أخرى بعد لحظات.";
+      }
+      setError(msg);
     }
   }, [router, setMonotonicProgress]);
 
