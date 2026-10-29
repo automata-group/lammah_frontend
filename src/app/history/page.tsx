@@ -13,12 +13,11 @@ import {
 } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import SmartGenerateButton from "@/components/SmartGenerateButton";
+import { getApiBaseUrl } from "@/lib/apiConfig";
 
 const StudyFocusTimer = dynamic(() => import("@/components/dashboard/StudyFocusTimer"), {
   ssr: false,
 });
-
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function HistoryPage() {
   const { user, session, loading } = useAuth();
@@ -72,7 +71,7 @@ export default function HistoryPage() {
     }
 
     if (session) {
-      fetch(`${API}/api/v1/subscription/history`, {
+      fetch(`${getApiBaseUrl()}/api/v1/subscription/history`, {
         headers: { "Authorization": `Bearer ${session.access_token}` }
       })
         .then(r => r.json())
@@ -86,7 +85,7 @@ export default function HistoryPage() {
         })
         .catch(() => setLoadingLogs(false));
 
-      fetch(`${API}/api/v1/subscription/quota`, {
+      fetch(`${getApiBaseUrl()}/api/v1/subscription/quota`, {
         headers: { "Authorization": `Bearer ${session.access_token}` }
       })
         .then(r => r.json())
@@ -98,7 +97,7 @@ export default function HistoryPage() {
         })
         .catch(() => {});
 
-      fetch(`${API}/api/v1/marketplace/my-notebooks`, {
+      fetch(`${getApiBaseUrl()}/api/v1/marketplace/my-notebooks`, {
         headers: { "Authorization": `Bearer ${session.access_token}` }
       })
         .then(r => r.json())
@@ -144,7 +143,7 @@ export default function HistoryPage() {
     ));
     setEditingId(null);
     try {
-      await fetch(`${API}/api/v1/subscription/history/${logId}/title`, {
+      await fetch(`${getApiBaseUrl()}/api/v1/subscription/history/${logId}/title`, {
         method: "PATCH",
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
@@ -461,17 +460,20 @@ export default function HistoryPage() {
                     {/* Actions */}
                     <div className="flex flex-wrap gap-2.5">
                       {(() => {
-                        const notebookHref = jobId
-                          ? `/notebook?job_id=${jobId}&title=${encodeURIComponent(title)}&student_name=${encodeURIComponent(studentName)}&history_id=${log.id}`
-                          : `/notebook?history_id=${log.id}`;
+                        const isNotebook = log.action_type === "notebook" || log.metadata?.is_notebook || (jobId && jobId.startsWith("notebook_"));
+                        const targetHref = isNotebook
+                          ? (jobId
+                              ? `/notebook?job_id=${jobId}&title=${encodeURIComponent(title)}&student_name=${encodeURIComponent(studentName)}&history_id=${log.id}`
+                              : `/notebook?history_id=${log.id}`)
+                          : `/dashboard?history_id=${log.id}&id=${log.id}`;
                         const isOpening = openingId === log.id;
 
                         return (
                           <Link
-                            href={notebookHref}
+                            href={targetHref}
                             prefetch={true}
                             onClick={() => setOpeningId(log.id)}
-                            onMouseEnter={() => router.prefetch(notebookHref)}
+                            onMouseEnter={() => router.prefetch(targetHref)}
                             className={`w-full flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl text-xs font-black shadow-xs transition-all text-center cursor-pointer select-none ${
                               isOpening
                                 ? "bg-indigo-700 text-white opacity-90 scale-98 pointer-events-none"
@@ -481,12 +483,12 @@ export default function HistoryPage() {
                             {isOpening ? (
                               <>
                                 <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
-                                <span>جاري فتح الدفتر...</span>
+                                <span>{isNotebook ? "جاري فتح الدفتر..." : "جاري فتح المحاضرة..."}</span>
                               </>
                             ) : (
                               <>
                                 <BookOpen className="w-4 h-4 shrink-0" />
-                                <span>فتح وتصفح الدفتر 📖</span>
+                                <span>{isNotebook ? "فتح وتصفح الدفتر 📖" : "عرض المحاضرة والتلخيص 🎓"}</span>
                               </>
                             )}
                           </Link>
@@ -494,12 +496,15 @@ export default function HistoryPage() {
                       })()}
 
                       {jobId && (() => {
+                        const isNotebook = log.action_type === "notebook" || log.metadata?.is_notebook || (jobId && jobId.startsWith("notebook_"));
                         const isPrep = log.metadata?.is_prep !== undefined
                           ? !!log.metadata.is_prep
                           : (log.metadata?.has_audio !== undefined ? !log.metadata.has_audio : !log.metadata?.transcript?.trim());
                         const cleanTitle = (title || "المادة الدراسية").replace(/^دفتر\s+/, "").replace(/^محاضرة\s+/, "").replace(/[\\/*?:"<>|]/g, " ").trim() || "المادة الدراسية";
-                        const filename = `${cleanTitle} - ${isPrep ? "دفتر تحضير سلايدات" : "دفتر مخطط فويسات"} - لمّاح.pdf`;
-                        const dlUrl = `${API}/api/v1/notebook/download/${jobId}.pdf?download=true&title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`;
+                        const filename = `${cleanTitle} - ${isNotebook ? (isPrep ? "دفتر تحضير سلايدات" : "دفتر مخطط فويسات") : "ملف مخطط ومظلل"} - لمّاح.pdf`;
+                        const dlUrl = isNotebook
+                          ? `${getApiBaseUrl()}/api/v1/notebook/download/${jobId}.pdf?download=true&title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`
+                          : (log.metadata?.download_url || `${getApiBaseUrl()}/api/v1/summarize/download/${jobId || log.id}.pdf`);
 
                         return (
                           <a
@@ -703,7 +708,7 @@ export default function HistoryPage() {
                             : (log.metadata?.has_audio !== undefined ? !log.metadata.has_audio : !log.metadata?.transcript?.trim());
                           const cleanTitle = (getTitle(log) || "المادة الدراسية").replace(/^محاضرة\s+/, "").replace(/^دفتر\s+/, "").replace(/[\\/*?:"<>|]/g, " ").trim() || "المادة الدراسية";
                           const filename = `${cleanTitle} - ${isPrep ? "تحضير سلايدات" : "مخططة فويسات"} - لمّاح.pdf`;
-                          const dlUrl = `${API}/api/v1/summarize/download/${log.metadata.job_id}.pdf?title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`;
+                          const dlUrl = `${getApiBaseUrl()}/api/v1/summarize/download/${log.metadata.job_id}.pdf?title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`;
 
                           return (
                             <a

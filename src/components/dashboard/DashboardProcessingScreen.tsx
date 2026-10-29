@@ -105,21 +105,6 @@ export default function DashboardProcessingScreen({
               </div>
             )}
           </div>
-
-          {/* Left: Ultra-Precise Countdown Timer Pill */}
-          <div className="flex items-center gap-2.5 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 border border-indigo-200/80 dark:border-indigo-500/40 px-3.5 py-1.5 rounded-xl shadow-xs">
-            <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin" style={{ animationDuration: "6s" }} />
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">الوقت المتبقي:</span>
-              <span className="text-sm sm:text-base font-black text-indigo-600 dark:text-indigo-300 tabular-nums tracking-wider">
-                {timeLeft === null
-                  ? "جاري الحساب..."
-                  : timeLeft > 10
-                  ? `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, "0")} د`
-                  : "لحظات قليلة، جاري إنهاء وتدقيق الملف..."}
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* Row 2: Header Headline & Live Dynamic Progress Message */}

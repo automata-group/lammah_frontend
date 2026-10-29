@@ -47,12 +47,13 @@ import {
   parseTranscriptLines,
 } from "@/lib/dashboardUtils";
 import { createClient } from "@/lib/supabase";
+import { getApiBaseUrl } from "@/lib/apiConfig";
 
 function DashboardContent() {
   const { user, session, loading, signOut } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const historyIdRaw = searchParams.get("history_id");
+  const historyIdRaw = searchParams.get("history_id") || searchParams.get("id");
 
   // Core History & Lecture States
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(historyIdRaw);
@@ -674,7 +675,7 @@ function DashboardContent() {
       const checkTutorAccess = async () => {
         try {
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/tutoring/my-status`,
+            `${getApiBaseUrl()}/api/v1/tutoring/my-status`,
             { headers: { Authorization: `Bearer ${session.access_token}` } }
           );
           if (res.ok) {
@@ -740,7 +741,7 @@ function DashboardContent() {
       const token = session?.access_token;
       if (token) {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/history/${historyId}`,
+          `${getApiBaseUrl()}/api/v1/subscription/history/${historyId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -781,6 +782,9 @@ function DashboardContent() {
 
             try {
               sessionStorage.setItem("lammah_instant_lecture_" + historyId, JSON.stringify(data));
+              if (data.metadata.job_id) {
+                sessionStorage.setItem("lammah_instant_lecture_" + data.metadata.job_id, JSON.stringify(data));
+              }
             } catch {}
           }
         }
@@ -797,7 +801,7 @@ function DashboardContent() {
 
   // Load lecture when history_id search param is present
   useEffect(() => {
-    const historyId = searchParams.get("history_id");
+    const historyId = searchParams.get("history_id") || searchParams.get("id");
     if (historyId) {
       loadLectureById(historyId);
     }
@@ -825,7 +829,7 @@ function DashboardContent() {
     }
 
     if (session?.access_token) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/history?limit=6`, {
+      fetch(`${getApiBaseUrl()}/api/v1/subscription/history?limit=6`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
         .then((r) => r.json())
@@ -1060,7 +1064,7 @@ function DashboardContent() {
                     setCurrentHistoryId(p.history_id);
                     if (lectureTitle.trim() && session) {
                       fetch(
-                        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/history/${p.history_id}/title`,
+                        `${getApiBaseUrl()}/api/v1/subscription/history/${p.history_id}/title`,
                         {
                           method: "PATCH",
                           headers: {
@@ -1071,7 +1075,7 @@ function DashboardContent() {
                         }
                       ).catch(() => {});
                     }
-                    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+                    const apiBase = getApiBaseUrl();
                     fetch(`${apiBase}/api/v1/subscription/history/${p.history_id}`, {
                       headers: {
                         Authorization: `Bearer ${session.access_token}`,

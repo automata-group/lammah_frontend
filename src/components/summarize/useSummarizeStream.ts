@@ -249,27 +249,28 @@ export function useSummarizeStream() {
                     creepIntervalRef.current = null;
                   }
 
-                  // Instant lecture handoff cache
-                  if (typeof window !== "undefined" && data.job_id) {
+                  const targetId = data.history_id || data.job_id;
+
+                  // Instant lecture handoff cache (0ms rendering)
+                  if (typeof window !== "undefined") {
                     try {
-                      sessionStorage.setItem(
-                        `lammah_instant_lecture_${data.job_id}`,
-                        JSON.stringify({
-                          title: data.title || "محاضرة جديدة",
-                          transcript: data.transcript || "",
-                          download_url: data.download_url,
-                          annotations: data.annotations || {},
-                          isDocumentOnly: isDocOnly,
-                          created_at: new Date().toISOString(),
-                        })
-                      );
+                      const payload = JSON.stringify({
+                        title: data.title || "محاضرة جديدة",
+                        transcript: data.transcript || "",
+                        download_url: data.download_url,
+                        annotations: data.annotations || {},
+                        isDocumentOnly: isDocOnly,
+                        job_id: data.job_id,
+                        created_at: new Date().toISOString(),
+                      });
+                      if (data.job_id) sessionStorage.setItem(`lammah_instant_lecture_${data.job_id}`, payload);
+                      if (targetId) sessionStorage.setItem(`lammah_instant_lecture_${targetId}`, payload);
                     } catch {}
                   }
 
-                  const targetId = data.history_id || data.job_id;
                   setTimeout(() => {
-                    router.push(`/dashboard?id=${targetId}&instant=true`);
-                  }, 800);
+                    router.push(`/dashboard?history_id=${targetId}&id=${targetId}&instant=true`);
+                  }, 600);
                   return;
                 } else if (data.type === "error") {
                   throw new Error(data.message || "حدث خطأ غير متوقع أثناء المعالجة");
