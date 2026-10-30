@@ -25,6 +25,28 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Clean date formatter producing modern Arabic dates with standard Arabic numerals
+const formatDateAr = (dateStr: string) => {
+  if (!dateStr) return { date: "---", time: "" };
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return { date: "---", time: "" };
+  const day = d.getDate();
+  const months = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  
+  let hours = d.getHours();
+  const minutes = d.getMinutes().toString().padStart(2, "0");
+  const ampm = hours >= 12 ? "م" : "ص";
+  hours = hours % 12 || 12;
+  const formattedHours = hours.toString().padStart(2, "0");
+  
+  return {
+    date: `${day} ${month} ${year}`,
+    time: `${formattedHours}:${minutes} ${ampm}`
+  };
+};
+
 export default function FinancialAnalytics({ session }: { session: any }) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -410,7 +432,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
           </div>
           
           <div className="flex items-baseline gap-1.5 mb-1.5">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
               ₪{trueNetProfit.toLocaleString()}
             </span>
           </div>
@@ -432,7 +454,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
           </div>
           
           <div className="flex items-baseline gap-1.5 mb-1.5">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
               ₪{grossInflow.toLocaleString()}
             </span>
           </div>
@@ -461,7 +483,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
           </div>
           
           <div className="flex items-baseline gap-1.5 mb-1.5">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
               ₪{totalServerExpensesIls.toLocaleString()}
             </span>
           </div>
@@ -496,7 +518,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
           </div>
           
           <div className="flex items-baseline gap-1.5 mb-1.5">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
               ${openrouterRemainingUsd.toFixed(2)}
             </span>
           </div>
@@ -623,7 +645,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                       <div className={`text-xs font-bold ${bank.text}`} title={bank.label}>
                         {bank.label}
                       </div>
-                      <div className="text-lg font-black font-mono mt-1 text-slate-900 dark:text-white">
+                      <div className="text-lg font-black mt-1 text-slate-900 dark:text-white">
                         ₪{bank.amount.toLocaleString()}
                       </div>
                     </div>
@@ -667,9 +689,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                     })
                     .map((tx: any, idx: number) => {
                       const studentName = tx.profiles?.full_name || tx.sender_name || "طالب";
-                      const dateObj = tx.created_at ? new Date(tx.created_at) : null;
-                      const dateStr = dateObj ? dateObj.toLocaleDateString("ar-EG", { month: "short", day: "numeric", year: "numeric" }) : "---";
-                      const timeStr = dateObj ? dateObj.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }) : "";
+                      const formattedDate = formatDateAr(tx.created_at);
                       const rawAmt = Number(tx.amount) || 0;
                       const displayAmt = rawAmt % 1 === 0 ? rawAmt.toFixed(0) : rawAmt.toFixed(2);
 
@@ -686,12 +706,12 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                                   {studentName}
                                 </span>
                                 {tx.student_email ? (
-                                  <span className="text-[11px] text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 font-mono block select-all transition-colors truncate">
+                                  <span className="text-[11px] text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 block select-all transition-colors truncate font-medium">
                                     {tx.student_email}
                                   </span>
                                 ) : (
                                   tx.profiles?.phone_number && (
-                                    <span className="text-[10px] text-slate-400 font-mono block">
+                                    <span className="text-[10px] text-slate-400 block font-medium">
                                       {tx.profiles.phone_number}
                                     </span>
                                   )
@@ -716,28 +736,28 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                           </td>
 
                           {/* Amount */}
-                          <td className="py-3 px-3 text-center whitespace-nowrap font-mono font-black text-sm text-slate-900 dark:text-white">
+                          <td className="py-3 px-3 text-center whitespace-nowrap font-black text-sm text-slate-900 dark:text-white">
                             ₪{displayAmt}
                           </td>
 
                           {/* Minutes Quota & Consumption */}
                           <td className="py-3 px-4 text-center">
-                            <div className="flex flex-col items-center gap-1 min-w-[170px]">
-                              {/* Horizontal badges that never wrap */}
+                            <div className="flex flex-col items-center gap-1 min-w-[175px]">
+                              {/* Horizontal badges that never wrap with native clean font */}
                               <div className="inline-flex items-center gap-1.5 bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 p-1 rounded-lg text-xs font-bold whitespace-nowrap shadow-2xs">
                                 <span className="text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/70 px-2 py-0.5 rounded-md flex items-center gap-1" title="الدقائق المتبقية في رصيده">
-                                  <span className="text-[10px] opacity-75 font-normal">باقي:</span>
-                                  <strong className="font-mono text-xs">{tx.minutes_remaining ?? 0}د</strong>
+                                  <span className="text-[10px] opacity-80 font-normal">باقي:</span>
+                                  <strong className="text-xs font-black">{tx.minutes_remaining ?? 0} د</strong>
                                 </span>
                                 <span className="text-slate-300 dark:text-slate-700">•</span>
                                 <span className="text-slate-600 dark:text-slate-300 px-1.5 py-0.5 flex items-center gap-1" title="الدقائق التي استهلكها">
-                                  <span className="text-[10px] opacity-75 font-normal">صرفت:</span>
-                                  <strong className="font-mono text-xs text-slate-900 dark:text-white">{tx.minutes_used ?? 0}د</strong>
+                                  <span className="text-[10px] opacity-80 font-normal">صرفت:</span>
+                                  <strong className="text-xs font-black text-slate-900 dark:text-white">{tx.minutes_used ?? 0} د</strong>
                                 </span>
                               </div>
 
-                              {/* AI Token Cost */}
-                              <div className="flex items-center gap-1 text-[10px] text-slate-400 font-mono">
+                              {/* AI Token Cost in native font */}
+                              <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
                                 <span>{tx.tokens_used > 0 ? `${tx.tokens_used >= 1000 ? (tx.tokens_used / 1000).toFixed(1) + 'K' : tx.tokens_used} توكن` : "0 توكن"}</span>
                                 {tx.ai_cost_usd > 0 && (
                                   <span className="text-rose-500 dark:text-rose-400 font-bold">
@@ -749,13 +769,13 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                           </td>
 
                           {/* Date */}
-                          <td className="py-3 px-3 text-center whitespace-nowrap font-mono text-[11px]" dir="ltr">
-                            <div className="text-slate-800 dark:text-slate-200 font-bold">
-                              {dateStr}
+                          <td className="py-3 px-3 text-center whitespace-nowrap text-xs">
+                            <div className="text-slate-900 dark:text-white font-bold">
+                              {formattedDate.date}
                             </div>
-                            {timeStr && (
-                              <div className="text-slate-400 text-[10px]">
-                                {timeStr}
+                            {formattedDate.time && (
+                              <div className="text-slate-400 text-[11px] font-medium mt-0.5">
+                                {formattedDate.time}
                               </div>
                             )}
                           </td>
@@ -860,7 +880,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                       <div className={`text-xs font-bold ${bank.text}`} title={bank.label}>
                         {bank.label}
                       </div>
-                      <div className="text-lg font-black font-mono mt-1 text-slate-900 dark:text-white">
+                      <div className="text-lg font-black mt-1 text-slate-900 dark:text-white">
                         ₪{bank.amount.toLocaleString()}
                       </div>
                     </div>
@@ -904,16 +924,16 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                              exp.category === "tools" ? "أدوات وخدمات" : exp.category}
                           </span>
                         </td>
-                        <td className="p-3.5 text-center font-bold text-rose-600 dark:text-rose-400 font-mono text-sm">
+                        <td className="p-3.5 text-center font-bold text-rose-600 dark:text-rose-400 text-sm font-bold">
                           -₪{exp.amount_ils}
                         </td>
-                        <td className="p-3.5 text-center font-mono text-slate-500 dark:text-slate-400">
+                        <td className="p-3.5 text-center text-slate-500 dark:text-slate-400 font-medium">
                           ${exp.amount_usd}
                         </td>
                         <td className="p-3.5 text-slate-500 dark:text-slate-400">
                           {exp.notes || "---"}
                         </td>
-                        <td className="p-3.5 text-center text-[11px] text-slate-400 font-mono" dir="ltr">
+                        <td className="p-3.5 text-center text-[11px] text-slate-400 " dir="ltr">
                           {dateStr}
                         </td>
                         <td className="p-3.5 text-left">
@@ -983,7 +1003,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
               <div className="text-[11px] font-bold text-slate-500">الرصيد المتاح حالياً</div>
-              <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-1">
+              <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1 font-bold">
                 ${openrouterRemainingUsd.toFixed(2)}
               </div>
               <div className="text-[10px] text-slate-400 mt-0.5">جاهز لمعالجة المحاضرات</div>
@@ -991,7 +1011,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
 
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
               <div className="text-[11px] font-bold text-slate-500">إجمالي المصروف (USD)</div>
-              <div className="text-2xl font-black text-slate-900 dark:text-white font-mono mt-1">
+              <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-bold">
                 ${openrouterUsageUsd.toFixed(2)}
               </div>
               <div className="text-[10px] text-slate-400 mt-0.5">تكلفة تلخيص المحاضرات</div>
@@ -999,7 +1019,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
 
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
               <div className="text-[11px] font-bold text-slate-500">إجمالي المصروف (ILS)</div>
-              <div className="text-2xl font-black text-slate-900 dark:text-white font-mono mt-1">
+              <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-bold">
                 ₪{openrouterUsageIls.toFixed(2)}
               </div>
               <div className="text-[10px] text-slate-400 mt-0.5">سعر الصرف التقديري: 3.75 ₪</div>
@@ -1007,7 +1027,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
 
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
               <div className="text-[11px] font-bold text-slate-500">إجمالي ما تم شحنه</div>
-              <div className="text-2xl font-black text-slate-900 dark:text-white font-mono mt-1">
+              <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-bold">
                 ${openrouterCreditsUsd.toFixed(2)}
               </div>
               <div className="text-[10px] text-slate-400 mt-0.5">الرصيد التراكمي المشحون</div>
@@ -1071,7 +1091,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                       value={editAmount}
                       onChange={(e) => setEditAmount(e.target.value)}
                       required
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pr-9 pl-4 py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 font-mono"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pr-9 pl-4 py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 "
                     />
                   </div>
                   <span className="text-[10px] text-slate-400 mt-1 block">
@@ -1207,7 +1227,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                         onChange={(e) => setExpenseAmount(e.target.value)}
                         placeholder="50"
                         required
-                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pr-9 pl-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 font-mono"
+                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl pr-9 pl-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 "
                       />
                     </div>
                   </div>
