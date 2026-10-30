@@ -18,6 +18,7 @@ interface SmartChatTabContentProps {
   isBasicPlan?: boolean;
   isDemoLecture: boolean;
   isDocumentOnly?: boolean;
+  isAudioOnly?: boolean;
 }
 
 export default function SmartChatTabContent({
@@ -31,6 +32,7 @@ export default function SmartChatTabContent({
   isBasicPlan = false,
   isDemoLecture,
   isDocumentOnly = false,
+  isAudioOnly = false,
 }: SmartChatTabContentProps) {
   const router = useRouter();
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -131,12 +133,10 @@ export default function SmartChatTabContent({
       >
         <div className="bg-slate-50 dark:bg-slate-900/60 p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex flex-col relative overflow-hidden">
           <h3 className="text-lg sm:text-xl font-black flex items-center text-blue-700 dark:text-blue-400 relative z-10">
-            <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 ml-2 text-blue-600 dark:text-blue-500" /> تحدث مع المحاضرة
+            <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 ml-2 text-blue-600 dark:text-blue-500" /> {isAudioOnly ? "تحدث مع المحاضرة الصوتية" : isDocumentOnly ? "تحدث مع السلايدات" : "تحدث مع المحاضرة والسلايدات"}
           </h3>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 pr-0 sm:pr-8 mt-1 font-medium relative z-10">
-            {isDocumentOnly
-              ? "يستند الرد لمعالجة سؤالك بدقة واحترافية وفق ما ورد في السلايدات والشرائح."
-              : "يستند الرد لمعالجة سؤالك باحترافية، مع توضيح ما ذكره الدكتور في المحاضرة ومطابقته مع السلايدات."}
+            يستند الرد لمعالجة سؤالك بدقة واحترافية وفق ما ورد في محتوى {isAudioOnly ? "التسجيل والمحاضرة الصوتية." : isDocumentOnly ? "السلايدات والمستند الدراسي." : "المحاضرة والسلايدات."}
           </p>
         </div>
 
@@ -152,7 +152,9 @@ export default function SmartChatTabContent({
               <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 space-y-4 opacity-70">
                 <BrainCircuit className="w-12 h-12 sm:w-16 sm:h-16 text-slate-400 dark:text-slate-600" />
                 <p className="text-base sm:text-lg text-center font-bold">
-                  {isDocumentOnly
+                  {isAudioOnly
+                    ? "اطرح سؤالاً يخص جزئية معينة من المحاضرة الصوتية وسيجيبك النظام فوراً!"
+                    : isDocumentOnly
                     ? "اطرح سؤالاً يخص جزئية معينة من السلايدات وسيجيبك النظام فوراً!"
                     : "اطرح سؤالاً يخص جزئية معينة من المحاضرة وسيجيبك النظام فوراً!"}
                 </p>
@@ -179,7 +181,7 @@ export default function SmartChatTabContent({
                 <div className="max-w-[75%] p-3.5 sm:p-5 rounded-2xl sm:rounded-[1.5rem] bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/50 text-slate-700 dark:text-slate-400 rounded-tr-xs flex items-center gap-2 shadow-inner">
                   <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-blue-600 dark:text-blue-400 shrink-0" />
                   <span className="text-xs sm:text-sm font-bold">
-                    {isDocumentOnly ? "يقرأ محتوى الشرائح..." : "يقرأ الشرائح والصوت..."}
+                    يقرأ الملف...
                   </span>
                 </div>
               </div>
@@ -227,7 +229,9 @@ export default function SmartChatTabContent({
               maxLength={500}
               className="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 text-slate-900 dark:text-slate-100 p-3 sm:p-4 rounded-xl sm:rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder-slate-400 dark:placeholder-slate-500 shadow-xs font-semibold text-xs sm:text-sm md:text-base placeholder:text-xs sm:placeholder:text-sm placeholder:font-normal"
               placeholder={
-                isDocumentOnly
+                isAudioOnly
+                  ? "مثال: اشرح الفكرة الرئيسية للمحاضرة"
+                  : isDocumentOnly
                   ? "مثال: اشرح النقطة في الشريحة رقم 2"
                   : "مثال: كيف شرح الدكتور الفرق في الشريحة 2؟"
               }

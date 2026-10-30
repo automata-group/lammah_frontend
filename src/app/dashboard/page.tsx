@@ -223,9 +223,18 @@ function DashboardContent() {
     ? 15
     : 5;
 
+  // User manual tab selection tracker - prevents background async fetches from forcibly switching tabs
+  const hasUserSelectedTabRef = useRef(false);
+
+  const handleTabChange = useCallback((tab: string) => {
+    hasUserSelectedTabRef.current = true;
+    setActiveTab(tab);
+  }, []);
+
   // Helper to select the most appropriate tab on load or stream completion
   const selectInitialTab = useCallback((annos: any, hasFile: boolean) => {
     if (!annos) return;
+    if (hasUserSelectedTabRef.current) return;
     if (!hasFile && (annos.slide_explanations?.length > 0 || annos.sticky_notes?.length > 0)) {
       setActiveTab("notes");
     } else if (annos.focus_points?.length > 0) {
@@ -244,7 +253,7 @@ function DashboardContent() {
   useEffect(() => {
     if (result?.downloadUrl && initialTabSelectedForUrlRef.current !== result.downloadUrl) {
       initialTabSelectedForUrlRef.current = result.downloadUrl;
-      if (activeTab === "notes") {
+      if (!hasUserSelectedTabRef.current && activeTab === "notes") {
         if (result.annotations?.focus_points && result.annotations.focus_points.length > 0) {
           setActiveTab("focus");
         } else if (result.annotations?.mcqs && result.annotations.mcqs.length > 0) {
@@ -256,7 +265,7 @@ function DashboardContent() {
         }
       }
     }
-  }, [result?.downloadUrl, result?.annotations]);
+  }, [result?.downloadUrl, result?.annotations, activeTab]);
 
   // Jump to PDF slide helper
   const jumpToPdfSlide = (
@@ -308,16 +317,24 @@ function DashboardContent() {
     return generatePastExamQuestions(result?.annotations, filteredFocusPoints);
   }, [result?.annotations, filteredFocusPoints]);
 
-  // Context-aware file analysis for processing screen
-  const isDocumentOnly = useMemo(() => {
-    if (result?.isDocumentOnly !== undefined) return !!result.isDocumentOnly;
+  // Tri-State Pipeline Architecture (Slides Only | Audio Only | Hybrid)
+  const processingMode = useMemo<"slides_only" | "slides_and_audio" | "audio_only">(() => {
+    if (result?.isDocumentOnly !== undefined) {
+      return result.isDocumentOnly ? "slides_only" : (result.hasAudio ? "slides_and_audio" : "audio_only");
+    }
     const hasAudio = !!audioFile || !!audioTempId || multiAudioFiles.length > 0;
     const hasUrl =
       uploadMode === "url" &&
       (lectureUrl.trim().length > 0 || lectureUrls.some((u) => u.trim().length > 0));
     const hasDoc = !!pdfFile || !!pdfTempId;
-    return hasDoc && !hasAudio && !hasUrl;
-  }, [result?.isDocumentOnly, audioFile, audioTempId, multiAudioFiles, uploadMode, lectureUrl, lectureUrls, pdfFile, pdfTempId]);
+
+    if (hasDoc && !hasAudio && !hasUrl) return "slides_only";
+    if (hasDoc && (hasAudio || hasUrl)) return "slides_and_audio";
+    return "audio_only";
+  }, [result?.isDocumentOnly, result?.hasAudio, audioFile, audioTempId, multiAudioFiles, uploadMode, lectureUrl, lectureUrls, pdfFile, pdfTempId]);
+
+  const isDocumentOnly = processingMode === "slides_only";
+  const isAudioOnly = processingMode === "audio_only";
 
   const activeFileName = useMemo(() => {
     if (isDocumentOnly) {
@@ -328,11 +345,11 @@ function DashboardContent() {
     if (audioFile?.name) return audioFile.name;
     if (multiAudioFiles.length > 0) return `${multiAudioFiles.length} تسجيلات صوتية`;
     if (uploadMode === "url" && lectureUrl.trim()) return "رابط المحاضرة السحابي";
-    return "المحاضرة قيد المعالجة";
-  }, [isDocumentOnly, pdfFile, pdfTempId, audioFile, multiAudioFiles, uploadMode, lectureUrl]);
+    return isAudioOnly ? "التسجيل الصوتي للمحاضرة" : "المحاضرة قيد المعالجة";
+  }, [isDocumentOnly, isAudioOnly, pdfFile, pdfTempId, audioFile, multiAudioFiles, uploadMode, lectureUrl]);
 
   const currentPipelineSteps: PipelineStep[] = useMemo(() => {
-    if (isDocumentOnly) {
+    if (processingMode === "slides_only") {
       return [
         {
           id: 1,
@@ -356,6 +373,33 @@ function DashboardContent() {
           id: 4,
           title: "إخراج الملف المخطط",
           shortDesc: "تجهيز وتلوين الملف المخطط والمظلل",
+          icon: Sparkles,
+        },
+      ];
+    } else if (processingMode === "audio_only") {
+      return [
+        {
+          id: 1,
+          title: "معالجة وتصفية الصوت",
+          shortDesc: "تنقية التسجيل للمحرك الذكي",
+          icon: FileAudio,
+        },
+        {
+          id: 2,
+          title: "التفريغ الصوتي الذكي",
+          shortDesc: "تحويل الصوت لنص دقيق ومصحح",
+          icon: BrainCircuit,
+        },
+        {
+          id: 3,
+          title: "استخلاص المحاور والقواعد",
+          shortDesc: "تفكيك الشرح واستخراج فخاخ الدكتور",
+          icon: Target,
+        },
+        {
+          id: 4,
+          title: "إخراج الدفتر الأكاديمي",
+          shortDesc: "صياغة كبسولات الفهم وبنك الأسئلة",
           icon: Sparkles,
         },
       ];
@@ -387,11 +431,11 @@ function DashboardContent() {
         },
       ];
     }
-  }, [isDocumentOnly]);
+  }, [processingMode]);
 
   const activeStepIdx = useMemo(() => {
     const msg = (progressStep || "").toLowerCase();
-    if (isDocumentOnly) {
+    if (processingMode === "slides_only") {
       if (
         msg.includes("5/5") ||
         msg.includes("تلوين") ||
@@ -427,6 +471,40 @@ function DashboardContent() {
         return 0;
       }
       return 0;
+    } else if (processingMode === "audio_only") {
+      if (
+        msg.includes("5/5") ||
+        msg.includes("دفتر") ||
+        msg.includes("تجهيز") ||
+        msg.includes("جاهز") ||
+        msg.includes("اللمسات الأخيرة")
+      )
+        return 3;
+      if (
+        msg.includes("4/5") ||
+        msg.includes("محاور") ||
+        msg.includes("قواعد") ||
+        msg.includes("يفكّر") ||
+        msg.includes("استنتاج") ||
+        msg.includes("أسئلة")
+      )
+        return 2;
+      if (
+        msg.includes("1/5") ||
+        msg.includes("تفريغ") ||
+        msg.includes("يستمع") ||
+        msg.includes("صوت")
+      )
+        return 1;
+
+      if (timeLeft !== null && initialEstimate > 0) {
+        const elapsedRatio = Math.max(0, 1 - timeLeft / initialEstimate);
+        if (elapsedRatio >= 0.85) return 3;
+        if (elapsedRatio >= 0.55) return 2;
+        if (elapsedRatio >= 0.25) return 1;
+        return 0;
+      }
+      return 0;
     } else {
       if (
         msg.includes("5/5") ||
@@ -449,7 +527,7 @@ function DashboardContent() {
       }
       return 0;
     }
-  }, [progressStep, isDocumentOnly, timeLeft, initialEstimate]);
+  }, [progressStep, processingMode, timeLeft, initialEstimate]);
 
   const progressPercent = useMemo(() => {
     // 1. الأولوية للنسبة المئوية الحقيقية القادمة من السيرفر
@@ -862,6 +940,7 @@ function DashboardContent() {
 
   // Process Lecture (Streaming SSE Loop)
   const handleProcess = async (forceRawFiles: boolean = false) => {
+    hasUserSelectedTabRef.current = false;
     const hasAudioFile = !!audioFile || multiAudioFiles.length > 0;
     const hasLectureUrl =
       (uploadMode === "url" && lectureUrl.trim().length > 0) ||
@@ -1363,7 +1442,7 @@ function DashboardContent() {
                 <div className="space-y-6">
                   <DashboardTabsNav
                     activeTab={activeTab}
-                    setActiveTab={setActiveTab}
+                    setActiveTab={handleTabChange}
                     annotations={result?.annotations}
                     hasPdfDownload={!!result?.downloadUrl}
                     filteredFocusPoints={filteredFocusPoints}
@@ -1434,6 +1513,7 @@ function DashboardContent() {
                       isBasicPlan={isBasicPlan}
                       isDemoLecture={isDemoLecture}
                       isDocumentOnly={isDocumentOnly}
+                      isAudioOnly={isAudioOnly}
                     />
                   )}
 

@@ -161,7 +161,8 @@ export function useSummarizeStream() {
         if (prev < 20) return prev + 0.5;
         if (prev < 50) return prev + 0.3;
         if (prev < 85) return prev + 0.15;
-        if (prev < 94) return prev + 0.05;
+        if (prev < 94) return prev + 0.08;
+        if (prev < 98.5) return prev + 0.025;
         return prev;
       });
     }, 500);
@@ -261,6 +262,7 @@ export function useSummarizeStream() {
                 const data = JSON.parse(line.substring(6));
 
                 if (data.type === "progress") {
+                  setQueuePosition(0);
                   if (data.progress_percent !== undefined) {
                     setMonotonicProgress(data.progress_percent);
                   }

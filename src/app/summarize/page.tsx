@@ -91,7 +91,13 @@ function SummarizeContent() {
 
   const hasAudio = !!audioFile || multiAudioFiles.length > 0;
   const hasPdf = !!pdfFile || !!pdfTempId;
-  const isDocumentOnly = !hasAudio && hasPdf;
+  const processingMode: "slides_only" | "slides_and_audio" | "audio_only" = useMemo(() => {
+    if (hasPdf && !hasAudio) return "slides_only";
+    if (hasPdf && hasAudio) return "slides_and_audio";
+    return "audio_only";
+  }, [hasPdf, hasAudio]);
+  const isDocumentOnly = processingMode === "slides_only";
+  const isAudioOnly = processingMode === "audio_only";
 
   const isRangeInvalid = useMemo(() => {
     const s = parseInt(startPage, 10);
@@ -109,12 +115,19 @@ function SummarizeContent() {
   }, [multiAudioFiles, audioFile, pdfFile]);
 
   const currentPipelineSteps: PipelineStep[] = useMemo(() => {
-    if (isDocumentOnly) {
+    if (processingMode === "slides_only") {
       return [
         { id: 1, title: "فحص وتدقيق الشرائح", shortDesc: "قراءة النصوص والجداول بدقة", icon: FileText },
         { id: 2, title: "استيعاب المفاهيم", shortDesc: "تحليل الأفكار والمعادلات والتعاريف", icon: BrainCircuit },
         { id: 3, title: "الشرح وفخاخ الاختبار", shortDesc: "صياغة الشرح والكبسولات والأسئلة", icon: Lightbulb },
         { id: 4, title: "إخراج الملف المخطط", shortDesc: "تجهيز وتلوين الملف المخطط والمظلل", icon: Sparkles },
+      ];
+    } else if (processingMode === "audio_only") {
+      return [
+        { id: 1, title: "معالجة وتصفية الصوت", shortDesc: "تنقية التسجيل للمحرك الذكي", icon: FileAudio },
+        { id: 2, title: "التفريغ الصوتي الذكي", shortDesc: "تحويل الصوت لنص دقيق ومصحح", icon: BrainCircuit },
+        { id: 3, title: "استخلاص المحاور والقواعد", shortDesc: "تفكيك الشرح واستخراج فخاخ الدكتور", icon: FileText },
+        { id: 4, title: "إخراج الدفتر الأكاديمي", shortDesc: "صياغة كبسولات الفهم وبنك الأسئلة", icon: Sparkles },
       ];
     }
     return [
@@ -123,7 +136,7 @@ function SummarizeContent() {
       { id: 3, title: "مطابقة الصوت بالشرائح", shortDesc: "ربط الدقائق الصوتية بالشرائح", icon: FileText },
       { id: 4, title: "إخراج الملف المخطط", shortDesc: "توليد الأسئلة وتلوين الملف المخطط", icon: Sparkles },
     ];
-  }, [isDocumentOnly]);
+  }, [processingMode]);
 
   const activeStepIdx = useMemo(() => {
     if (phase === "done" || phase === "pdf") return 3;

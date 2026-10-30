@@ -88,6 +88,7 @@ export interface DashboardResult {
   downloadUrl?: string | null;
   annotations?: DashboardAnnotations;
   isDocumentOnly?: boolean;
+  hasAudio?: boolean;
 }
 
 export interface PipelineStep {
