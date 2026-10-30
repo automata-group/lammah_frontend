@@ -168,26 +168,16 @@ export default function DashboardPdfViewer({
           </div>
         </div>
 
-        {isBasicPlan ? (
-          <Link
-            href="/plans"
-            prefetch={true}
-            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-950/80 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-300 px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center shadow-xs hover:shadow-sm w-full sm:w-auto text-center justify-center text-xs cursor-pointer"
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center shadow-xs shadow-indigo-500/20 hover:shadow-indigo-500/30 w-full sm:w-auto text-center justify-center text-xs cursor-pointer"
           >
-            <Lock className="w-3.5 h-3.5 ml-1.5 text-amber-500" /> تنزيل الملف المخطط (للمشتركين)
-          </Link>
-        ) : (
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={handleDownloadPdf}
-              className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center shadow-xs shadow-indigo-500/20 hover:shadow-indigo-500/30 w-full sm:w-auto text-center justify-center text-xs cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5 ml-1.5" />
-              تحميل الملف
-            </button>
-          </div>
-        )}
+            <Download className="w-3.5 h-3.5 ml-1.5" />
+            تحميل الملف
+          </button>
+        </div>
       </div>
 
       <div className="relative rounded-xl p-1 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-inner">

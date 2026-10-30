@@ -203,6 +203,12 @@ function DashboardContent() {
   const isBasicPlan = !hasPaidPlan && !isDemoLecture;
   const isDemoMode = !hasPaidPlan && !hasQuota && quota !== null && quota <= 0;
 
+  // Saved Lecture in History Protection:
+  // If a student is viewing any lecture already saved in their history (currentHistoryId exists),
+  // they own its generated assets permanently (Flashcards, Quiz, Download, Notes) without lockouts!
+  const isSavedLecture = Boolean(currentHistoryId && !isDemoLecture);
+  const shouldLockStudyTools = isBasicPlan && !isSavedLecture;
+
   const subscriptionLimit = isDemoLecture
     ? 25
     : planName.includes("الذهبية") ||
@@ -1473,7 +1479,7 @@ function DashboardContent() {
                   {activeTab === "flashcards" && (
                     <FlashcardsTabContent
                       flashcards={result?.annotations?.flashcards || []}
-                      isBasicPlan={isBasicPlan}
+                      isBasicPlan={shouldLockStudyTools}
                     />
                   )}
 
@@ -1481,7 +1487,7 @@ function DashboardContent() {
                   {activeTab === "quiz" && (
                     <QuizTabContent
                       mcqs={result?.annotations?.mcqs || []}
-                      isBasicPlan={isBasicPlan}
+                      isBasicPlan={shouldLockStudyTools}
                       slidePageMap={result?.annotations?.slide_page_map}
                       companionPageMap={result?.annotations?.companion_page_map}
                       jumpToPdfSlide={jumpToPdfSlide}
@@ -1494,7 +1500,7 @@ function DashboardContent() {
                   {activeTab === "past_exams" && (
                     <PastExamsTabContent
                       pastExamQuestions={pastExamQuestions}
-                      isBasicPlan={isBasicPlan}
+                      isBasicPlan={shouldLockStudyTools}
                       slidePageMap={result?.annotations?.slide_page_map}
                       jumpToPdfSlide={jumpToPdfSlide}
                     />
