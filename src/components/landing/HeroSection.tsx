@@ -99,7 +99,7 @@ export default function HeroSection() {
       <p
         className="mt-7 sm:mt-8 text-base xs:text-[17px] sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto leading-relaxed sm:leading-relaxed font-medium px-3 sm:px-0"
       >
-        وداعاً لإضاعة الساعات في تفريغ المحاضرات يدوياً. حوّل تسجيلاتك وملفات الـ PDF فوراً إلى ملخصات فائقة الدقة، أسئلة امتحانات متوقعة، وشات ذكي يجيبك عن كل مسألة.
+        ارفع فويس المحاضرة والسلايدات؛ لمّاح يكتب لك كل كلمة وملاحظة حكاها الدكتور، يظلل السلايدات المهمة، ويصيد أسئلة الامتحان المتوقعة بملف PDF جاهز للطباعة فوراً!
       </p>
 
       {/* ── 3. Action Buttons ─────────────────────────────────────── */}
