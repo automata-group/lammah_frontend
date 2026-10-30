@@ -19,18 +19,37 @@ const alexandria = Alexandria({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://lammah.site"),
-  title: "منصة لمّاح | Lammah",
-  description: "لمّاح - منصتك الأكاديمية لتفريغ المحاضرات، وتوليد الدفاتر الجمالية، وبنوك الأسئلة المتوقعة",
+  title: "منصة لمّاح | تخطيط السلايدات وكتابة كل ملاحظات الدكتور",
+  description: "ارفع فويس المحاضرة والسلايدات؛ لمّاح يكتب لك كل كلمة وملاحظة حكاها الدكتور، يظلل السلايدات المهمة، ويصيد أسئلة الامتحان المتوقعة بملف PDF جاهز للطباعة فوراً!",
+  keywords: [
+    "تخطيط السلايدات",
+    "تفريغ المحاضرات",
+    "ملاحظات الدكتور",
+    "تظليل السلايدات",
+    "ملخصات جامعية",
+    "أسئلة الامتحان المتوقعة",
+    "دفاتر دراسية",
+    "لمّاح",
+    "Lammah"
+  ],
   creator: "Automata",
   publisher: "Automata Group",
   authors: [
     { name: "Automata", url: "https://lammah.site" }
   ],
   openGraph: {
-    title: "منصة لمّاح | Lammah",
-    description: "لمّاح - منصتك الأكاديمية لتفريغ المحاضرات، وتوليد الدفاتر الجمالية، وبنوك الأسئلة المتوقعة - إحدى ابتكارات Automata",
-    siteName: "منصة لمّاح | Automata",
+    title: "منصة لمّاح | تخطيط السلايدات وكتابة كل ملاحظات الدكتور",
+    description: "ارفع فويس المحاضرة والسلايدات؛ لمّاح يكتب لك كل كلمة وملاحظة حكاها الدكتور، يظلل السلايدات المهمة، ويصيد أسئلة الامتحان المتوقعة بملف PDF جاهز للطباعة فوراً!",
+    siteName: "منصة لمّاح | Lammah",
     images: [{ url: "/lammah-logo.png" }],
+    locale: "ar_AR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "منصة لمّاح | تخطيط السلايدات وكتابة كل ملاحظات الدكتور",
+    description: "ارفع فويس المحاضرة والسلايدات؛ لمّاح يكتب لك كل كلمة وملاحظة حكاها الدكتور، يظلل السلايدات المهمة، ويصيد أسئلة الامتحان المتوقعة بملف PDF جاهز للطباعة فوراً!",
+    images: ["/lammah-logo.png"],
   },
 };
 
@@ -47,8 +66,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebApplication",
-              "name": "منصة لمّاح",
+              "name": "منصة لمّاح | تخطيط السلايدات وكتابة كل ملاحظات الدكتور",
               "alternateName": "Lammah",
+              "description": "ارفع فويس المحاضرة والسلايدات؛ لمّاح يكتب لك كل كلمة وملاحظة حكاها الدكتور، يظلل السلايدات المهمة، ويصيد أسئلة الامتحان المتوقعة بملف PDF جاهز للطباعة فوراً!", 
               "url": "https://lammah.site",
               "applicationCategory": "EducationalApplication",
               "operatingSystem": "All",

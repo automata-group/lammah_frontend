@@ -39,7 +39,7 @@ export default function Footer() {
             </div>
 
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-md">
-              حوّل تفريغ محاضراتك الصوتية وسلايداتك إلى دفاتر دراسية منسقة، اختبارات تجريبية ذكية، وشات أكاديمي خصوصي يفهم أدق تفاصيل شرح دكتورك.
+              ارفع فويس المحاضرة والسلايدات؛ لمّاح يكتب لك كل كلمة وملاحظة حكاها الدكتور، يظلل السلايدات المهمة، ويصيد أسئلة الامتحان المتوقعة بملف PDF جاهز للطباعة فوراً!
             </p>
 
             {/* Official Instagram Badge */}

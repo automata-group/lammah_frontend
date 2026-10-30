@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'منصة لمّاح - Automata',
     short_name: 'لمّاح',
-    description: 'المنصة الأكاديمية الذكية لتفريغ المحاضرات وتوليد الدفاتر - إحدى ابتكارات Automata Group',
+    description: 'تخطيط السلايدات وكتابة ملاحظات الدكتور وتوليد الدفاتر الذكية لطلاب الجامعات',
     start_url: '/',
     display: 'standalone',
     background_color: '#020617',
