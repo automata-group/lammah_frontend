@@ -185,6 +185,13 @@ export default function PricingSection() {
                         <div className="mt-0.5 w-4 h-4 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
                           <Check className="w-2.5 h-2.5 stroke-[3]" />
                         </div>
+                        <span className="leading-snug"><strong>رفع فويس فقط (بدون سلايدات)؟</strong> يولد كتاباً دراسياً كاملاً (PDF) بالشرح، كبسولات الفهم، وبنك أسئلة MCQs</span>
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <div className="mt-0.5 w-4 h-4 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        </div>
                         <span className="leading-snug"><strong>صيد ما ركز عليه الدكتور</strong> وتحديد أسئلة الامتحان المتوقعة</span>
                       </div>
 

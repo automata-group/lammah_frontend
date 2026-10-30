@@ -358,6 +358,16 @@ export default function PlansPage() {
                         </span>
                       </div>
 
+                      {/* Point 2.5: Voice-Only Study Book */}
+                      <div className="flex items-start gap-1.5 sm:gap-2">
+                        <div className="mt-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                          <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        <span className="leading-snug sm:leading-relaxed">
+                          <strong>رفع فويس فقط (بدون سلايدات)؟</strong> يولد كتاباً دراسياً كاملاً (PDF) بالشرح، كبسولات الفهم، وبنك أسئلة MCQs
+                        </span>
+                      </div>
+
                       {/* Point 3: Arabic/English + Doctor Focus vs Lammah explanation */}
                       <div className="flex items-start gap-1.5 sm:gap-2">
                         <div className="mt-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20">
