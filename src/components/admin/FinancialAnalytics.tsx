@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { 
   Loader2, 
   DollarSign, 
@@ -20,7 +20,8 @@ import {
   Trash2,
   X,
   AlertCircle,
-  CreditCard
+  CreditCard,
+  Landmark
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -29,6 +30,118 @@ export default function FinancialAnalytics({ session }: { session: any }) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"students" | "expenses" | "openrouter">("students");
   const [studentSearch, setStudentSearch] = useState("");
+  const [selectedBankFilter, setSelectedBankFilter] = useState<string | null>(null);
+
+  // Helper badge for payment method
+  const renderPaymentMethodBadge = (method: string) => {
+    switch (method) {
+      case "reflect":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-bold text-[11px]">
+            <span>📱</span>
+            <span>ريفلكت (Reflect)</span>
+          </span>
+        );
+      case "bop":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-bold text-[11px]">
+            <span>🏦</span>
+            <span>بنك فلسطين</span>
+          </span>
+        );
+      case "arab_bank":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-bold text-[11px]">
+            <span>🏛️</span>
+            <span>البنك العربي</span>
+          </span>
+        );
+      case "cash":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-bold text-[11px]">
+            <span>💵</span>
+            <span>كاش (نقدي)</span>
+          </span>
+        );
+      case "admin_direct":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-bold text-[11px]">
+            <span>⚡</span>
+            <span>شحن مباشر من الأدمن</span>
+          </span>
+        );
+      case "jawwal_pay":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border border-teal-200 font-bold text-[11px]">
+            <span>📲</span>
+            <span>جوال باي</span>
+          </span>
+        );
+      case "palpay":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200 font-bold text-[11px]">
+            <span>💳</span>
+            <span>بال باي</span>
+          </span>
+        );
+      case "bank":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 font-bold text-[11px]">
+            <span>🏦</span>
+            <span>تحويل بنكي</span>
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 font-bold text-[11px]">
+            <span>💳</span>
+            <span>{method || "تحويل مباشر"}</span>
+          </span>
+        );
+    }
+  };
+
+  // Aggregated money by bank / payment method
+  const bankStats = useMemo(() => {
+    const txs = data?.student_subscriptions?.recent_transactions || [];
+    const base: Record<string, { key: string; label: string; amount: number; count: number; icon: string; border: string; bg: string; text: string }> = {
+      reflect: { key: "reflect", label: "ريفلكت (Reflect)", amount: 0, count: 0, icon: "📱", border: "border-indigo-200 dark:border-indigo-800", bg: "bg-indigo-50/70 dark:bg-indigo-950/30", text: "text-indigo-800 dark:text-indigo-300" },
+      bop: { key: "bop", label: "بنك فلسطين", amount: 0, count: 0, icon: "🏦", border: "border-emerald-200 dark:border-emerald-800", bg: "bg-emerald-50/70 dark:bg-emerald-950/30", text: "text-emerald-800 dark:text-emerald-300" },
+      arab_bank: { key: "arab_bank", label: "البنك العربي", amount: 0, count: 0, icon: "🏛️", border: "border-blue-200 dark:border-blue-800", bg: "bg-blue-50/70 dark:bg-blue-950/30", text: "text-blue-800 dark:text-blue-300" },
+      cash: { key: "cash", label: "كاش (نقدي)", amount: 0, count: 0, icon: "💵", border: "border-amber-200 dark:border-amber-800", bg: "bg-amber-50/70 dark:bg-amber-950/30", text: "text-amber-800 dark:text-amber-300" },
+    };
+
+    let directAmount = 0;
+    let directCount = 0;
+
+    txs.forEach((tx: any) => {
+      const m = (tx.payment_method || "admin_direct").toLowerCase();
+      const amt = Number(tx.amount) || 0;
+      if (base[m]) {
+        base[m].amount += amt;
+        base[m].count += 1;
+      } else {
+        directAmount += amt;
+        directCount += 1;
+      }
+    });
+
+    const result = Object.values(base);
+    if (directCount > 0) {
+      result.push({
+        key: "admin_direct",
+        label: "شحن مباشر (أدمن)",
+        amount: directAmount,
+        count: directCount,
+        icon: "⚡",
+        border: "border-slate-200 dark:border-slate-800",
+        bg: "bg-slate-50 dark:bg-slate-900/60",
+        text: "text-slate-700 dark:text-slate-300"
+      });
+    }
+
+    return result;
+  }, [data?.student_subscriptions?.recent_transactions]);
 
   // Edit Transaction State
   const [editingTx, setEditingTx] = useState<any | null>(null);
@@ -453,6 +566,56 @@ export default function FinancialAnalytics({ session }: { session: any }) {
             </div>
           </div>
 
+          {/* ── Bank & Payment Methods Aggregated Breakdown ── */}
+          <div className="space-y-2 pt-1 pb-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Landmark className="w-3.5 h-3.5 text-indigo-500" />
+                <span>توزيع الأموال المحصلة حسب البنك وطريقة الدفع:</span>
+              </span>
+              {selectedBankFilter && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedBankFilter(null)}
+                  className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                >
+                  ✕ إلغاء التصفية (عرض كل البنوك)
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+              {bankStats.map((bank) => {
+                const isSelected = selectedBankFilter === bank.key;
+                return (
+                  <button
+                    key={bank.key}
+                    type="button"
+                    onClick={() => setSelectedBankFilter(isSelected ? null : bank.key)}
+                    className={`p-3 rounded-xl border text-right transition cursor-pointer flex flex-col justify-between ${
+                      isSelected
+                        ? "ring-2 ring-indigo-500 border-indigo-500 shadow-xs bg-indigo-500/10"
+                        : `${bank.border} ${bank.bg} hover:border-slate-400 dark:hover:border-slate-600`
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-base">{bank.icon}</span>
+                      <span className="text-[10px] font-bold opacity-75">{bank.count} عمليات</span>
+                    </div>
+                    <div>
+                      <div className={`text-[11px] font-bold truncate ${bank.text}`} title={bank.label}>
+                        {bank.label}
+                      </div>
+                      <div className="text-base font-black font-mono mt-0.5 text-slate-900 dark:text-white">
+                        ₪{bank.amount.toLocaleString()}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Table */}
           <div className="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-slate-800">
             <table className="w-full text-right border-collapse text-xs">
@@ -471,6 +634,14 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                 {data?.student_subscriptions?.recent_transactions?.length > 0 ? (
                   data.student_subscriptions.recent_transactions
                     .filter((tx: any) => {
+                      if (selectedBankFilter) {
+                        const m = (tx.payment_method || "admin_direct").toLowerCase();
+                        if (selectedBankFilter === "admin_direct") {
+                          if (["reflect", "bop", "arab_bank", "cash"].includes(m)) return false;
+                        } else if (m !== selectedBankFilter) {
+                          return false;
+                        }
+                      }
                       if (!studentSearch.trim()) return true;
                       const term = studentSearch.toLowerCase();
                       const sName = (tx.profiles?.full_name || tx.sender_name || "").toLowerCase();
@@ -510,14 +681,8 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                               {tx.plan_name || "باقة أكاديمية"}
                             </span>
                           </td>
-                          <td className="p-3.5 text-slate-700 dark:text-slate-300 font-medium">
-                            {tx.payment_method === "reflect" ? "📱 ريفلكت (Reflect)" :
-                             tx.payment_method === "jawwal_pay" ? "📲 جوال باي" :
-                             tx.payment_method === "palpay" ? "💳 بال باي" :
-                             tx.payment_method === "bank" ? "🏦 تحويل بنكي" :
-                             tx.payment_method === "whatsapp" ? "💬 تحويل واتساب" :
-                             tx.payment_method === "admin_direct" ? "⚡ شحن مباشر من الأدمن" :
-                             tx.payment_method || "تحويل مباشر"}
+                          <td className="p-3.5">
+                            {renderPaymentMethodBadge(tx.payment_method)}
                           </td>
                           <td className="p-3.5 text-center font-bold text-slate-900 dark:text-white font-mono text-sm">
                             ₪{tx.amount}
@@ -604,6 +769,56 @@ export default function FinancialAnalytics({ session }: { session: any }) {
               <Plus className="w-3.5 h-3.5" />
               <span>إضافة تكلفة جديدة</span>
             </button>
+          </div>
+
+          {/* ── Bank & Payment Methods Aggregated Breakdown ── */}
+          <div className="space-y-2 pt-1 pb-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Landmark className="w-3.5 h-3.5 text-indigo-500" />
+                <span>توزيع الأموال المحصلة حسب البنك وطريقة الدفع:</span>
+              </span>
+              {selectedBankFilter && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedBankFilter(null)}
+                  className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                >
+                  ✕ إلغاء التصفية (عرض كل البنوك)
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+              {bankStats.map((bank) => {
+                const isSelected = selectedBankFilter === bank.key;
+                return (
+                  <button
+                    key={bank.key}
+                    type="button"
+                    onClick={() => setSelectedBankFilter(isSelected ? null : bank.key)}
+                    className={`p-3 rounded-xl border text-right transition cursor-pointer flex flex-col justify-between ${
+                      isSelected
+                        ? "ring-2 ring-indigo-500 border-indigo-500 shadow-xs bg-indigo-500/10"
+                        : `${bank.border} ${bank.bg} hover:border-slate-400 dark:hover:border-slate-600`
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-base">{bank.icon}</span>
+                      <span className="text-[10px] font-bold opacity-75">{bank.count} عمليات</span>
+                    </div>
+                    <div>
+                      <div className={`text-[11px] font-bold truncate ${bank.text}`} title={bank.label}>
+                        {bank.label}
+                      </div>
+                      <div className="text-base font-black font-mono mt-0.5 text-slate-900 dark:text-white">
+                        ₪{bank.amount.toLocaleString()}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Table */}
@@ -825,8 +1040,10 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-slate-400"
                   >
                     <option value="reflect">📱 ريفلكت (Reflect)</option>
+                    <option value="bop">🏦 بنك فلسطين (Bank of Palestine)</option>
+                    <option value="arab_bank">🏛️ البنك العربي (Arab Bank)</option>
+                    <option value="cash">💵 كاش (نقدي)</option>
                     <option value="admin_direct">⚡ شحن مباشر من الأدمن</option>
-                    <option value="bank">🏦 تحويل بنكي</option>
                     <option value="jawwal_pay">📲 جوال باي (Jawwal Pay)</option>
                     <option value="palpay">💳 بال باي (PalPay)</option>
                     <option value="whatsapp">💬 تحويل واتساب / يدوي</option>

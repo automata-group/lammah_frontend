@@ -140,6 +140,7 @@ export default function AssignSubscriptionModal({
   const [customBonusMinutes, setCustomBonusMinutes] = useState<number>(0);
   const [addToExisting, setAddToExisting] = useState<boolean>(true);
   const [notes, setNotes] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<string>("reflect");
   const [showCustomOption, setShowCustomOption] = useState<boolean>(false);
 
   // Lookup state
@@ -285,7 +286,8 @@ export default function AssignSubscriptionModal({
           plan_id: selectedPlanId,
           custom_minutes: Number(customBonusMinutes) || 0,
           add_to_existing: addToExisting,
-          notes: notes.trim() || undefined
+          notes: notes.trim() || undefined,
+          payment_method: paymentMethod
         })
       });
 
@@ -749,7 +751,7 @@ export default function AssignSubscriptionModal({
               </div>
 
               {/* Warning Banner if Account Already Has Active Plan or Minutes */}
-              {lookupUser && lookupUser.quota_remaining > 0 && (
+              {lookupUser && (lookupUser.quota_remaining ?? 0) > 0 && (
                 <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-400 dark:border-amber-600/70 text-amber-950 dark:text-amber-100 text-xs flex items-start gap-3 shadow-xs">
                   <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
                     <AlertCircle className="w-5 h-5" />
@@ -835,6 +837,49 @@ export default function AssignSubscriptionModal({
                   />
                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">دقيقة</span>
                 </div>
+              </div>
+
+              {/* Payment Method / Bank Selection */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-2">
+                <label className="text-xs font-black text-slate-800 dark:text-slate-200 block">
+                  طريقة الدفع والحساب المستلم عليه:
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: "reflect", label: "ريفلكت (Reflect)", icon: "📱" },
+                    { id: "bop", label: "بنك فلسطين", icon: "🏦" },
+                    { id: "arab_bank", label: "البنك العربي", icon: "🏛️" },
+                    { id: "cash", label: "كاش (نقدي)", icon: "💵" },
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setPaymentMethod(m.id)}
+                      className={`p-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                        paymentMethod === m.id
+                          ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+                          : "bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300"
+                      }`}
+                    >
+                      <span>{m.icon}</span>
+                      <span>{m.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Optional Notes or Transaction Ref */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                <label className="text-xs font-black text-slate-800 dark:text-slate-200 block">
+                  ملاحظة على الاشتراك أو رقم الحوالة (اختياري):
+                </label>
+                <input
+                  type="text"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="مثال: تحويل ريفلكت رقم 49281، دفعة مسبقة، خصم خاص..."
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-2 px-3 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                />
               </div>
 
               {/* Final Receipt / Summary Card */}
