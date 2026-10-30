@@ -462,7 +462,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                   <th className="p-3.5">الباقة</th>
                   <th className="p-3.5">طريقة الدفع</th>
                   <th className="p-3.5 text-center">المبلغ المستلم</th>
-                  <th className="p-3.5 text-center">استهلاك التوكن والرصيد</th>
+                  <th className="p-3.5 text-center">استهلاك الدقائق والرصيد المتبقي</th>
                   <th className="p-3.5 text-center">التاريخ</th>
                   <th className="p-3.5 text-left">إجراءات</th>
                 </tr>
@@ -476,8 +476,9 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                       const sName = (tx.profiles?.full_name || tx.sender_name || "").toLowerCase();
                       const pName = (tx.plan_name || "").toLowerCase();
                       const phone = (tx.profiles?.phone_number || tx.sender_phone || "").toLowerCase();
+                      const email = (tx.student_email || "").toLowerCase();
                       const notes = (tx.notes || "").toLowerCase();
-                      return sName.includes(term) || pName.includes(term) || phone.includes(term) || notes.includes(term);
+                      return sName.includes(term) || pName.includes(term) || phone.includes(term) || email.includes(term) || notes.includes(term);
                     })
                     .map((tx: any, idx: number) => {
                       const studentName = tx.profiles?.full_name || tx.sender_name || "طالب";
@@ -486,8 +487,18 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                       return (
                         <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-900/40 transition">
                           <td className="p-3.5">
-                            <span className="font-bold text-slate-900 dark:text-white block">{studentName}</span>
-                            <span className="text-[10px] text-slate-400 font-mono">{tx.profiles?.phone_number || tx.sender_phone || "---"}</span>
+                            <span className="font-bold text-slate-900 dark:text-white block text-xs">{studentName}</span>
+                            {tx.student_email ? (
+                              <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-mono block select-all font-semibold">
+                                {tx.student_email}
+                              </span>
+                            ) : (
+                              tx.profiles?.phone_number && (
+                                <span className="text-[10px] text-slate-400 font-mono block">
+                                  {tx.profiles.phone_number}
+                                </span>
+                              )
+                            )}
                             {tx.notes && (
                               <div className="mt-1 flex items-center gap-1 text-[10px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/50 px-2 py-0.5 rounded-md w-fit max-w-[220px] truncate" title={tx.notes}>
                                 <span className="font-bold shrink-0">ملاحظة:</span> <span className="truncate">{tx.notes}</span>
@@ -512,26 +523,27 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                             ₪{tx.amount}
                           </td>
                           <td className="p-3.5 text-center">
-                            <div className="flex flex-col items-center">
-                              <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">
-                                {tx.tokens_used > 0 ? (
-                                  tx.tokens_used >= 1000 
-                                    ? `${(tx.tokens_used / 1000).toFixed(1)}K توكن` 
-                                    : `${tx.tokens_used} توكن`
-                                ) : (
-                                  "0 توكن"
-                                )}
-                              </span>
-                              <span className="text-[10px] text-rose-500 dark:text-rose-400 font-mono font-bold">
-                                {tx.ai_cost_usd > 0 
-                                  ? `-₪${tx.ai_cost_ils || (tx.ai_cost_usd * 3.75).toFixed(2)} ($${tx.ai_cost_usd.toFixed(3)})` 
-                                  : "₪0.00"}
-                              </span>
-                              {tx.lectures_processed > 0 && (
-                                <span className="text-[9px] text-slate-400">
-                                  ({tx.lectures_processed} محاضرة)
+                            <div className="flex flex-col items-center gap-1">
+                              {/* Minutes spent & remaining */}
+                              <div className="flex items-center gap-1.5 text-xs font-bold">
+                                <span className="text-slate-500 dark:text-slate-400" title="الدقائق التي استهلكها الطالب">
+                                  صرفت: <strong className="text-slate-900 dark:text-white font-mono">{tx.minutes_used ?? 0}د</strong>
                                 </span>
-                              )}
+                                <span className="text-slate-300 dark:text-slate-700">•</span>
+                                <span className="text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded" title="الدقائق المتبقية في رصيده">
+                                  باقي: <strong className="font-mono text-emerald-700 dark:text-emerald-400">{tx.minutes_remaining ?? 0}د</strong>
+                                </span>
+                              </div>
+
+                              {/* AI Token Cost */}
+                              <div className="flex items-center gap-1 text-[10px] text-slate-400 font-mono">
+                                <span>{tx.tokens_used > 0 ? `${tx.tokens_used >= 1000 ? (tx.tokens_used / 1000).toFixed(1) + 'K' : tx.tokens_used} توكن` : "0 توكن"}</span>
+                                {tx.ai_cost_usd > 0 && (
+                                  <span className="text-rose-500 dark:text-rose-400 font-bold">
+                                    (-₪{tx.ai_cost_ils || (tx.ai_cost_usd * 3.75).toFixed(2)})
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </td>
                           <td className="p-3.5 text-center text-[11px] text-slate-400 font-mono" dir="ltr">
@@ -770,7 +782,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                     تعديل سعر وبيانات الاشتراك
                   </h3>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    الطالب: {editingTx.profiles?.full_name || editingTx.sender_name || "طالب"} ({editingTx.plan_name})
+                    الطالب: <strong className="text-slate-800 dark:text-slate-200">{editingTx.sender_name}</strong> {editingTx.student_email ? `(${editingTx.student_email})` : `(${editingTx.plan_name})`}
                   </p>
                 </div>
                 <button
