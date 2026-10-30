@@ -790,7 +790,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                     <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₪</span>
                     <input
                       type="number"
-                      step="0.5"
+                      step="any"
                       min="0"
                       value={editAmount}
                       onChange={(e) => setEditAmount(e.target.value)}
@@ -927,8 +927,8 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                       <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₪</span>
                       <input
                         type="number"
-                        step="0.5"
-                        min="1"
+                        step="any"
+                        min="0"
                         value={expenseAmount}
                         onChange={(e) => setExpenseAmount(e.target.value)}
                         placeholder="50"
