@@ -261,6 +261,15 @@ export default function AssignSubscriptionModal({
       return;
     }
 
+    // Safety confirmation if student already has active quota
+    if (lookupUser && lookupUser.quota_remaining && lookupUser.quota_remaining > 0) {
+      const addedMins = selectedPlanId === "custom_only" ? bonusMins : baseMinutes + bonusMins;
+      const confirmCharge = window.confirm(
+        `⚠️ تنبيه أمان لمنع الشحن المزدوج:\n\nالطالب (${cleanEmail}) يمتلك حالياً ${lookupUser.quota_remaining} دقيقة في (${lookupUser.current_plan || "باقة نشطة"}).\n\nإذا قمت بالشحن، فسيتم تفعيل الباقة مجدداً وإضافة ${addedMins} دقيقة إضافية لحسابه ليصبح الإجمالي ${totalCalculated} دقيقة.\n\nهل أنت متأكد من رغبتك بالاستمرار وشحن رصيد إضافي؟`
+      );
+      if (!confirmCharge) return;
+    }
+
     setSubmitting(true);
     setResultMessage(null);
 
@@ -287,6 +296,13 @@ export default function AssignSubscriptionModal({
           text: data.message || "تم تفعيل الاشتراك وشحن الدقائق بنجاح!",
           details: data
         });
+        if (lookupUser) {
+          setLookupUser({
+            ...lookupUser,
+            quota_remaining: typeof data.total_quota === "number" ? data.total_quota : (lookupUser.quota_remaining || 0) + (data.minutes_added || 0),
+            current_plan: data.plan_name || lookupUser.current_plan
+          });
+        }
         if (onSuccess) onSuccess();
       } else {
         const errorText = data.detail?.user_message || (typeof data.detail === "string" ? data.detail : null) || data.message || `فشلت عملية تفعيل الاشتراك (رمز ${res.status})`;
@@ -404,35 +420,69 @@ export default function AssignSubscriptionModal({
         {/* Scrollable Modal Content (Takes Available Height Smoothly) */}
         <div className="p-6 flex-1 overflow-y-auto space-y-5">
 
-          {/* Success / Error Notification Banner */}
-          {resultMessage && (
-            <motion.div 
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`p-4 rounded-2xl border flex items-start gap-3 ${
-                resultMessage.type === "success"
-                  ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
-                  : "bg-rose-50 dark:bg-rose-950/30 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300"
-              }`}
+          {/* Dedicated Success Screen to lock form and prevent duplicate charge */}
+          {resultMessage?.type === "success" ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="py-4 flex flex-col items-center text-center space-y-4"
             >
-              {resultMessage.type === "success" ? (
-                <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
-              ) : (
-                <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
-              )}
-              <div className="flex-1 text-xs">
-                <p className="font-black text-sm mb-1">{resultMessage.text}</p>
-                {resultMessage.details && (
-                  <div className="mt-2 p-3 rounded-xl bg-white/70 dark:bg-black/40 font-mono text-[11px] space-y-1">
-                    <p>• البريد الإلكتروني: {resultMessage.details.email}</p>
-                    <p>• الباقة المفعلة: {resultMessage.details.plan_name}</p>
-                    <p>• إجمالي الرصيد الجديد: <span className="font-bold text-indigo-600 dark:text-indigo-400">{resultMessage.details.total_quota} دقيقة</span></p>
-                    <p>• الصلاحية: شهر كامل (30 يوماً)</p>
-                  </div>
-                )}
+              <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-md">
+                <CheckCircle2 className="w-9 h-9" />
+              </div>
+
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  تم تفعيل وشحن الباقة بنجاح!
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  أصبح الحساب مفعلاً الآن ومتاحاً للطالب للاستخدام الفوري.
+                </p>
+              </div>
+
+              {/* Receipt Box */}
+              <div className="w-full max-w-md bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-right space-y-2.5 text-xs">
+                <div className="flex justify-between items-center py-1 border-b border-slate-200/80 dark:border-slate-800">
+                  <span className="text-slate-500 font-bold">البريد الإلكتروني:</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white">{resultMessage.details?.email || email}</span>
+                </div>
+                <div className="flex justify-between items-center py-1 border-b border-slate-200/80 dark:border-slate-800">
+                  <span className="text-slate-500 font-bold">الباقة المعتمدة:</span>
+                  <span className="font-bold text-indigo-600 dark:text-indigo-400">{resultMessage.details?.plan_name || currentSelectedPlan?.title}</span>
+                </div>
+                <div className="flex justify-between items-center py-1 border-b border-slate-200/80 dark:border-slate-800">
+                  <span className="text-slate-500 font-bold">الدقائق المضافة الآن:</span>
+                  <span className="font-mono font-bold text-emerald-600">+{resultMessage.details?.minutes_added || (selectedPlanId === "custom_only" ? bonusMins : baseMinutes + bonusMins)} دقيقة</span>
+                </div>
+                <div className="flex justify-between items-center py-1 border-b border-slate-200/80 dark:border-slate-800">
+                  <span className="text-slate-500 font-bold">إجمالي الرصيد الحالي بالحساب:</span>
+                  <span className="font-mono font-black text-slate-900 dark:text-white text-sm">{resultMessage.details?.total_quota || totalCalculated} دقيقة</span>
+                </div>
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-slate-500 font-bold">فترة الصلاحية:</span>
+                  <span className="font-bold text-slate-700 dark:text-slate-300">شهر كامل (30 يوماً)</span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 rounded-xl text-indigo-800 dark:text-indigo-300 text-[11px] max-w-md text-right">
+                🔒 <strong>حماية ضد التكرار:</strong> تم قفل زر الشحن لحماية الطالب من الشحن المزدوج بالخطأ.
               </div>
             </motion.div>
-          )}
+          ) : (
+            <>
+              {/* Error Banner Only */}
+              {resultMessage?.type === "error" && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 rounded-2xl border bg-rose-50 dark:bg-rose-950/30 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300 flex items-start gap-3"
+                >
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+                  <div className="flex-1 text-xs">
+                    <p className="font-black text-sm mb-1">{resultMessage.text}</p>
+                  </div>
+                </motion.div>
+              )}
 
           {/* ══════════════════════════════════════════════════════════ */}
           {/* STEP 1: Email & Account Verification                     */}
@@ -698,6 +748,24 @@ export default function AssignSubscriptionModal({
                 </p>
               </div>
 
+              {/* Warning Banner if Account Already Has Active Plan or Minutes */}
+              {lookupUser && lookupUser.quota_remaining > 0 && (
+                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-400 dark:border-amber-600/70 text-amber-950 dark:text-amber-100 text-xs flex items-start gap-3 shadow-xs">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <AlertCircle className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <span className="font-black text-sm block text-amber-950 dark:text-amber-200">
+                      ⚠️ تنبيه: هذا الطالب يمتلك باقة ورصيداً نشطاً بالفعل!
+                    </span>
+                    <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                      يمتلك الطالب حالياً <strong>{lookupUser.quota_remaining} دقيقة متبقية</strong> في ({lookupUser.current_plan || "باقة نشطة"}).
+                      عند المتابعة والضغط على زر الشحن، {addToExisting ? `سيتم تفعيل باقة جديدة وإضافة الدقائق تراكمياً ليصبح رصيده الكلي ${totalCalculated} دقيقة.` : "سيتم تصفير رصيده القديم واعتماد دقائق الباقة الجديدة فقط."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Mode Selection */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label className={`p-3.5 rounded-2xl border cursor-pointer transition flex items-start gap-3 ${
@@ -794,78 +862,109 @@ export default function AssignSubscriptionModal({
             </motion.div>
           )}
 
+            </>
+          )}
+
         </div>
 
         {/* Modal Bottom Footer (Fixed - Never Shrinks) */}
         <div className="px-6 py-4 bg-slate-50/90 dark:bg-slate-900/90 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
-          <div>
-            {step > 1 && (
+          {resultMessage?.type === "success" ? (
+            <div className="w-full flex items-center justify-between">
               <button
                 type="button"
-                onClick={() => setStep((s) => (s - 1) as any)}
-                disabled={submitting}
-                className="px-4 py-2.5 rounded-xl bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                onClick={() => {
+                  setResultMessage(null);
+                  setEmail("");
+                  setLookupUser(null);
+                  setStep(1);
+                  setCustomBonusMinutes(0);
+                }}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
-                <ArrowRight className="w-3.5 h-3.5" />
-                <span>السابق</span>
+                شحن عميل آخر ↻
               </button>
-            )}
-          </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={submitting}
-              className="px-4 py-2.5 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-white text-xs font-bold transition cursor-pointer"
-            >
-              إلغاء
-            </button>
-
-            {step === 1 && (
               <button
                 type="button"
-                onClick={goToStep2}
-                disabled={lookupLoading || !email.trim() || !email.includes("@")}
-                className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black shadow-md shadow-indigo-600/20 flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+                onClick={onClose}
+                className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-black shadow-md transition cursor-pointer"
               >
-                <span>متابعة لاختيار الباقة</span>
-                <ArrowLeft className="w-3.5 h-3.5" />
+                تم والحمد لله (إغلاق النافذة)
               </button>
-            )}
-
-            {step === 2 && (
-              <button
-                type="button"
-                onClick={() => setStep(3)}
-                className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black shadow-md shadow-indigo-600/20 flex items-center gap-1.5 transition cursor-pointer"
-              >
-                <span>متابعة لتأكيد الرصيد</span>
-                <ArrowLeft className="w-3.5 h-3.5" />
-              </button>
-            )}
-
-            {step === 3 && (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={submitting || !email.trim() || (!selectedPlanId && customBonusMinutes <= 0)}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-amber-600 hover:from-indigo-500 hover:to-amber-500 text-white text-xs font-black shadow-lg shadow-indigo-600/25 flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>جاري الشحن والاعتماد...</span>
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4 text-amber-300" />
-                    <span>تأكيد وشحن الباقة فوراً ⚡</span>
-                  </>
+            </div>
+          ) : (
+            <>
+              <div>
+                {step > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setStep((s) => (s - 1) as any)}
+                    disabled={submitting}
+                    className="px-4 py-2.5 rounded-xl bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <ArrowRight className="w-3.5 h-3.5" />
+                    <span>السابق</span>
+                  </button>
                 )}
-              </button>
-            )}
-          </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={submitting}
+                  className="px-4 py-2.5 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-white text-xs font-bold transition cursor-pointer"
+                >
+                  إلغاء
+                </button>
+
+                {step === 1 && (
+                  <button
+                    type="button"
+                    onClick={goToStep2}
+                    disabled={lookupLoading || !email.trim() || !email.includes("@")}
+                    className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black shadow-md shadow-indigo-600/20 flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+                  >
+                    <span>متابعة لاختيار الباقة</span>
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                  </button>
+                )}
+
+                {step === 2 && (
+                  <button
+                    type="button"
+                    onClick={() => setStep(3)}
+                    className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black shadow-md shadow-indigo-600/20 flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <span>متابعة لتأكيد الرصيد</span>
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                  </button>
+                )}
+
+                {step === 3 && (
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={submitting || !email.trim() || (!selectedPlanId && customBonusMinutes <= 0)}
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-amber-600 hover:from-indigo-500 hover:to-amber-500 text-white text-xs font-black shadow-lg shadow-indigo-600/25 flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>جاري الشحن والاعتماد...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4 text-amber-300" />
+                        <span>تأكيد وشحن الباقة فوراً ⚡</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
       </motion.div>
