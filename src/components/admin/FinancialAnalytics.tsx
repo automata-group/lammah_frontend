@@ -34,6 +34,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
   const [editingTx, setEditingTx] = useState<any | null>(null);
   const [editAmount, setEditAmount] = useState<string>("");
   const [editPaymentMethod, setEditPaymentMethod] = useState<string>("");
+  const [editNotes, setEditNotes] = useState<string>("");
   const [isUpdatingTx, setIsUpdatingTx] = useState(false);
 
   // Add Server Expense State
@@ -69,6 +70,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
     setEditingTx(tx);
     setEditAmount(String(tx.amount || "0"));
     setEditPaymentMethod(tx.payment_method || "reflect");
+    setEditNotes(tx.notes || "");
   };
 
   // Save Transaction Updates
@@ -91,7 +93,8 @@ export default function FinancialAnalytics({ session }: { session: any }) {
         },
         body: JSON.stringify({
           amount: numAmount,
-          payment_method: editPaymentMethod
+          payment_method: editPaymentMethod,
+          notes: editNotes
         })
       });
       if (res.ok) {
@@ -473,7 +476,8 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                       const sName = (tx.profiles?.full_name || tx.sender_name || "").toLowerCase();
                       const pName = (tx.plan_name || "").toLowerCase();
                       const phone = (tx.profiles?.phone_number || tx.sender_phone || "").toLowerCase();
-                      return sName.includes(term) || pName.includes(term) || phone.includes(term);
+                      const notes = (tx.notes || "").toLowerCase();
+                      return sName.includes(term) || pName.includes(term) || phone.includes(term) || notes.includes(term);
                     })
                     .map((tx: any, idx: number) => {
                       const studentName = tx.profiles?.full_name || tx.sender_name || "طالب";
@@ -484,6 +488,11 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                           <td className="p-3.5">
                             <span className="font-bold text-slate-900 dark:text-white block">{studentName}</span>
                             <span className="text-[10px] text-slate-400 font-mono">{tx.profiles?.phone_number || tx.sender_phone || "---"}</span>
+                            {tx.notes && (
+                              <div className="mt-1 flex items-center gap-1 text-[10px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/50 px-2 py-0.5 rounded-md w-fit max-w-[220px] truncate" title={tx.notes}>
+                                <span className="font-bold shrink-0">ملاحظة:</span> <span className="truncate">{tx.notes}</span>
+                              </div>
+                            )}
                           </td>
                           <td className="p-3.5">
                             <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded text-[11px] font-bold">
@@ -810,6 +819,19 @@ export default function FinancialAnalytics({ session }: { session: any }) {
                     <option value="palpay">💳 بال باي (PalPay)</option>
                     <option value="whatsapp">💬 تحويل واتساب / يدوي</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    ملاحظات إضافية على المشترك:
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                    placeholder="مثال: تم تحويل 25 بدل 30 بالاتفاق، دفعة أولى، صديق فلان..."
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 resize-none"
+                  />
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
