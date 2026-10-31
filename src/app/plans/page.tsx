@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { 
   Loader2, Crown, Zap, Sparkles, Check, 
-  ArrowRight, Star, Lock, Mic, FileText, ShieldCheck
+  ArrowRight, Star, Lock, Mic, FileText, ShieldCheck, MessageCircle, Phone
 } from "lucide-react";
 
 import AppHeader from "@/components/AppHeader";
@@ -35,9 +35,7 @@ export default function PlansPage() {
   const [showContactModal, setShowContactModal] = useState(false);
   const [userProfile, setUserProfile] = useState<{ full_name?: string; phone_number?: string }>({});
 
-  useEffect(() => {
-    if (!loading && !user) router.replace("/#pricing");
-  }, [user, loading, router]);
+
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/subscription/plans`)
@@ -191,6 +189,33 @@ export default function PlansPage() {
           <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base max-w-2xl mx-auto font-medium leading-relaxed">
             من التلخيص الأكاديمي السريع قبل الامتحانات إلى توليد أفخم الدفاتر الملونة القابلة للطباعة وبيعها بالمتجر للأرباح!
           </p>
+
+          {/* Direct WhatsApp Subscription Banner */}
+          <div className="mt-6 max-w-2xl mx-auto p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border border-emerald-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-right shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20">
+                <MessageCircle className="w-5 h-5 fill-current" />
+              </div>
+              <div>
+                <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                  تفعيل فوري لجميع الباقات عبر واتساب
+                </h4>
+                <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 font-medium">
+                  اختر باقتك وتواصل معنا مباشرة للتفعيل وطرق الدفع:{" "}
+                  <strong className="font-mono text-emerald-600 dark:text-emerald-400 font-black text-sm" dir="ltr">+972 59 829 8930</strong>
+                </p>
+              </div>
+            </div>
+            <a
+              href="https://wa.me/972598298930?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%A8%D8%A7%D9%82%D8%A7%D8%AA%20%D9%85%D9%86%D8%B5%D8%A9%20%D9%84%D9%85%D9%91%D8%A7%D8%AD%20%D9%88%D8%B7%D8%B1%D9%82%20%D8%A7%D9%84%D8%AF%D9%81%D8%B9%20%D9%88%D8%A7%D9%84%D8%AA%D9%81%D8%B9%D9%8A%D9%84."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black flex items-center gap-1.5 shadow-sm transition"
+            >
+              <MessageCircle className="w-3.5 h-3.5 fill-current" />
+              <span>راسلنا على واتساب</span>
+            </a>
+          </div>
         </div>
 
         {loadingPlans ? (
@@ -452,11 +477,18 @@ export default function PlansPage() {
                       <span>باقتك الحالية المفعلة ✅</span>
                     ) : (
                       <>
+                        <MessageCircle className="w-4 h-4" />
                         <span>{isGoldPlan ? "اشترك في باقة النخبة (100 ₪)" : isMidPlan ? "اشترك في باقة التفوق (60 ₪)" : "شحن باقة الإنقاذ (25 ₪)"}</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     )}
                   </button>
+
+                  {!isActive && (
+                    <div className="text-center mt-2 text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1">
+                      <span>تفعيل مباشر عبر واتساب:</span>
+                      <span className="font-mono text-emerald-600 dark:text-emerald-400 font-black" dir="ltr">+972 59 829 8930</span>
+                    </div>
+                  )}
                 </div>
               );
             })}

@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  X, MessageCircle, Crown, Zap, Sparkles, CheckCircle2, 
-  Loader2, Phone, User, ArrowLeft, ShieldCheck 
+  X, MessageCircle, Crown, Zap, Sparkles, Check, 
+  Copy, Phone, ShieldCheck, ArrowRight, ExternalLink, CreditCard
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 interface PlanItem {
   id: string;
@@ -26,17 +27,8 @@ interface SubscriptionContactModalProps {
   onSuccess?: () => void;
 }
 
-const COUNTRY_CODES = [
-  { code: "+970", country: "فلسطين", flag: "🇵🇸" },
-  { code: "+972", country: "القدس والداخل", flag: "🇵🇸" },
-  { code: "+962", country: "الأردن", flag: "🇯🇴" },
-  { code: "+966", country: "السعودية", flag: "🇸🇦" },
-  { code: "+20", country: "مصر", flag: "🇪🇬" },
-  { code: "+971", country: "الإمارات", flag: "🇦🇪" },
-  { code: "+974", country: "قطر", flag: "🇶🇦" },
-  { code: "+965", country: "الكويت", flag: "🇰🇼" },
-  { code: "custom", country: "أخرى (كود مخصص)", flag: "🌍" },
-];
+const ADMIN_WHATSAPP_NUMBER = "+972598298930";
+const ADMIN_WHATSAPP_CLEAN = "972598298930";
 
 export default function SubscriptionContactModal({
   isOpen,
@@ -47,39 +39,19 @@ export default function SubscriptionContactModal({
   sessionToken,
   onSuccess,
 }: SubscriptionContactModalProps) {
-  const [fullName, setFullName] = useState(initialFullName);
-  const [selectedCountryCode, setSelectedCountryCode] = useState("+970");
-  const [customCountryCode, setCustomCountryCode] = useState("+");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [orderSuccess, setOrderSuccess] = useState<{
-    orderId: string;
-    formattedPhone: string;
-    planName: string;
-    amount: number;
-  } | null>(null);
+  const { user } = useAuth();
+  const [studentName, setStudentName] = useState(initialFullName);
+  const [copiedNumber, setCopiedNumber] = useState(false);
 
   useEffect(() => {
-    if (initialFullName) setFullName(initialFullName);
-    if (initialPhone) {
-      // Try to parse country code if passed
-      const matched = COUNTRY_CODES.find(c => c.code !== "custom" && initialPhone.startsWith(c.code));
-      if (matched) {
-        setSelectedCountryCode(matched.code);
-        setPhoneNumber(initialPhone.slice(matched.code.length));
-      } else {
-        setPhoneNumber(initialPhone.replace(/\D/g, ""));
-      }
+    if (initialFullName) {
+      setStudentName(initialFullName);
+    } else if (user?.user_metadata?.full_name) {
+      setStudentName(user.user_metadata.full_name);
+    } else if (user?.user_metadata?.name) {
+      setStudentName(user.user_metadata.name);
     }
-  }, [initialFullName, initialPhone]);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setError("");
-      setOrderSuccess(null);
-    }
-  }, [isOpen]);
+  }, [initialFullName, user]);
 
   if (!isOpen || !plan) return null;
 
@@ -87,99 +59,70 @@ export default function SubscriptionContactModal({
   const isMidPlan = plan.price_ils === 60 || plan.name.includes("الميدتيرم") || plan.name.includes("التفوق") || plan.name.toLowerCase().includes("premium");
   const PlanIcon = isGoldPlan ? Crown : isMidPlan ? Zap : Sparkles;
 
-  const getFullDialCode = () => {
-    if (selectedCountryCode === "custom") {
-      return customCountryCode.trim().startsWith("+") ? customCountryCode.trim() : `+${customCountryCode.trim()}`;
+  const buildWhatsAppMessage = () => {
+    const lines = [
+      `مرحباً، أود الاشتراك في (${plan.name}) بسعر ${plan.price_ils} ₪ عبر منصة لمّاح.`,
+    ];
+
+    const trimmedName = studentName.trim();
+    if (trimmedName) {
+      lines.push(`الاسم: ${trimmedName}`);
     }
-    return selectedCountryCode;
+
+    if (user?.email) {
+      lines.push(`البريد الإلكتروني لحسابي: ${user.email}`);
+    }
+
+    lines.push(`أرجو تزويدي بطرق الدفع المتاحة وتفعيل الباقة في حسابي. شكراً لك!`);
+    return lines.join("\n");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    if (!fullName.trim() || fullName.trim().length < 2) {
-      setError("يرجى إدخال اسمك لتسهيل التواصل والمطابقة.");
-      return;
-    }
-
-    const cleanDigits = phoneNumber.trim().replace(/\D/g, "").replace(/^0+/, "");
-    if (!cleanDigits || cleanDigits.length < 7) {
-      setError("يرجى إدخال رقم هاتف واتساب صحيح مكون من 7 أرقام على الأقل.");
-      return;
-    }
-
-    const dialCode = getFullDialCode();
-    if (!dialCode || dialCode === "+") {
-      setError("يرجى إدخال أو تحديد مقدمة الدولة للواتساب.");
-      return;
-    }
-
-    const fullFormattedPhone = `${dialCode}${cleanDigits}`;
-    setSubmitting(true);
-
+  const handleOpenWhatsApp = () => {
+    const message = buildWhatsAppMessage();
+    const url = `https://wa.me/${ADMIN_WHATSAPP_CLEAN}?text=${encodeURIComponent(message)}`;
+    
+    // Log intent to backend silently if possible
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-      if (sessionToken) {
-        headers["Authorization"] = `Bearer ${sessionToken}`;
-      }
-
-      const res = await fetch(`${apiUrl}/api/v1/transactions/checkout`, {
+      fetch(`${apiUrl}/api/v1/transactions/checkout`, {
         method: "POST",
-        headers,
+        headers: {
+          "Content-Type": "application/json",
+          ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}),
+        },
         body: JSON.stringify({
           plan_id: plan.id,
-          phone_number: fullFormattedPhone,
-          full_name: fullName.trim(),
+          phone_number: initialPhone || ADMIN_WHATSAPP_NUMBER,
+          full_name: studentName.trim() || user?.user_metadata?.full_name || "طالب مهتم",
         }),
-      });
+      }).catch(() => {});
+    } catch {}
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.detail?.user_message || data.detail || "تعذر إرسال الطلب، يرجى المحاولة لاحقاً.");
-      }
-
-      setOrderSuccess({
-        orderId: data.order_id || "NEW",
-        formattedPhone: fullFormattedPhone,
-        planName: plan.name,
-        amount: plan.price_ils,
-      });
-
-      if (onSuccess) onSuccess();
-    } catch (err: any) {
-      setError(err.message || "حدث خطأ أثناء إرسال الطلب.");
-    } finally {
-      setSubmitting(false);
-    }
+    window.open(url, "_blank");
+    if (onSuccess) onSuccess();
   };
 
-  const handleDirectWhatsAppClick = () => {
-    if (!orderSuccess) return;
-    const adminPhone = "972598298930";
-    const msg = `مرحباً، قمت بطلب الاشتراك في (${orderSuccess.planName}) بسعر ${orderSuccess.amount} ₪ عبر منصة لمّاح.\nالاسم: ${fullName.trim()}\nرقم الطلب: #${orderSuccess.orderId}\nرقم الواتساب: ${orderSuccess.formattedPhone}\nأرجو تزويدي بطريقة الدفع وتفعيل الباقة. شكراً!`;
-    const url = `https://wa.me/${adminPhone}?text=${encodeURIComponent(msg)}`;
-    window.open(url, "_blank");
+  const handleCopyNumber = () => {
+    navigator.clipboard.writeText(ADMIN_WHATSAPP_NUMBER);
+    setCopiedNumber(true);
+    setTimeout(() => setCopiedNumber(false), 2500);
   };
 
   return (
     <AnimatePresence>
       <div 
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-md"
         dir="rtl"
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          exit={{ opacity: 0, scale: 0.95, y: 15 }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
           className="relative w-full max-w-lg bg-white dark:bg-[#0B0F19] rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden text-right"
         >
           {/* Top Decorative Sheen */}
-          <div className="absolute top-0 left-8 right-8 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/40 dark:via-emerald-400/50 to-transparent pointer-events-none" />
+          <div className="absolute top-0 left-8 right-8 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/60 dark:via-emerald-400/70 to-transparent pointer-events-none" />
 
           {/* Close Button */}
           <button
@@ -190,197 +133,122 @@ export default function SubscriptionContactModal({
             <X className="w-5 h-5" />
           </button>
 
-          {!orderSuccess ? (
-            <div className="p-5 sm:p-7 space-y-5">
-              {/* Header: Plan Summary Pill */}
-              <div className="flex items-start gap-3.5">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-md ${
-                  isGoldPlan 
-                    ? "bg-amber-500/15 text-amber-500 border border-amber-500/30"
-                    : isMidPlan
-                      ? "bg-indigo-500/15 text-indigo-500 border border-indigo-500/30"
-                      : "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30"
-                }`}>
-                  <PlanIcon className="w-6 h-6" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
-                      طلب اشتراك سريع
-                    </span>
-                    <span className="font-mono font-black text-sm text-slate-900 dark:text-white">
-                      {plan.price_ils} ₪
-                    </span>
-                  </div>
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1 truncate">
-                    {plan.name}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-relaxed">
-                    ضع رقمك مع مقدمة الواتساب وسنتواصل معك فوراً لتفعيل الباقة وتسهيل الدفع.
-                  </p>
-                </div>
+          <div className="p-5 sm:p-7 space-y-5">
+            {/* Header: Plan Summary Pill */}
+            <div className="flex items-start gap-3.5">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-md ${
+                isGoldPlan 
+                  ? "bg-amber-500/15 text-amber-500 border border-amber-500/30"
+                  : isMidPlan
+                    ? "bg-indigo-500/15 text-indigo-500 border border-indigo-500/30"
+                    : "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30"
+              }`}>
+                <PlanIcon className="w-6 h-6" />
               </div>
-
-              {error && (
-                <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2">
-                  <span>⚠️</span>
-                  <span>{error}</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
+                    تفعيل فوري عبر واتساب
+                  </span>
+                  <span className="font-mono font-black text-sm text-slate-900 dark:text-white">
+                    {plan.price_ils} ₪
+                  </span>
                 </div>
-              )}
-
-              {/* Contact Form */}
-              <form onSubmit={handleSubmit} className="space-y-4 pt-1">
-                {/* 1. Full Name */}
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-black text-slate-700 dark:text-slate-300">
-                    الاسم الكامل (أحرف لمخاطبتك وتوثيق الباقة):
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      required
-                      placeholder="مثال: أحمد خليل"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-[#070b14] border border-slate-200 dark:border-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-2xl py-2.5 px-3.5 pr-10 text-xs sm:text-sm font-bold text-slate-900 dark:text-white outline-none transition"
-                    />
-                    <User className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* 2. WhatsApp Number + Country Code */}
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-black text-slate-700 dark:text-slate-300">
-                    رقم الواتساب مع مقدمة الدولة:
-                  </label>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-                    {/* Country Code Select */}
-                    <div className="sm:col-span-2">
-                      <select
-                        value={selectedCountryCode}
-                        onChange={(e) => setSelectedCountryCode(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-[#070b14] border border-slate-200 dark:border-slate-800 focus:border-emerald-500 rounded-2xl py-2.5 px-3 text-xs font-black text-slate-900 dark:text-white outline-none cursor-pointer transition"
-                      >
-                        {COUNTRY_CODES.map((c) => (
-                          <option key={c.code} value={c.code} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                            {c.flag} {c.country} ({c.code === "custom" ? "مخصص" : c.code})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Phone Number Input */}
-                    <div className="sm:col-span-3 relative">
-                      <input
-                        type="tel"
-                        required
-                        placeholder="مثال: 599123456"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ""))}
-                        className="w-full bg-slate-50 dark:bg-[#070b14] border border-slate-200 dark:border-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-2xl py-2.5 px-3.5 pr-10 text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white outline-none transition text-left"
-                        dir="ltr"
-                      />
-                      <Phone className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    </div>
-                  </div>
-
-                  {/* Custom dial code input if selected */}
-                  {selectedCountryCode === "custom" && (
-                    <div className="pt-1 flex items-center gap-2">
-                      <span className="text-[11px] text-slate-500 font-bold">أدخل مقدمة دولتك:</span>
-                      <input
-                        type="text"
-                        placeholder="+000"
-                        value={customCountryCode}
-                        onChange={(e) => setCustomCountryCode(e.target.value)}
-                        className="w-28 bg-slate-50 dark:bg-[#070b14] border border-slate-200 dark:border-slate-800 rounded-xl py-1 px-2.5 text-xs font-mono font-bold text-slate-900 dark:text-white text-left outline-none"
-                        dir="ltr"
-                      />
-                    </div>
-                  )}
-
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                    💬 يرجى التأكد من أن الرقم مربوط بتطبيق واتساب نشط لتلقي رسالة التفعيل فوراً.
-                  </p>
-                </div>
-
-                {/* Submit Button */}
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>جاري إرسال الطلب...</span>
-                      </>
-                    ) : (
-                      <>
-                        <MessageCircle className="w-4 h-4" />
-                        <span>تواصل معي عبر واتساب</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {/* Trust Footer */}
-                <div className="flex items-center justify-center gap-1.5 pt-1 text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>تفعيل فوري ومتابعة شخصية من إدارة منصة لمّاح</span>
-                </div>
-              </form>
-            </div>
-          ) : (
-            /* ── Success State Screen ── */
-            <div className="p-6 sm:p-8 text-center space-y-5">
-              <div className="w-16 h-16 rounded-3xl bg-emerald-500/15 border-2 border-emerald-500/30 text-emerald-500 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
-                <CheckCircle2 className="w-8 h-8" />
-              </div>
-
-              <div>
-                <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
-                  تم استلام طلبك بنجاح 🎉
-                </span>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white mt-2">
-                  سنتواصل معك عبر الواتساب الآن!
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1 truncate">
+                  {plan.name}
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-sm mx-auto leading-relaxed">
-                  تم تسجيل رقمك <strong className="font-mono text-emerald-600 dark:text-emerald-400 font-black" dir="ltr">{orderSuccess.formattedPhone}</strong> للاشتراك في <strong className="text-slate-900 dark:text-white font-bold">{orderSuccess.planName}</strong>.
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 leading-relaxed">
+                  تواصل معنا مباشرة عبر واتساب لتزويدك بطرق الدفع وتفعيل باقتك فوراً.
                 </p>
               </div>
+            </div>
 
-              {/* Order Reference Box */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1">
-                <div className="text-slate-400 font-medium">رقم الطلب الخاص بك:</div>
-                <div className="font-mono font-black text-base text-indigo-600 dark:text-indigo-400">
-                  #{orderSuccess.orderId}
+            {/* Direct WhatsApp Contact Card */}
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-teal-500/10 border border-emerald-500/30 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-sm">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">
+                      رقم واتساب الإدارة المباشر:
+                    </span>
+                    <span className="font-mono font-black text-sm sm:text-base text-emerald-700 dark:text-emerald-300" dir="ltr">
+                      {ADMIN_WHATSAPP_NUMBER}
+                    </span>
+                  </div>
                 </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="space-y-2 pt-2">
-                <button
-                  type="button"
-                  onClick={handleDirectWhatsAppClick}
-                  className="w-full py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 transition cursor-pointer"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>راسلنا على واتساب فوراً لتسريع التفعيل ⚡</span>
-                </button>
 
                 <button
                   type="button"
-                  onClick={onClose}
-                  className="w-full py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer"
+                  onClick={handleCopyNumber}
+                  className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center gap-1.5 cursor-pointer shadow-xs"
                 >
-                  إغلاق والمتابعة
+                  {copiedNumber ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-600">تم النسخ</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-slate-400" />
+                      <span>نسخ الرقم</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
-          )}
+
+            {/* Student Name Input (Optional helper) */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-black text-slate-700 dark:text-slate-300">
+                اسمك الكامل (ليظهر في رسالة الواتساب):
+              </label>
+              <input
+                type="text"
+                placeholder="أدخل اسمك هنا (مثال: سارة محمد)"
+                value={studentName}
+                onChange={(e) => setStudentName(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-[#070b14] border border-slate-200 dark:border-slate-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-2xl py-2.5 px-3.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white outline-none transition"
+              />
+              {user?.email && (
+                <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                  الحساب المسجل: <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">{user.email}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Primary WhatsApp Action Button */}
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={handleOpenWhatsApp}
+                className="w-full py-4 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.99] text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2.5 transition cursor-pointer"
+              >
+                <MessageCircle className="w-5 h-5 fill-current" />
+                <span>تواصل معنا عبر واتساب الآن ({ADMIN_WHATSAPP_NUMBER})</span>
+                <ExternalLink className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Payment Methods Notice */}
+            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 space-y-1">
+              <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-300">
+                <CreditCard className="w-3.5 h-3.5 text-emerald-500" />
+                <span>طرق الدفع والتفعيل المتاحة:</span>
+              </div>
+              <p className="leading-relaxed">
+                بال باي (PalPay) • بنك فلسطين • جوال باي (Jawwal Pay) • ريفلكت (Reflect) • تحويلات بنكية ومحلية.
+              </p>
+            </div>
+
+            {/* Trust Footer */}
+            <div className="flex items-center justify-center gap-1.5 pt-0 text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+              <span>تفعيل فوري ومتابعة شخصية من إدارة منصة لمّاح</span>
+            </div>
+          </div>
         </motion.div>
       </div>
     </AnimatePresence>
