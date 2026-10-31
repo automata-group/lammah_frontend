@@ -41,7 +41,25 @@ export const metadata: Metadata = {
     title: "منصة لمّاح | تخطيط السلايدات وكتابة كل ملاحظات الدكتور",
     description: "ارفع فويس المحاضرة والسلايدات؛ لمّاح يكتب لك كل كلمة وملاحظة حكاها الدكتور، يظلل السلايدات المهمة، ويصيد أسئلة الامتحان المتوقعة بملف PDF جاهز للطباعة فوراً!",
     siteName: "منصة لمّاح | Lammah",
-    images: [{ url: "/lammah-logo.png" }],
+    url: "https://lammah.site",
+    images: [
+      {
+        url: "https://lammah.site/og-image.png",
+        secureUrl: "https://lammah.site/og-image.png",
+        width: 1200,
+        height: 630,
+        type: "image/png",
+        alt: "منصة لمّاح الذكية",
+      },
+      {
+        url: "https://lammah.site/lammah-logo.png",
+        secureUrl: "https://lammah.site/lammah-logo.png",
+        width: 502,
+        height: 497,
+        type: "image/png",
+        alt: "شعار لمّاح",
+      }
+    ],
     locale: "ar_AR",
     type: "website",
   },
@@ -49,7 +67,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "منصة لمّاح | تخطيط السلايدات وكتابة كل ملاحظات الدكتور",
     description: "ارفع فويس المحاضرة والسلايدات؛ لمّاح يكتب لك كل كلمة وملاحظة حكاها الدكتور، يظلل السلايدات المهمة، ويصيد أسئلة الامتحان المتوقعة بملف PDF جاهز للطباعة فوراً!",
-    images: ["/lammah-logo.png"],
+    images: ["https://lammah.site/og-image.png"],
   },
 };
 
@@ -59,6 +77,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="image_src" href="https://lammah.site/og-image.png" />
+        <meta property="og:image" content="https://lammah.site/og-image.png" />
+        <meta property="og:image:secure_url" content="https://lammah.site/og-image.png" />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="منصة لمّاح | تخطيط السلايدات وكتابة كل ملاحظات الدكتور" />
         {/* Structured Data (Schema.org) documenting Automata ownership to Google & search engines */}
         <script
           type="application/ld+json"
