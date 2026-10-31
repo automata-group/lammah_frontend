@@ -133,14 +133,9 @@ export default function DashboardHeroBanner({
               <CheckSquare className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <h4 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
-                  ورقة مهام المذاكرة
-                </h4>
-                <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 shrink-0">
-                  مفكرة 📝
-                </span>
-              </div>
+              <h4 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
+                ورقة مهام المذاكرة
+              </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">
                 {navigatingTo === "/tasks" ? "جاري الفتح..." : "تنظيم وإنجاز مهامك الدراسية"}
               </p>
