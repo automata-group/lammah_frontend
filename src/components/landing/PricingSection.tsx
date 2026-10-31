@@ -160,14 +160,57 @@ export default function PricingSection() {
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-[11px] font-medium">
-                        <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-                          <Mic className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
-                          <span>{isGoldPlan ? "تكفي حتى 100 محاضرة" : isMidPlan ? "تكفي حتى 50 محاضرة" : "تكفي حتى 18 محاضرة"}</span>
+                      {/* Visual Pill 1: Audio / Lectures Breakdown */}
+                      <div className="rounded-xl p-2.5 bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-5 h-5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                              <Mic className="w-3 h-3" />
+                            </div>
+                            <span className="font-black text-slate-900 dark:text-white text-xs">
+                              كم محاضرة تكفيك؟
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">
+                            {isGoldPlan ? "حتى 100 محاضرة" : isMidPlan ? "حتى 50 محاضرة" : "حتى 18 محاضرة"}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-                          <FileText className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
-                          <span>{isGoldPlan ? "أو 300 ملف سلايدات" : isMidPlan ? "أو 150 ملف سلايدات" : "أو 50 ملف سلايدات"}</span>
+
+                        {/* Lectures breakdown grid */}
+                        <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                          <div className="bg-white/90 dark:bg-slate-900/90 p-1.5 rounded-md border border-indigo-100/70 dark:border-indigo-950 flex flex-col justify-center">
+                            <span className="text-slate-500 dark:text-slate-400 text-[9px]">لو المحاضرة ساعتان:</span>
+                            <span className="font-black text-slate-900 dark:text-white text-[11px]">
+                              {isGoldPlan ? "37 إلى 38 محاضرة" : isMidPlan ? "18 إلى 19 محاضرة" : "7 إلى 8 محاضرات"}
+                            </span>
+                          </div>
+                          <div className="bg-white/90 dark:bg-slate-900/90 p-1.5 rounded-md border border-indigo-100/70 dark:border-indigo-950 flex flex-col justify-center">
+                            <span className="text-slate-500 dark:text-slate-400 text-[9px]">لو المحاضرة ساعة:</span>
+                            <span className="font-black text-slate-900 dark:text-white text-[11px]">
+                              {isGoldPlan ? "75 محاضرة كاملة" : isMidPlan ? "36 إلى 37 محاضرة" : "13 إلى 14 محاضرة"}
+                            </span>
+                          </div>
+                          <div className="bg-white/90 dark:bg-slate-900/90 p-1.5 rounded-md border border-indigo-100/70 dark:border-indigo-950 col-span-2 flex items-center justify-between">
+                            <span className="text-slate-500 dark:text-slate-400 text-[9px]">لو المحاضرة 45 دقيقة:</span>
+                            <span className="font-black text-emerald-600 dark:text-emerald-400 text-[11px]">
+                              {isGoldPlan ? "100 محاضرة كاملة" : isMidPlan ? "48 إلى 50 محاضرة" : "17 إلى 18 محاضرة"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Visual Pill 2: Slides / Files */}
+                      <div className="rounded-xl p-2 bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 flex items-start gap-2">
+                        <div className="w-5 h-5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                          <FileText className="w-3 h-3" />
+                        </div>
+                        <div className="text-[11px] leading-tight">
+                          <div className="font-black text-slate-900 dark:text-white">
+                            {isGoldPlan ? "حتى 300 ملف سلايدات PDF بدون صوت" : isMidPlan ? "حتى 150 ملف سلايدات PDF بدون صوت" : "حتى 50 ملف سلايدات PDF بدون صوت"}
+                          </div>
+                          <div className="text-slate-500 dark:text-slate-400 text-[10px] font-medium mt-0.5">
+                            أو دمج وتوزيع حر بين الصوت والسلايدات طوال الشهر
+                          </div>
                         </div>
                       </div>
                     </div>
