@@ -309,102 +309,96 @@ export default function PlansPage() {
                             </span>
                           </div>
 
-                          {/* Lectures breakdown grid */}
+                          {/* Lectures breakdown grid (2 clean balanced columns) */}
                           <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                            <div className="bg-white/90 dark:bg-slate-900/90 p-1.5 rounded-md border border-indigo-100/70 dark:border-indigo-950 flex flex-col justify-center">
+                            <div className="bg-white/90 dark:bg-slate-900/90 p-2 rounded-lg border border-indigo-100/70 dark:border-indigo-950 flex flex-col justify-center">
                               <span className="text-slate-500 dark:text-slate-400 text-[9px]">لو المحاضرة ساعتان:</span>
                               <span className="font-black text-slate-900 dark:text-white text-[11px]">
                                 {isGoldPlan ? "37 إلى 38 محاضرة" : isMidPlan ? "18 إلى 19 محاضرة" : "7 إلى 8 محاضرات"}
                               </span>
                             </div>
-                            <div className="bg-white/90 dark:bg-slate-900/90 p-1.5 rounded-md border border-indigo-100/70 dark:border-indigo-950 flex flex-col justify-center">
-                              <span className="text-slate-500 dark:text-slate-400 text-[9px]">لو المحاضرة ساعة:</span>
+                            <div className="bg-white/90 dark:bg-slate-900/90 p-2 rounded-lg border border-indigo-100/70 dark:border-indigo-950 flex flex-col justify-center">
+                              <span className="text-slate-500 dark:text-slate-400 text-[9px]">لو المحاضرة ساعة واحدة:</span>
                               <span className="font-black text-slate-900 dark:text-white text-[11px]">
                                 {isGoldPlan ? "75 محاضرة كاملة" : isMidPlan ? "36 إلى 37 محاضرة" : "13 إلى 14 محاضرة"}
                               </span>
                             </div>
-                            <div className="bg-white/90 dark:bg-slate-900/90 p-1.5 rounded-md border border-indigo-100/70 dark:border-indigo-950 col-span-2 flex items-center justify-between">
-                              <span className="text-slate-500 dark:text-slate-400 text-[9px]">لو المحاضرة 45 دقيقة:</span>
-                              <span className="font-black text-emerald-600 dark:text-emerald-400 text-[11px]">
-                                {isGoldPlan ? "100 محاضرة كاملة" : isMidPlan ? "48 إلى 50 محاضرة" : "17 إلى 18 محاضرة"}
-                              </span>
-                            </div>
                           </div>
                         </div>
 
-                        {/* Visual Pill 2: Slides / Files */}
-                        <div className="rounded-lg p-2 bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 flex items-start gap-2">
-                          <div className="w-5 h-5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
-                            <FileText className="w-3 h-3" />
-                          </div>
-                          <div className="text-[10px] sm:text-[11px] leading-tight">
-                            <div className="font-black text-slate-900 dark:text-white">
-                              {isGoldPlan ? "حتى 300 ملف سلايدات PDF بدون صوت" : isMidPlan ? "حتى 150 ملف سلايدات PDF بدون صوت" : "حتى 50 ملف سلايدات PDF بدون صوت"}
+                        {/* Visual Pill 2: Slides / Files (Streamlined 1-row) */}
+                        <div className="rounded-lg p-2 bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-5 h-5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                              <FileText className="w-3 h-3" />
                             </div>
-                            <div className="text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                              أو دمج وتوزيع حر بين الصوت والسلايدات طوال الشهر
-                            </div>
+                            <span className="font-black text-slate-900 dark:text-white text-[10px] sm:text-[11px]">
+                              {isGoldPlan ? "حتى 300 ملف سلايدات PDF" : isMidPlan ? "حتى 150 ملف سلايدات PDF" : "حتى 50 ملف سلايدات PDF"}
+                            </span>
                           </div>
+                          <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
+                            أو دمج حر مع الفويس
+                          </span>
                         </div>
                       </div>
 
-                      {/* Point 2: Highlighting & White Explanatory Slides */}
+                      {/* Point 1: Slides Highlighting & Doctor Notes */}
                       <div className="flex items-start gap-1.5 sm:gap-2">
                         <div className="mt-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20">
-                          <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
+                          <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 stroke-[3]" />
                         </div>
                         <span className="leading-snug sm:leading-relaxed">
-                          <strong>تخطيط وتظليل السلايدات</strong> وإدراج شرائح شرح بيضاء ذكية
+                          <strong>تخطيط وتظليل السلايدات</strong> مع تفريغ دقيق لكلام الدكتور
                         </span>
                       </div>
 
-                      {/* Point 2.5: Voice-Only Study Book */}
+                      {/* Point 2: Audio-Only Study Dossier */}
                       <div className="flex items-start gap-1.5 sm:gap-2">
                         <div className="mt-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20">
-                          <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
+                          <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 stroke-[3]" />
                         </div>
                         <span className="leading-snug sm:leading-relaxed">
-                          <strong>رفع فويس فقط (بدون سلايدات)؟</strong> يولد كتاباً دراسياً كاملاً (PDF) بالشرح، كبسولات الفهم، وبنك أسئلة MCQs
+                          <strong>رفع فويس فقط:</strong> كتاب دراسي كامل (PDF) بالشرح، كبسولات الفهم، وأسئلة MCQs
                         </span>
                       </div>
 
-                      {/* Point 3: Arabic/English + Doctor Focus vs Lammah explanation */}
+                      {/* Point 3: Doctor Focus & Expected Exam Questions */}
                       <div className="flex items-start gap-1.5 sm:gap-2">
                         <div className="mt-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20">
-                          <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
+                          <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 stroke-[3]" />
                         </div>
                         <span className="leading-snug sm:leading-relaxed">
-                          شرح عربي مخلط إنجليزي + تحديد دقيق لكلام الدكتور وشرح لمّاح
+                          <strong>صيد أسئلة الامتحان المتوقعة</strong> وتحديد كل ما ركّز عليه الدكتور
                         </span>
                       </div>
 
-                      {/* Point 4: Examples, Expected Questions & Vocabulary */}
+                      {/* Point 4: Mixed Arabic & English explanation */}
                       <div className="flex items-start gap-1.5 sm:gap-2">
                         <div className="mt-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20">
-                          <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
+                          <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 stroke-[3]" />
                         </div>
                         <span className="leading-snug sm:leading-relaxed">
-                          أمثلة إضافية + أسئلة الامتحان المتوقعة + مصطلحات الحفظ
+                          <strong>شرح عربي مخلط إنجليزي</strong> لتبسيط المصطلحات والمفاهيم المعقدة
                         </span>
                       </div>
 
-                      {/* Point 5: Download PDF */}
+                      {/* Point 5: High-Quality Printable PDF */}
                       <div className="flex items-start gap-1.5 sm:gap-2">
                         <div className="mt-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20">
-                          <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
+                          <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 stroke-[3]" />
                         </div>
                         <span className="leading-snug sm:leading-relaxed">
-                          تنزيل الملف PDF عالي الجودة للطباعة الورقية أو للمذاكرة من الجوال
+                          <strong>تنزيل ملفات PDF</strong> جاهزة للطباعة الورقية الفورية والمذاكرة
                         </span>
                       </div>
 
                       {/* Point 6: Interactive Bundle */}
                       <div className="flex items-start gap-1.5 sm:gap-2">
                         <div className="mt-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20">
-                          <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
+                          <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 stroke-[3]" />
                         </div>
                         <span className="leading-snug sm:leading-relaxed">
-                          تفريغ صوتي + فلاش كاردز مقلوبة + كويزات + شات ذكي ({isGoldPlan ? "100 سؤال" : isMidPlan ? "35 سؤال" : "15 سؤال"})
+                          <strong>الحزمة التفاعلية:</strong> فلاش كاردز + كويزات + شات ذكي ({isGoldPlan ? "100 سؤال" : isMidPlan ? "35 سؤال" : "15 سؤال"})
                         </span>
                       </div>
 
@@ -430,25 +424,10 @@ export default function PlansPage() {
                           </div>
                         </>
                       ) : (
-                        <>
-                          <div className="flex items-start gap-1.5 sm:gap-2 text-slate-400 dark:text-slate-500 p-1.5 rounded-lg bg-slate-100/60 dark:bg-white/5 border border-dashed border-slate-200 dark:border-white/10">
-                            <div className="mt-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center shrink-0">
-                              <Lock className="w-2.5 h-2.5 text-slate-500" />
-                            </div>
-                            <span className="leading-snug sm:leading-relaxed">
-                              توليد الدفاتر الذكية الشاملة <strong className="text-slate-500 dark:text-slate-400 font-bold">(خاصة بباقة النخبة 100 ₪)</strong>
-                            </span>
-                          </div>
-
-                          <div className="flex items-start gap-1.5 sm:gap-2 text-slate-400 dark:text-slate-500 p-1.5 rounded-lg bg-slate-100/60 dark:bg-white/5 border border-dashed border-slate-200 dark:border-white/10">
-                            <div className="mt-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center shrink-0">
-                              <Lock className="w-2.5 h-2.5 text-slate-500" />
-                            </div>
-                            <span className="leading-snug sm:leading-relaxed">
-                              رخصة بائع وبيع الدفاتر بالمتجر <strong className="text-slate-500 dark:text-slate-400 font-bold">(خاصة بباقة النخبة 100 ₪)</strong>
-                            </span>
-                          </div>
-                        </>
+                        <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 dark:text-slate-500 p-2 rounded-xl bg-slate-100/60 dark:bg-white/5 border border-dashed border-slate-200 dark:border-white/10 text-[11px]">
+                          <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                          <span>دفتر الإنقاذ ورخصة بيع الملخصات بالمتجر <strong className="text-slate-500 dark:text-slate-400 font-bold">(خاصة بباقة النخبة 100 ₪)</strong></span>
+                        </div>
                       )}
                     </div>
                   </div>
