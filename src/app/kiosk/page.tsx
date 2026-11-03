@@ -177,7 +177,7 @@ export default function KioskPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 font-sans flex flex-col transition-colors" dir="rtl">
       {/* Platform Header (Landing Header for guests, AppHeader for authenticated users) */}
-      {user ? <AppHeader activePage="kiosk" /> : <Header />}
+      <AppHeader activePage="kiosk" />
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 pt-6 sm:pt-10 pb-8 sm:pb-12">

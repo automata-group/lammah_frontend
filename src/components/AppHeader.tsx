@@ -311,7 +311,7 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
           <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
             
             {/* Quota Badge (Always Visible for logged-in users on all screen sizes) */}
-            {user && (
+            {isMounted && user && (
               <Link 
                 href="/plans"
                 prefetch={true}
@@ -334,7 +334,7 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
 
             {/* Theme Toggle Button */}
             <button 
-              onClick={toggleTheme} 
+              onClick={toggleTheme} suppressHydrationWarning 
               className="text-slate-600 dark:text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-white/10 p-1.5 sm:p-2 rounded-full transition-all cursor-pointer shrink-0 active:scale-95 duration-100" 
               title={theme === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي'}
             >
@@ -342,7 +342,7 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
             </button>
 
             {/* User Profile Dropdown Menu or Sign In */}
-            {user ? (
+            {isMounted && user ? (
               <div className="relative shrink-0" ref={userMenuRef}>
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -510,7 +510,7 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
                   </div>
                 )}
               </div>
-            ) : (
+            ) : isMounted ? (
               <Link
                 href="/login"
                 prefetch={true}
@@ -518,6 +518,8 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
               >
                 تسجيل الدخول
               </Link>
+            ) : (
+              <div className="w-16 h-8" />
             )}
 
 

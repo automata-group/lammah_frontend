@@ -762,7 +762,7 @@ export default function MarketplacePage() {
       dir="rtl"
     >
       {/* Main Inner Tab App Header (Landing Header for guests, AppHeader for authenticated users) */}
-      {user ? <AppHeader quota={quota} activePage="marketplace" /> : <Header />}
+      <AppHeader quota={quota} activePage="marketplace" />
 
       <div className="flex-1 px-4 sm:px-6 pt-6 sm:pt-10 pb-16 max-w-7xl mx-auto w-full relative z-10 space-y-5 sm:space-y-6">
 
