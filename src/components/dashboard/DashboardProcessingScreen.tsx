@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Sparkles, Check, FileText, FileAudio } from "lucide-react";
+import { Clock, Sparkles, Check, FileText, FileAudio, Smartphone } from "lucide-react";
 import { PipelineStep } from "@/types/dashboard";
 import { DHIKR_PHRASES, DHIKR_VIRTUES } from "@/lib/dashboardUtils";
 
@@ -190,6 +190,14 @@ export default function DashboardProcessingScreen({
               </div>
             );
           })}
+        </div>
+
+        {/* Mobile / iPad Stability Notice */}
+        <div className="mb-3.5 px-3.5 py-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-200 text-xs font-bold flex items-center gap-2.5 relative z-10 shadow-2xs">
+          <Smartphone className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+          <span className="leading-relaxed">
+            ملاحظة هامة (خصوصاً لمستخدمي الآيباد والهاتف): يرجى إبقاء هذه الصفحة مفتوحة وعدم قفل الشاشة أو الانتقال لصفحة أخرى حتى اكتمال التجهيز لضمان استمرار المعالجة.
+          </span>
         </div>
 
         {/* Row 5: Creative Interactive Zen Dhikr Bar */}
