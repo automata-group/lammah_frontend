@@ -7,6 +7,8 @@ export interface UploadedAudio {
   isUploading: boolean;
   progress: number;
   duration: number;
+  error?: string | null;
+  status?: 'pending' | 'uploading' | 'ready' | 'error';
 }
 
 export interface QuotaCostBreakdown {
