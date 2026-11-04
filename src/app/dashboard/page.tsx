@@ -150,7 +150,9 @@ function DashboardContent() {
       );
       if (response.ok) {
         const data = await response.json();
-        setChatCount(data.total_chat_count || 0);
+        if (!hasPaidPlan && !currentHistoryId) {
+          setChatCount(data.total_chat_count || 0);
+        }
       }
     } catch (e) {
       console.warn("Failed to fetch chat usage:", e);
@@ -223,6 +225,8 @@ function DashboardContent() {
       planName.includes("Premium")
     ? 35
     : planName.includes("الإنقاذ") ||
+      planName.includes("إنقاذ") ||
+      planName.toLowerCase().includes("essential") ||
       planName.includes("الأساسية") ||
       planName.includes("أساسي") ||
       planName.includes("طالب")
@@ -843,7 +847,8 @@ function DashboardContent() {
               return;
             }
 
-            setChatCount(data.total_chat_count !== undefined ? data.total_chat_count : data.chat_count || 0);
+            const lectureChatCount = data.chat_count || 0;
+            setChatCount(hasPaidPlan ? lectureChatCount : (data.total_chat_count !== undefined ? data.total_chat_count : lectureChatCount));
             setLectureTitle(data.metadata.title || "محاضرة بدون عنوان");
             const hasPdf = data.metadata.has_pdf !== undefined
               ? data.metadata.has_pdf
