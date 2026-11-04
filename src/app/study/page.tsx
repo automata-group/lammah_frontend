@@ -78,13 +78,7 @@ function StudyPageContent() {
     }
   }, [user, authLoading, router]);
 
-  const [quota, setQuota] = useState<number | null>(() => {
-    if (typeof window !== "undefined") {
-      const cachedQuota = localStorage.getItem("cached_user_quota");
-      if (cachedQuota !== null && !isNaN(Number(cachedQuota))) return Number(cachedQuota);
-    }
-    return null;
-  });
+  // Quota is managed automatically and hydration-safely inside AppHeader
 
   // Document states
   const [pdfSource, setPdfSource] = useState<string | File | Blob | null>(null);
@@ -658,7 +652,7 @@ function StudyPageContent() {
 
       {/* ── Top Navigation: Unified AppHeader in Bento Hub / Focused Bar in Reading Mode ── */}
       {!pdfSource || showInstructions ? (
-        <AppHeader quota={quota} activePage="study" />
+        <AppHeader activePage="study" />
       ) : (
         <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-3 sm:px-6 py-2">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
