@@ -142,10 +142,7 @@ export default function AudioUploadCard({
         } catch {}
       }
 
-      if (!token) {
-        throw new Error("🔒 يرجى تسجيل الدخول بحسابك أولاً لتتمكن من رفع المحاضرات");
-      }
-      return token;
+      return token || "";
     },
     [session]
   );
@@ -184,7 +181,9 @@ export default function AudioUploadCard({
             activeXhrMap.current.set(id, xhr);
 
             xhr.open("POST", url, true);
-            xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+            if (token) {
+              xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+            }
 
             xhr.upload.onprogress = (e) => {
               if (e.lengthComputable) {

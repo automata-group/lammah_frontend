@@ -96,7 +96,9 @@ export default function SlidesUploadCard({
           activeXhrRef.current = xhr;
 
           xhr.open("POST", url, true);
-          xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+          if (token) {
+            xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+          }
 
           xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) {
