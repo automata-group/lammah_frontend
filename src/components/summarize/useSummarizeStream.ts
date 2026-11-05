@@ -16,6 +16,7 @@ interface StartProcessingParams {
   pdfTempId: string | null;
   startPage: string;
   endPage: string;
+  studyLanguage?: "ar" | "en" | "bilingual";
   hasPaidPlan: boolean;
   quota: number | null;
   session: any;
@@ -101,6 +102,7 @@ export function useSummarizeStream() {
       pdfTempId,
       startPage,
       endPage,
+      studyLanguage,
       hasPaidPlan,
       quota,
       session,
@@ -175,6 +177,7 @@ export function useSummarizeStream() {
       if (pdfTempId) formData.append("pdf_temp_id", pdfTempId);
       if (startPage) formData.append("start_page", startPage);
       if (endPage) formData.append("end_page", endPage);
+      formData.append("study_language", studyLanguage || "ar");
 
       const isBatchMode = multiAudioFiles.length > 1;
       if (multiAudioFiles.length > 0) {

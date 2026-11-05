@@ -14,6 +14,7 @@ import { useSummarizeQuota } from "@/components/summarize/useSummarizeQuota";
 import { useSummarizeStream } from "@/components/summarize/useSummarizeStream";
 import AudioUploadCard from "@/components/summarize/AudioUploadCard";
 import SlidesUploadCard from "@/components/summarize/SlidesUploadCard";
+import StudyLanguageSelector, { StudyLanguage } from "@/components/summarize/StudyLanguageSelector";
 import QuotaBreakdownCard from "@/components/summarize/QuotaBreakdownCard";
 import SummarizePaywall from "@/components/summarize/SummarizePaywall";
 
@@ -35,6 +36,7 @@ function SummarizeContent() {
   const [startPage, setStartPage] = useState<string>("");
   const [endPage, setEndPage] = useState<string>("");
   const [pdfDetectedPages, setPdfDetectedPages] = useState<number | null>(null);
+  const [studyLanguage, setStudyLanguage] = useState<StudyLanguage>("ar");
 
   const {
     quota,
@@ -158,6 +160,7 @@ function SummarizeContent() {
       pdfTempId,
       startPage,
       endPage,
+      studyLanguage,
       hasPaidPlan,
       quota,
       session,
@@ -317,6 +320,13 @@ function SummarizeContent() {
                     session={session}
                   />
                 </div>
+
+                {/* Study Language Selector (Arabic / English / Bilingual) */}
+                <StudyLanguageSelector
+                  value={studyLanguage}
+                  onChange={setStudyLanguage}
+                  disabled={isAnyAudioUploading || isPdfUploading}
+                />
 
                 {/* Quota Deduction Summary & Action Button */}
                 <QuotaBreakdownCard

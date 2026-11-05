@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { MessageCircle, BrainCircuit, Loader2, Send, Lock, Crown, ArrowDown } from "lucide-react";
+import { MessageCircle, BrainCircuit, Loader2, Send, Lock, Crown, ArrowDown, Languages, Sparkles } from "lucide-react";
 import { ChatMessage } from "@/types/dashboard";
 import ChatMessageItem from "@/components/dashboard/ChatMessageItem";
 
@@ -222,6 +222,32 @@ export default function SmartChatTabContent({
               </div>
             </div>
           )}
+
+          {/* Quick Suggestion Pills */}
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-3 overflow-x-auto scrollbar-none py-0.5" dir="rtl">
+            <button
+              type="button"
+              onClick={() => {
+                const prompt = "Please explain this lecture and its key concepts completely in clear, academic English (من فضلك اشرح لي هذه المحاضرة ومفاهيمها الأساسية بالإنجليزية بالكامل).";
+                setChatInput(prompt);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 transition shadow-2xs whitespace-nowrap cursor-pointer active:scale-95 shrink-0"
+              title="التبديل للشرح باللغة الإنجليزية الأكاديمية"
+            >
+              <Languages className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span>🔄 Switch explanation to English / اقلب الشرح للإنجليزية</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setChatInput("ما هي أهم فخاخ وأسئلة الامتحان المتوقعة في هذه المحاضرة؟");
+              }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 transition shadow-2xs whitespace-nowrap cursor-pointer active:scale-95 shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>🎯 فخاخ الامتحان المتوقعة</span>
+            </button>
+          </div>
 
           <form onSubmit={handleChatSubmit} className="flex gap-2 sm:gap-3 relative">
             <input
