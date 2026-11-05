@@ -1,5 +1,7 @@
 "use client";
 
+import { getApiBaseUrl } from "@/lib/apiConfig";
+
 import { useEffect, useState, useMemo } from "react";
 import { 
   Loader2, 
@@ -203,7 +205,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
   const fetchFinancials = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/admin/analytics/financial`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/analytics/financial`, {
         headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
       const json = await res.json();
@@ -235,7 +237,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
 
     setIsUpdatingTx(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/admin/transactions/${editingTx.id}`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/transactions/${editingTx.id}`, {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${session?.access_token}`,
@@ -266,7 +268,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
   const handleDeleteTransaction = async (txId: string) => {
     if (!confirm("هل أنت متأكد من حذف هذه المعاملة نهائياً من سجل الأرباح؟")) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/admin/transactions/${txId}`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/transactions/${txId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
@@ -296,7 +298,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
 
     setIsAddingExpense(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/admin/expenses`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/expenses`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${session?.access_token}`,
@@ -332,7 +334,7 @@ export default function FinancialAnalytics({ session }: { session: any }) {
     if (!confirm("هل أنت متأكد من حذف هذا المصروف؟ سيتم إرجاع قيمته لصافي الأرباح.")) return;
     setDeletingExpenseId(expenseId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/admin/expenses/${expenseId}`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/admin/expenses/${expenseId}`, {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${session?.access_token}` }
       });

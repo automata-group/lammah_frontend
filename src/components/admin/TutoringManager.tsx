@@ -1,5 +1,7 @@
 "use client";
 
+import { getApiBaseUrl } from "@/lib/apiConfig";
+
 import { useState, useEffect } from "react";
 import { 
   GraduationCap, 
@@ -51,7 +53,7 @@ export default function TutoringManager({ session }: Props) {
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
-  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const API = getApiBaseUrl();
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
     setToast({ message, type });

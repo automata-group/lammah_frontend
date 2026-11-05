@@ -1,5 +1,7 @@
 "use client";
 
+import { getApiBaseUrl } from "@/lib/apiConfig";
+
 import { useEffect, useState } from "react";
 import { 
   Loader2, 
@@ -126,7 +128,7 @@ export default function AnnouncementsManager({ session }: Props) {
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const [previewDismissed, setPreviewDismissed] = useState(false);
 
-  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const API = getApiBaseUrl();
 
   useEffect(() => {
     fetchAnnouncement();

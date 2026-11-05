@@ -1,5 +1,7 @@
 "use client";
 
+import { getApiBaseUrl } from "@/lib/apiConfig";
+
 import React, { useState, useEffect } from "react";
 import { 
   Users, 
@@ -51,7 +53,7 @@ export default function UserBehaviorAnalytics({ sessionToken }: UserBehaviorAnal
   const [journeyData, setJourneyData] = useState<any>(null);
   const [journeyError, setJourneyError] = useState("");
 
-  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const API = getApiBaseUrl();
 
   const fetchOverview = async (showSpinner = false) => {
     if (showSpinner) setIsRefreshing(true);

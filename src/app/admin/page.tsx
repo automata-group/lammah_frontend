@@ -60,11 +60,6 @@ function getArabicRelativeTime(dateStr: string): { label: string; isOld: boolean
 
 import { getApiBaseUrl } from "@/lib/apiConfig";
 
-function getApiBase() {
-  return getApiBaseUrl();
-}
-
-const API = getApiBaseUrl();
 
 export default function AdminPage() {
   const { user, session, loading, signOut } = useAuth();
@@ -95,7 +90,7 @@ export default function AdminPage() {
     try {
       setFetching(true);
       setError("");
-      const res = await fetch(`${API}/api/v1/transactions/admin/pending`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/transactions/admin/pending`, {
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
       if (!res.ok) {
@@ -116,7 +111,7 @@ export default function AdminPage() {
       setTransactions(Array.isArray(data) ? data : []);
 
       try {
-        const usageRes = await fetch(`${API}/api/v1/admin/stats`, {
+        const usageRes = await fetch(`${getApiBaseUrl()}/api/v1/admin/stats`, {
            headers: { "Authorization": `Bearer ${session?.access_token}` }
         });
         if (usageRes.ok) {
@@ -137,7 +132,7 @@ export default function AdminPage() {
   const handleApprove = async (txId: string) => {
     setProcessing(txId);
     try {
-      const res = await fetch(`${API}/api/v1/transactions/admin/approve/${txId}`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/transactions/admin/${txId}/approve`, {
          method: "POST",
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
@@ -156,7 +151,7 @@ export default function AdminPage() {
     if (!confirm("هل أنت متأكد من رفض هذا الطلب؟")) return;
     setProcessing(txId);
     try {
-      const res = await fetch(`${API}/api/v1/transactions/admin/reject/${txId}`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/transactions/admin/${txId}/reject`, {
          method: "POST",
          headers: { "Authorization": `Bearer ${session?.access_token}` }
       });
@@ -192,7 +187,7 @@ export default function AdminPage() {
     if (!confirm(`هل أنت متأكد من تأكيد ${selectedTxIds.size} طلب وتفعيل الاشتراكات؟`)) return;
     setBulkProcessing(true);
     try {
-      const res = await fetch(`${API}/api/v1/transactions/admin/bulk-approve`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/transactions/admin/bulk-approve`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${session?.access_token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ transaction_ids: Array.from(selectedTxIds) })
@@ -215,7 +210,7 @@ export default function AdminPage() {
     if (!confirm(`هل أنت متأكد من رفض ${selectedTxIds.size} طلب؟`)) return;
     setBulkProcessing(true);
     try {
-      const res = await fetch(`${API}/api/v1/transactions/admin/bulk-reject`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/transactions/admin/bulk-reject`, {
         method: "POST",
         headers: { "Authorization": `Bearer ${session?.access_token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ transaction_ids: Array.from(selectedTxIds) })
@@ -690,7 +685,7 @@ export default function AdminPage() {
         onClose={() => setShowAssignModal(false)}
         sessionToken={session?.access_token}
         onSuccess={fetchOverview}
-        apiUrl={API}
+        apiUrl={getApiBaseUrl()}
       />
 
     </main>

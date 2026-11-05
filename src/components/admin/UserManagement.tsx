@@ -1,5 +1,7 @@
 "use client";
 
+import { getApiBaseUrl } from "@/lib/apiConfig";
+
 import { useEffect, useState } from "react";
 import { 
   Loader2, 
@@ -40,7 +42,7 @@ export default function UserManagement({ session }: { session: any }) {
   const [adminSearchLoading, setAdminSearchLoading] = useState(false);
   const [adminSearchMessage, setAdminSearchMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const API = getApiBaseUrl();
 
   const handleExportExcel = async () => {
     try {
