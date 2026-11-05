@@ -1,3 +1,4 @@
+import { createClient } from "@/lib/supabase";
 "use client";
 
 import React, { useCallback, useRef } from "react";
@@ -61,7 +62,6 @@ export default function SlidesUploadCard({
     let token = session?.access_token;
     if (!token && typeof window !== "undefined") {
       try {
-        const { createClient } = await import("@/lib/supabase");
         const supabase = createClient();
         const { data } = await supabase.auth.getSession();
         token = data?.session?.access_token;

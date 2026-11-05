@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { UploadedAudio } from "./types";
 import { getUploaderBaseUrl, getApiBaseUrl } from "@/lib/apiConfig";
+import { createClient } from "@/lib/supabase";
 
 interface AudioUploadCardProps {
   audioFile: File | null;
@@ -66,6 +67,17 @@ export default function AudioUploadCard({
 
   const multiAudioFilesRef = useRef<UploadedAudio[]>(multiAudioFiles);
   multiAudioFilesRef.current = multiAudioFiles;
+
+  const updateMultiAudioFiles = useCallback(
+    (updater: (prev: UploadedAudio[]) => UploadedAudio[]) => {
+      setMultiAudioFiles((prev) => {
+        const next = updater(prev);
+        multiAudioFilesRef.current = next;
+        return next;
+      });
+    },
+    [setMultiAudioFiles]
+  );
 
   // Resilient duration detector with timeout guard & OGG Opus safety (< 1.2s fallback)
   const getAudioDuration = useCallback((file: File): Promise<number> => {
@@ -123,7 +135,6 @@ export default function AudioUploadCard({
       let token = session?.access_token;
       if (typeof window !== "undefined") {
         try {
-          const { createClient } = await import("@/lib/supabase");
           const supabase = createClient();
           if (forceRefresh) {
             const { data: refreshed } = await supabase.auth.refreshSession();
@@ -220,7 +231,6 @@ export default function AudioUploadCard({
                 if (xhr.status === 401 || xhr.status === 403) {
                   // Silent auto-refresh attempt
                   try {
-                    const { createClient } = await import("@/lib/supabase");
                     await createClient().auth.refreshSession();
                   } catch {}
                   reject(new Error(msg || "🔒 يرجى تسجيل الدخول بحسابك للمتابعة"));
@@ -294,7 +304,7 @@ export default function AudioUploadCard({
         if (!target) break;
 
         // Mark current target as uploading
-        setMultiAudioFiles((prev) =>
+        updateMultiAudioFiles((prev) =>
           prev.map((it) =>
             it.id === target.id ? { ...it, isUploading: true, status: "uploading" } : it
           )
@@ -306,7 +316,7 @@ export default function AudioUploadCard({
         for (let attempt = 1; attempt <= 2; attempt++) {
           try {
             successTempId = await uploadWithEngineFallback(target.id, target.file, (pct) => {
-              setMultiAudioFiles((prev) =>
+              updateMultiAudioFiles((prev) =>
                 prev.map((item) =>
                   item.id === target.id ? { ...item, progress: pct, status: "uploading" } : item
                 )
@@ -321,7 +331,7 @@ export default function AudioUploadCard({
         }
 
         if (successTempId) {
-          setMultiAudioFiles((prev) =>
+          updateMultiAudioFiles((prev) =>
             prev.map((it) =>
               it.id === target.id
                 ? {
@@ -337,7 +347,7 @@ export default function AudioUploadCard({
           );
         } else if (lastErr?.message !== "تم إلغاء الرفع") {
           const errMsg = lastErr?.message || "فشل الرفع";
-          setMultiAudioFiles((prev) =>
+          updateMultiAudioFiles((prev) =>
             prev.map((it) =>
               it.id === target.id
                 ? { ...it, isUploading: false, status: "error", error: errMsg }
@@ -521,7 +531,7 @@ export default function AudioUploadCard({
   const handleRetryItem = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setError(null);
-    setMultiAudioFiles((prev) =>
+    updateMultiAudioFiles((prev) =>
       prev.map((it) => (it.id === id ? { ...it, error: null, status: "pending", progress: 0 } : it))
     );
     // Kickstart queue loop immediately
