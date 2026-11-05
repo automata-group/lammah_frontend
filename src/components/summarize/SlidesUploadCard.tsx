@@ -4,7 +4,7 @@ import React, { useCallback, useRef } from "react";
 import { FileText, CheckCircle, X } from "lucide-react";
 import PdfRangeSelector from "./PdfRangeSelector";
 import { QuotaCostBreakdown } from "./types";
-import { getUploaderBaseUrl } from "@/lib/apiConfig";
+import { getUploaderBaseUrl, getApiBaseUrl } from "@/lib/apiConfig";
 
 interface SlidesUploadCardProps {
   pdfFile: File | null;
@@ -53,55 +53,109 @@ export default function SlidesUploadCard({
 }: SlidesUploadCardProps) {
   const activeXhrRef = useRef<XMLHttpRequest | null>(null);
 
-  const uploadPdf = useCallback((file: File) => {
+  const uploadPdf = useCallback(async (file: File) => {
     setIsPdfUploading(true);
     setPdfUploadProgress(0);
 
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const xhr = new XMLHttpRequest();
-    activeXhrRef.current = xhr;
-
-    const uploaderUrl = getUploaderBaseUrl();
-    xhr.open("POST", `${uploaderUrl}/api/v1/summarize/upload-temp`, true);
-
-    if (session?.access_token) {
-      xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
+    // Resolve token safely
+    let token = session?.access_token;
+    if (!token && typeof window !== "undefined") {
+      try {
+        const { createClient } = await import("@/lib/supabase");
+        const supabase = createClient();
+        const { data } = await supabase.auth.getSession();
+        token = data?.session?.access_token;
+      } catch {}
     }
 
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        const pct = Math.round((e.loaded / e.total) * 100);
-        setPdfUploadProgress(pct);
-      }
-    };
-
-    xhr.onload = () => {
+    if (!token) {
+      setError("🔒 يرجى تسجيل الدخول بحسابك أولاً لتتمكن من رفع السلايدات.");
       setIsPdfUploading(false);
-      activeXhrRef.current = null;
-      if (xhr.status === 200) {
-        try {
-          const res = JSON.parse(xhr.responseText);
-          setPdfTempId(res.temp_id);
-          setPdfUploadProgress(100);
-        } catch {
-          setError("فشل استلام معرّف ملف السلايدات من السيرفر.");
-        }
-      } else {
-        setError(`فشل رفع ملف السلايدات (${xhr.status}). يرجى التأكد من الحجم والمحاولة مجدداً.`);
-        setPdfFile(null);
-      }
-    };
-
-    xhr.onerror = () => {
-      setIsPdfUploading(false);
-      activeXhrRef.current = null;
-      setError("حدث خطأ أثناء رفع ملف السلايدات. يرجى التحقق من الاتصال.");
       setPdfFile(null);
-    };
+      return;
+    }
 
-    xhr.send(formData);
+    const uploaderUrl = getUploaderBaseUrl();
+    const apiUrl = getApiBaseUrl();
+    const endpoints = [
+      `${uploaderUrl}/api/v1/summarize/upload-temp`,
+      `${apiUrl}/api/v1/summarize/upload-temp-py`,
+    ];
+    const uniqueEndpoints = Array.from(new Set(endpoints));
+
+    let lastError = "فشل رفع السلايدات";
+
+    for (let attempt = 0; attempt < uniqueEndpoints.length; attempt++) {
+      const url = uniqueEndpoints[attempt];
+      try {
+        const tempId = await new Promise<string>((resolve, reject) => {
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const xhr = new XMLHttpRequest();
+          activeXhrRef.current = xhr;
+
+          xhr.open("POST", url, true);
+          xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const pct = Math.round((e.loaded / e.total) * 100);
+              setPdfUploadProgress(pct);
+            }
+          };
+
+          xhr.onload = () => {
+            activeXhrRef.current = null;
+            if (xhr.status === 200) {
+              try {
+                const res = JSON.parse(xhr.responseText);
+                if (res.temp_id) {
+                  resolve(res.temp_id);
+                } else {
+                  reject(new Error("استجابة غير صالحة"));
+                }
+              } catch {
+                reject(new Error("فشل فك استجابة السيرفر"));
+              }
+            } else {
+              let msg = "";
+              try {
+                const parsed = JSON.parse(xhr.responseText);
+                msg = parsed.detail?.user_message || (typeof parsed.detail === "string" ? parsed.detail : "") || parsed.message || "";
+              } catch {
+                msg = xhr.responseText || "";
+              }
+              if (xhr.status === 401 || xhr.status === 403) {
+                reject(new Error(msg || "🔒 يرجى تسجيل الدخول بحسابك للمتابعة"));
+              } else {
+                reject(new Error(msg || `فشل الرفع (${xhr.status})`));
+              }
+            }
+          };
+
+          xhr.onerror = () => {
+            activeXhrRef.current = null;
+            reject(new Error("انقطاع في اتصال الشبكة"));
+          };
+
+          xhr.send(formData);
+        });
+
+        setPdfTempId(tempId);
+        setPdfUploadProgress(100);
+        setIsPdfUploading(false);
+        return;
+      } catch (err: any) {
+        lastError = err.message || lastError;
+        await new Promise((r) => setTimeout(r, 600));
+      }
+    }
+
+    setIsPdfUploading(false);
+    activeXhrRef.current = null;
+    setError(`تعذر رفع ملف السلايدات «${file.name}»: ${lastError}`);
+    setPdfFile(null);
   }, [session, setIsPdfUploading, setPdfUploadProgress, setPdfTempId, setError, setPdfFile]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

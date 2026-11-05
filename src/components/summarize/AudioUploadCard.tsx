@@ -110,6 +110,21 @@ export default function AudioUploadCard({
 
       let lastError: Error = new Error("فشل رفع الملف");
 
+      // 1. Resolve token safely: session prop or direct Supabase session
+      let token = session?.access_token;
+      if (!token && typeof window !== "undefined") {
+        try {
+          const { createClient } = await import("@/lib/supabase");
+          const supabase = createClient();
+          const { data } = await supabase.auth.getSession();
+          token = data?.session?.access_token;
+        } catch {}
+      }
+
+      if (!token) {
+        throw new Error("🔒 يرجى تسجيل الدخول بحسابك أولاً لتتمكن من رفع المحاضرات");
+      }
+
       for (let attempt = 0; attempt < uniqueEndpoints.length; attempt++) {
         const url = uniqueEndpoints[attempt];
         try {
@@ -121,9 +136,7 @@ export default function AudioUploadCard({
             activeXhrMap.current.set(id, xhr);
 
             xhr.open("POST", url, true);
-            if (session?.access_token) {
-              xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
-            }
+            xhr.setRequestHeader("Authorization", `Bearer ${token}`);
 
             xhr.upload.onprogress = (e) => {
               if (e.lengthComputable) {
@@ -149,11 +162,15 @@ export default function AudioUploadCard({
                 let msg = "";
                 try {
                   const parsed = JSON.parse(xhr.responseText);
-                  msg = parsed.detail || parsed.message || "";
+                  msg = parsed.detail?.user_message || (typeof parsed.detail === "string" ? parsed.detail : "") || parsed.message || "";
                 } catch {
                   msg = xhr.responseText || "";
                 }
-                reject(new Error(msg || `رمز الخطأ ${xhr.status}`));
+                if (xhr.status === 401 || xhr.status === 403) {
+                  reject(new Error(msg || "🔒 يرجى تسجيل الدخول بحسابك للمتابعة"));
+                } else {
+                  reject(new Error(msg || `فشل الرفع (${xhr.status})`));
+                }
               }
             };
 
