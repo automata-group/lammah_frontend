@@ -17,7 +17,7 @@ import {
   Layers
 } from "lucide-react";
 import { UploadedAudio } from "./types";
-import { getUploaderBaseUrl } from "@/lib/apiConfig";
+import { getUploaderBaseUrl, getApiBaseUrl } from "@/lib/apiConfig";
 
 interface AudioUploadCardProps {
   audioFile: File | null;
@@ -90,109 +90,128 @@ export default function AudioUploadCard({
     });
   }, []);
 
-  // Upload single audio file via XHR
-  const uploadSingleAudio = useCallback((file: File) => {
+  // Indestructible upload helper: tries Go Uploader first, then Python backend fallback
+  const uploadWithEngineFallback = useCallback(
+    async (
+      id: string,
+      file: File,
+      onProgress: (pct: number) => void
+    ): Promise<string> => {
+      const uploaderUrl = getUploaderBaseUrl();
+      const apiUrl = getApiBaseUrl();
+
+      // Dual-engine targets: 1. Go uploader (/upload-temp), 2. Python backend (/upload-temp-py)
+      const endpoints = [
+        `${uploaderUrl}/api/v1/summarize/upload-temp`,
+        `${apiUrl}/api/v1/summarize/upload-temp-py`,
+      ];
+      // Deduplicate if both point to same origin
+      const uniqueEndpoints = Array.from(new Set(endpoints));
+
+      let lastError: Error = new Error("فشل رفع الملف");
+
+      for (let attempt = 0; attempt < uniqueEndpoints.length; attempt++) {
+        const url = uniqueEndpoints[attempt];
+        try {
+          const tempId = await new Promise<string>((resolve, reject) => {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const xhr = new XMLHttpRequest();
+            activeXhrMap.current.set(id, xhr);
+
+            xhr.open("POST", url, true);
+            if (session?.access_token) {
+              xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
+            }
+
+            xhr.upload.onprogress = (e) => {
+              if (e.lengthComputable) {
+                const pct = Math.round((e.loaded / e.total) * 100);
+                onProgress(pct);
+              }
+            };
+
+            xhr.onload = () => {
+              activeXhrMap.current.delete(id);
+              if (xhr.status === 200) {
+                try {
+                  const res = JSON.parse(xhr.responseText);
+                  if (res.temp_id) {
+                    resolve(res.temp_id);
+                  } else {
+                    reject(new Error("استجابة غير صالحة من السيرفر"));
+                  }
+                } catch {
+                  reject(new Error("فشل فك استجابة السيرفر"));
+                }
+              } else {
+                let msg = "";
+                try {
+                  const parsed = JSON.parse(xhr.responseText);
+                  msg = parsed.detail || parsed.message || "";
+                } catch {
+                  msg = xhr.responseText || "";
+                }
+                reject(new Error(msg || `رمز الخطأ ${xhr.status}`));
+              }
+            };
+
+            xhr.onerror = () => {
+              activeXhrMap.current.delete(id);
+              reject(new Error("انقطاع في اتصال الشبكة"));
+            };
+
+            xhr.onabort = () => {
+              activeXhrMap.current.delete(id);
+              reject(new Error("تم إلغاء الرفع"));
+            };
+
+            xhr.send(formData);
+          });
+
+          return tempId;
+        } catch (err: any) {
+          lastError = err;
+          if (err.message === "تم إلغاء الرفع") throw err;
+          // Short delay before fallback attempt
+          await new Promise((r) => setTimeout(r, 600));
+        }
+      }
+
+      throw lastError;
+    },
+    [session]
+  );
+
+  // Upload single audio file with dual-engine fallback
+  const uploadSingleAudio = useCallback(async (file: File) => {
     setIsAudioUploading(true);
     setAudioUploadProgress(0);
 
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const xhr = new XMLHttpRequest();
-    activeXhrMap.current.set("single", xhr);
-
-    const uploaderUrl = getUploaderBaseUrl();
-    xhr.open("POST", `${uploaderUrl}/api/v1/summarize/upload-temp`, true);
-
-    if (session?.access_token) {
-      xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
-    }
-
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        const pct = Math.round((e.loaded / e.total) * 100);
+    try {
+      const tempId = await uploadWithEngineFallback("single", file, (pct) => {
         setAudioUploadProgress(pct);
-      }
-    };
-
-    xhr.onload = () => {
-      setIsAudioUploading(false);
-      activeXhrMap.current.delete("single");
-      if (xhr.status === 200) {
-        try {
-          const res = JSON.parse(xhr.responseText);
-          setAudioTempId(res.temp_id);
-          setAudioUploadProgress(100);
-        } catch {
-          setError("فشل معالجة استجابة رفع الصوت من السيرفر.");
-        }
-      } else {
-        setError(`فشل رفع الملف الصوتي (${xhr.status}). يرجى التحقق من الاتصال والمحاولة مجدداً.`);
-        setAudioFile(null);
-      }
-    };
-
-    xhr.onerror = () => {
-      setIsAudioUploading(false);
-      activeXhrMap.current.delete("single");
-      setError("حدث خطأ أثناء رفع الملف الصوتي. يرجى التحقق من الشبكة.");
+      });
+      setAudioTempId(tempId);
+      setAudioUploadProgress(100);
+    } catch (err: any) {
+      setError(`تعذر رفع المقطع الصوتي «${file.name}»: ${err.message || "فشل الاتصال بالخادم"}`);
       setAudioFile(null);
-    };
-
-    xhr.send(formData);
-  }, [session, setIsAudioUploading, setAudioUploadProgress, setAudioTempId, setError, setAudioFile]);
+    } finally {
+      setIsAudioUploading(false);
+      activeXhrMap.current.delete("single");
+    }
+  }, [uploadWithEngineFallback, setIsAudioUploading, setAudioUploadProgress, setAudioTempId, setError, setAudioFile]);
 
   // Upload item in multi-audio queue sequentially
   const uploadItemAsync = useCallback((id: string, file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const xhr = new XMLHttpRequest();
-      activeXhrMap.current.set(id, xhr);
-
-      const uploaderUrl = getUploaderBaseUrl();
-      xhr.open("POST", `${uploaderUrl}/api/v1/summarize/upload-temp`, true);
-
-      if (session?.access_token) {
-        xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
-      }
-
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          const pct = Math.round((e.loaded / e.total) * 100);
-          setMultiAudioFiles((prev) =>
-            prev.map((item) => (item.id === id ? { ...item, progress: pct, status: "uploading" } : item))
-          );
-        }
-      };
-
-      xhr.onload = () => {
-        activeXhrMap.current.delete(id);
-        if (xhr.status === 200) {
-          try {
-            const res = JSON.parse(xhr.responseText);
-            if (res.temp_id) {
-              resolve(res.temp_id);
-            } else {
-              reject(new Error("استجابة غير صالحة من السيرفر"));
-            }
-          } catch {
-            reject(new Error("فشل فك استجابة السيرفر"));
-          }
-        } else {
-          reject(new Error(`رمز الخطأ ${xhr.status}`));
-        }
-      };
-
-      xhr.onerror = () => {
-        activeXhrMap.current.delete(id);
-        reject(new Error("انقطاع في اتصال الشبكة"));
-      };
-
-      xhr.send(formData);
+    return uploadWithEngineFallback(id, file, (pct) => {
+      setMultiAudioFiles((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, progress: pct, status: "uploading" } : item))
+      );
     });
-  }, [session, setMultiAudioFiles]);
+  }, [uploadWithEngineFallback, setMultiAudioFiles]);
 
   // Sequential Queue Runner: guarantees 1-by-1 resilient uploads with ZERO connection timeouts
   useEffect(() => {
@@ -453,7 +472,7 @@ export default function AudioUploadCard({
       <input
         ref={fileInputRef}
         type="file"
-        accept="audio/*"
+        accept="audio/*,video/*,.mp3,.wav,.m4a,.ogg,.opus,.aac,.flac,.webm,.weba,.wma,.mp4,.m4v,.mov"
         multiple
         onChange={handleFileChange}
         className={hasAudioContent ? "hidden" : "absolute inset-0 opacity-0 cursor-pointer z-10"}
@@ -463,7 +482,7 @@ export default function AudioUploadCard({
       <input
         ref={appendFileInputRef}
         type="file"
-        accept="audio/*"
+        accept="audio/*,video/*,.mp3,.wav,.m4a,.ogg,.opus,.aac,.flac,.webm,.weba,.wma,.mp4,.m4v,.mov"
         multiple
         onChange={handleAppendFiles}
         className="hidden"
