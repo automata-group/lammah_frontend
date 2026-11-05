@@ -11,7 +11,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    const msg = error?.message || "";
+    const msg = String(error?.message || error?.name || error || "");
     if (
       msg.includes("ChunkLoadError") ||
       msg.includes("Failed to load chunk") ||

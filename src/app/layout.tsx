@@ -129,17 +129,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               } catch (_) {}
 
               // Auto-recover from ChunkLoadError caused by new deployments
-              window.addEventListener('error', function(e) {
-                var msg = (e && e.message) ? e.message : '';
-                if (msg.indexOf('ChunkLoadError') !== -1 || msg.indexOf('Failed to load chunk') !== -1 || msg.indexOf('Loading chunk') !== -1) {
+              function handleChunkError(err) {
+                var msg = (err && (err.message || err.name || String(err))) || '';
+                if (
+                  msg.indexOf('ChunkLoadError') !== -1 ||
+                  msg.indexOf('Failed to load chunk') !== -1 ||
+                  msg.indexOf('Loading chunk') !== -1
+                ) {
                   var key = 'last_chunk_reload';
                   var last = sessionStorage.getItem(key);
                   var now = Date.now();
-                  if (!last || now - Number(last) > 10000) {
+                  if (!last || now - Number(last) > 8000) {
                     sessionStorage.setItem(key, String(now));
                     window.location.reload();
                   }
                 }
+              }
+
+              window.addEventListener('error', function(e) {
+                handleChunkError(e ? (e.error || e.message) : '');
+              });
+
+              window.addEventListener('unhandledrejection', function(e) {
+                handleChunkError(e ? (e.reason || e) : '');
               });
             `,
           }}
