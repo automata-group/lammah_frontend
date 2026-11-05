@@ -93,6 +93,8 @@ export default function QuotaBreakdownCard({
               ? `جاري رفع السلايدات (${pdfUploadProgress}%)...`
               : !quotaCostBreakdown.isSufficient && hasFiles
               ? `🚫 رصيدك غير كافٍ (المطلوب: ${quotaCostBreakdown.totalCost} دقيقة | المتوفر: ${quotaCostBreakdown.currentQuota} دقيقة)`
+              : multiAudioFiles.length > 0 && completedAudioCount < totalAudioCount && completedAudioCount > 0
+              ? `⚡ بدء التلخيص للمقاطع الجاهزة (${completedAudioCount} من ${totalAudioCount} جاهز)`
               : "ابدأ التلخيص الذكي وتوليد الملف المخطط"
           }
           loadingText="جاري التوليد والتلخيص..."

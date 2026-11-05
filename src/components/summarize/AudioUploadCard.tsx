@@ -64,7 +64,10 @@ export default function AudioUploadCard({
   const isQueueRunningRef = useRef<boolean>(false);
   const [showList, setShowList] = useState<boolean>(true);
 
-  // Client-side duration detection (< 20ms)
+  const multiAudioFilesRef = useRef<UploadedAudio[]>(multiAudioFiles);
+  multiAudioFilesRef.current = multiAudioFiles;
+
+  // Resilient duration detector with timeout guard & OGG Opus safety (< 1.2s fallback)
   const getAudioDuration = useCallback((file: File): Promise<number> => {
     return new Promise((resolve) => {
       if (typeof window === "undefined") {
@@ -76,19 +79,76 @@ export default function AudioUploadCard({
         const objectUrl = URL.createObjectURL(file);
         audio.preload = "metadata";
         audio.src = objectUrl;
+
+        let resolved = false;
+        const timer = setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            URL.revokeObjectURL(objectUrl);
+            resolve(Math.max(15, Math.round(file.size / 16000)));
+          }
+        }, 1200);
+
         audio.onloadedmetadata = () => {
-          URL.revokeObjectURL(objectUrl);
-          resolve(Math.round(audio.duration || 0));
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timer);
+            URL.revokeObjectURL(objectUrl);
+            const dur = Math.round(audio.duration || 0);
+            if (!dur || !isFinite(dur) || dur <= 0) {
+              resolve(Math.max(15, Math.round(file.size / 16000)));
+            } else {
+              resolve(dur);
+            }
+          }
         };
+
         audio.onerror = () => {
-          URL.revokeObjectURL(objectUrl);
-          resolve(Math.max(30, Math.round(file.size / 16000)));
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timer);
+            URL.revokeObjectURL(objectUrl);
+            resolve(Math.max(15, Math.round(file.size / 16000)));
+          }
         };
       } catch {
-        resolve(Math.max(30, Math.round(file.size / 16000)));
+        resolve(Math.max(15, Math.round(file.size / 16000)));
       }
     });
   }, []);
+
+  // Proactive token resolver with auto-refresh on near-expiry (<90s) or on demand
+  const getValidToken = useCallback(
+    async (forceRefresh = false): Promise<string> => {
+      let token = session?.access_token;
+      if (typeof window !== "undefined") {
+        try {
+          const { createClient } = await import("@/lib/supabase");
+          const supabase = createClient();
+          if (forceRefresh) {
+            const { data: refreshed } = await supabase.auth.refreshSession();
+            if (refreshed?.session?.access_token) {
+              return refreshed.session.access_token;
+            }
+          }
+          const { data: sessionData } = await supabase.auth.getSession();
+          token = sessionData?.session?.access_token || token;
+          const expiresAt = sessionData?.session?.expires_at;
+          const now = Math.floor(Date.now() / 1000);
+          if (!token || (expiresAt && expiresAt - now < 90)) {
+            const { data: refreshed } = await supabase.auth.refreshSession();
+            token = refreshed?.session?.access_token || token;
+          }
+        } catch {}
+      }
+
+      if (!token) {
+        throw new Error("🔒 يرجى تسجيل الدخول بحسابك أولاً لتتمكن من رفع المحاضرات");
+      }
+      return token;
+    },
+    [session]
+  );
 
   // Indestructible upload helper: tries Go Uploader first, then Python backend fallback
   const uploadWithEngineFallback = useCallback(
@@ -110,24 +170,12 @@ export default function AudioUploadCard({
 
       let lastError: Error = new Error("فشل رفع الملف");
 
-      // 1. Resolve token safely: session prop or direct Supabase session
-      let token = session?.access_token;
-      if (!token && typeof window !== "undefined") {
-        try {
-          const { createClient } = await import("@/lib/supabase");
-          const supabase = createClient();
-          const { data } = await supabase.auth.getSession();
-          token = data?.session?.access_token;
-        } catch {}
-      }
-
-      if (!token) {
-        throw new Error("🔒 يرجى تسجيل الدخول بحسابك أولاً لتتمكن من رفع المحاضرات");
-      }
-
       for (let attempt = 0; attempt < uniqueEndpoints.length; attempt++) {
         const url = uniqueEndpoints[attempt];
         try {
+          // Resolve fresh token before attempt (and force refresh on retry)
+          let token = await getValidToken(attempt > 0);
+
           const tempId = await new Promise<string>((resolve, reject) => {
             const formData = new FormData();
             formData.append("file", file);
@@ -145,7 +193,7 @@ export default function AudioUploadCard({
               }
             };
 
-            xhr.onload = () => {
+            xhr.onload = async () => {
               activeXhrMap.current.delete(id);
               if (xhr.status === 200) {
                 try {
@@ -162,11 +210,20 @@ export default function AudioUploadCard({
                 let msg = "";
                 try {
                   const parsed = JSON.parse(xhr.responseText);
-                  msg = parsed.detail?.user_message || (typeof parsed.detail === "string" ? parsed.detail : "") || parsed.message || "";
+                  msg =
+                    parsed.detail?.user_message ||
+                    (typeof parsed.detail === "string" ? parsed.detail : "") ||
+                    parsed.message ||
+                    "";
                 } catch {
                   msg = xhr.responseText || "";
                 }
                 if (xhr.status === 401 || xhr.status === 403) {
+                  // Silent auto-refresh attempt
+                  try {
+                    const { createClient } = await import("@/lib/supabase");
+                    await createClient().auth.refreshSession();
+                  } catch {}
                   reject(new Error(msg || "🔒 يرجى تسجيل الدخول بحسابك للمتابعة"));
                 } else {
                   reject(new Error(msg || `فشل الرفع (${xhr.status})`));
@@ -198,94 +255,113 @@ export default function AudioUploadCard({
 
       throw lastError;
     },
-    [session]
+    [getValidToken]
   );
 
   // Upload single audio file with dual-engine fallback
-  const uploadSingleAudio = useCallback(async (file: File) => {
-    setIsAudioUploading(true);
-    setAudioUploadProgress(0);
+  const uploadSingleAudio = useCallback(
+    async (file: File) => {
+      setIsAudioUploading(true);
+      setAudioUploadProgress(0);
 
-    try {
-      const tempId = await uploadWithEngineFallback("single", file, (pct) => {
-        setAudioUploadProgress(pct);
-      });
-      setAudioTempId(tempId);
-      setAudioUploadProgress(100);
-    } catch (err: any) {
-      setError(`تعذر رفع المقطع الصوتي «${file.name}»: ${err.message || "فشل الاتصال بالخادم"}`);
-      setAudioFile(null);
-    } finally {
-      setIsAudioUploading(false);
-      activeXhrMap.current.delete("single");
-    }
-  }, [uploadWithEngineFallback, setIsAudioUploading, setAudioUploadProgress, setAudioTempId, setError, setAudioFile]);
+      try {
+        const tempId = await uploadWithEngineFallback("single", file, (pct) => {
+          setAudioUploadProgress(pct);
+        });
+        setAudioTempId(tempId);
+        setAudioUploadProgress(100);
+      } catch (err: any) {
+        setError(`تعذر رفع المقطع الصوتي «${file.name}»: ${err.message || "فشل الاتصال بالخادم"}`);
+        setAudioFile(null);
+      } finally {
+        setIsAudioUploading(false);
+        activeXhrMap.current.delete("single");
+      }
+    },
+    [uploadWithEngineFallback, setIsAudioUploading, setAudioUploadProgress, setAudioTempId, setError, setAudioFile]
+  );
 
-  // Upload item in multi-audio queue sequentially
-  const uploadItemAsync = useCallback((id: string, file: File): Promise<string> => {
-    return uploadWithEngineFallback(id, file, (pct) => {
-      setMultiAudioFiles((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, progress: pct, status: "uploading" } : item))
-      );
-    });
-  }, [uploadWithEngineFallback, setMultiAudioFiles]);
-
-  // Sequential Queue Runner: guarantees 1-by-1 resilient uploads with ZERO connection timeouts
-  useEffect(() => {
-    if (multiAudioFiles.length === 0 || isQueueRunningRef.current) return;
-
-    // Check if there is an item pending upload
-    const pendingIndex = multiAudioFiles.findIndex(
-      (f) => !f.tempId && !f.error && !f.isUploading && f.status !== "ready"
-    );
-
-    if (pendingIndex === -1) return;
-
-    const itemToUpload = multiAudioFiles[pendingIndex];
+  // Autonomous, Deadlock-Free Queue Loop (Runs independently of React re-renders)
+  const runQueueWorker = useCallback(async () => {
+    if (isQueueRunningRef.current) return;
     isQueueRunningRef.current = true;
 
-    // Mark current item as uploading
-    setMultiAudioFiles((prev) =>
-      prev.map((it) => (it.id === itemToUpload.id ? { ...it, isUploading: true, status: "uploading" } : it))
-    );
+    try {
+      while (true) {
+        const currentFiles = multiAudioFilesRef.current;
+        const target = currentFiles.find(
+          (f) => !f.tempId && !f.error && !f.isUploading && f.status === "pending"
+        );
+        if (!target) break;
 
-    (async () => {
-      try {
-        const tempId = await uploadItemAsync(itemToUpload.id, itemToUpload.file);
+        // Mark current target as uploading
         setMultiAudioFiles((prev) =>
           prev.map((it) =>
-            it.id === itemToUpload.id
-              ? { ...it, tempId, isUploading: false, progress: 100, status: "ready", error: null }
-              : it
+            it.id === target.id ? { ...it, isUploading: true, status: "uploading" } : it
           )
         );
-      } catch (err: any) {
-        // Retry once after 1s before giving up
-        try {
-          await new Promise((r) => setTimeout(r, 1000));
-          const tempIdRetry = await uploadItemAsync(itemToUpload.id, itemToUpload.file);
-          setMultiAudioFiles((prev) =>
-            prev.map((it) =>
-              it.id === itemToUpload.id
-                ? { ...it, tempId: tempIdRetry, isUploading: false, progress: 100, status: "ready", error: null }
-                : it
-            )
-          );
-        } catch (retryErr: any) {
-          setMultiAudioFiles((prev) =>
-            prev.map((it) =>
-              it.id === itemToUpload.id
-                ? { ...it, isUploading: false, status: "error", error: retryErr.message || "فشل الرفع" }
-                : it
-            )
-          );
-          setError(`تعذر رفع المقطع «${itemToUpload.file.name}». يمكنك إعادة المحاولة بالضغط على زر المقطع.`);
+
+        let successTempId: string | null = null;
+        let lastErr: any = null;
+
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          try {
+            successTempId = await uploadWithEngineFallback(target.id, target.file, (pct) => {
+              setMultiAudioFiles((prev) =>
+                prev.map((item) =>
+                  item.id === target.id ? { ...item, progress: pct, status: "uploading" } : item
+                )
+              );
+            });
+            break;
+          } catch (err: any) {
+            lastErr = err;
+            if (err.message === "تم إلغاء الرفع") break;
+            await new Promise((r) => setTimeout(r, 800));
+          }
         }
-      } finally {
-        isQueueRunningRef.current = false;
+
+        if (successTempId) {
+          setMultiAudioFiles((prev) =>
+            prev.map((it) =>
+              it.id === target.id
+                ? {
+                    ...it,
+                    tempId: successTempId,
+                    isUploading: false,
+                    progress: 100,
+                    status: "ready",
+                    error: null,
+                  }
+                : it
+            )
+          );
+        } else if (lastErr?.message !== "تم إلغاء الرفع") {
+          const errMsg = lastErr?.message || "فشل الرفع";
+          setMultiAudioFiles((prev) =>
+            prev.map((it) =>
+              it.id === target.id
+                ? { ...it, isUploading: false, status: "error", error: errMsg }
+                : it
+            )
+          );
+          setError(`تعذر رفع المقطع «${target.file.name}». يمكنك إعادة المحاولة بالضغط على زر المقطع.`);
+        }
       }
-    })();
-  }, [multiAudioFiles, uploadItemAsync, setError, setMultiAudioFiles]);
+    } finally {
+      isQueueRunningRef.current = false;
+    }
+  }, [uploadWithEngineFallback, setError, setMultiAudioFiles]);
+
+  // Monitor multiAudioFiles for new pending uploads and trigger worker
+  useEffect(() => {
+    const hasPending = multiAudioFiles.some(
+      (f) => !f.tempId && !f.error && !f.isUploading && f.status === "pending"
+    );
+    if (hasPending && !isQueueRunningRef.current) {
+      runQueueWorker();
+    }
+  }, [multiAudioFiles, runQueueWorker]);
 
   // Handle Initial File Selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -442,12 +518,17 @@ export default function AudioUploadCard({
     setMultiAudioFiles((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // Retry failed upload item
+  // Retry failed upload item with instant worker kickstart
   const handleRetryItem = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    setError(null);
     setMultiAudioFiles((prev) =>
       prev.map((it) => (it.id === id ? { ...it, error: null, status: "pending", progress: 0 } : it))
     );
+    // Kickstart queue loop immediately
+    setTimeout(() => {
+      runQueueWorker();
+    }, 50);
   };
 
   const handleClear = (e: React.MouseEvent) => {

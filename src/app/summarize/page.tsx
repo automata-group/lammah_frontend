@@ -79,9 +79,11 @@ function SummarizeContent() {
     return `${mins} د و ${secs} ث`;
   };
 
-  const isMultiAudioUploading = multiAudioFiles.length > 0 && multiAudioFiles.some((f) => f.isUploading || !f.tempId);
+  const isMultiAudioUploading =
+    multiAudioFiles.length > 0 &&
+    multiAudioFiles.some((f) => f.isUploading || (f.status === "pending" && !f.error));
   const isAnyAudioUploading = isAudioUploading || isMultiAudioUploading;
-  const completedAudioCount = multiAudioFiles.filter((f) => !f.isUploading && Boolean(f.tempId)).length;
+  const completedAudioCount = multiAudioFiles.filter((f) => Boolean(f.tempId)).length;
   const totalAudioCount = multiAudioFiles.length;
 
   const totalAudioSeconds = useMemo(() => {
@@ -91,7 +93,10 @@ function SummarizeContent() {
     return audioDuration;
   }, [multiAudioFiles, audioDuration]);
 
-  const hasAudio = !!audioFile || multiAudioFiles.length > 0;
+  const hasAudio =
+    !!audioFile ||
+    !!audioTempId ||
+    (multiAudioFiles.length > 0 ? completedAudioCount > 0 : false);
   const hasPdf = !!pdfFile || !!pdfTempId;
   const processingMode: "slides_only" | "slides_and_audio" | "audio_only" = useMemo(() => {
     if (hasPdf && !hasAudio) return "slides_only";
