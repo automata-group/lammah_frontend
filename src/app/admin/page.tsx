@@ -58,16 +58,13 @@ function getArabicRelativeTime(dateStr: string): { label: string; isOld: boolean
   return { label, isOld };
 }
 
+import { getApiBaseUrl } from "@/lib/apiConfig";
+
 function getApiBase() {
-  if (typeof window !== "undefined") {
-    if (window.location.port === "8888" || window.location.port === "9090") {
-      return window.location.origin;
-    }
-  }
-  return process.env.NEXT_PUBLIC_API_URL || "https://api.lammah.site";
+  return getApiBaseUrl();
 }
 
-const API = getApiBase();
+const API = getApiBaseUrl();
 
 export default function AdminPage() {
   const { user, session, loading, signOut } = useAuth();
