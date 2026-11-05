@@ -448,10 +448,10 @@ export default function AudioUploadCard({
         error: null,
       }));
 
-      setMultiAudioFiles([existingItem, ...addedItems]);
+      updateMultiAudioFiles(() => [existingItem, ...addedItems]);
       addedItems.forEach(async (item) => {
         const dur = await getAudioDuration(item.file);
-        setMultiAudioFiles((prev) =>
+        updateMultiAudioFiles((prev) =>
           prev.map((f) => (f.id === item.id ? { ...f, duration: dur } : f))
         );
       });
@@ -469,10 +469,10 @@ export default function AudioUploadCard({
       error: null,
     }));
 
-    setMultiAudioFiles((prev) => [...prev, ...addedItems]);
+    updateMultiAudioFiles((prev) => [...prev, ...addedItems]);
     addedItems.forEach(async (item) => {
       const dur = await getAudioDuration(item.file);
-      setMultiAudioFiles((prev) =>
+      updateMultiAudioFiles((prev) =>
         prev.map((f) => (f.id === item.id ? { ...f, duration: dur } : f))
       );
     });
@@ -484,7 +484,7 @@ export default function AudioUploadCard({
   const moveUp = (index: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (index <= 0) return;
-    setMultiAudioFiles((prev) => {
+    updateMultiAudioFiles((prev) => {
       const next = [...prev];
       const temp = next[index - 1];
       next[index - 1] = next[index];
@@ -497,7 +497,7 @@ export default function AudioUploadCard({
   const moveDown = (index: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (index >= multiAudioFiles.length - 1) return;
-    setMultiAudioFiles((prev) => {
+    updateMultiAudioFiles((prev) => {
       const next = [...prev];
       const temp = next[index + 1];
       next[index + 1] = next[index];
@@ -509,7 +509,7 @@ export default function AudioUploadCard({
   // Natural alphanumeric sort by filename (Part 1, Part 2, etc.)
   const handleSortNatural = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setMultiAudioFiles((prev) => {
+    updateMultiAudioFiles((prev) => {
       const next = [...prev];
       next.sort((a, b) => a.file.name.localeCompare(b.file.name, undefined, { numeric: true, sensitivity: "base" }));
       return next;
@@ -524,7 +524,7 @@ export default function AudioUploadCard({
       xhr.abort();
       activeXhrMap.current.delete(id);
     }
-    setMultiAudioFiles((prev) => prev.filter((item) => item.id !== id));
+    updateMultiAudioFiles((prev) => prev.filter((item) => item.id !== id));
   };
 
   // Retry failed upload item with instant worker kickstart

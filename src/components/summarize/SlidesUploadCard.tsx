@@ -1,4 +1,3 @@
-import { createClient } from "@/lib/supabase";
 "use client";
 
 import React, { useCallback, useRef } from "react";
@@ -6,6 +5,7 @@ import { FileText, CheckCircle, X } from "lucide-react";
 import PdfRangeSelector from "./PdfRangeSelector";
 import { QuotaCostBreakdown } from "./types";
 import { getUploaderBaseUrl, getApiBaseUrl } from "@/lib/apiConfig";
+import { createClient } from "@/lib/supabase";
 
 interface SlidesUploadCardProps {
   pdfFile: File | null;
