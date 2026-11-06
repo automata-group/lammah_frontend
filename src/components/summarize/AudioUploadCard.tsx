@@ -666,20 +666,20 @@ export default function AudioUploadCard({
                       e.stopPropagation();
                       appendFileInputRef.current?.click();
                     }}
-                    className="flex items-center gap-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/50 border border-indigo-200/80 dark:border-indigo-800 px-2 py-1.5 rounded-xl transition cursor-pointer"
-                    title="إضافة تسجيل آخر"
+                    className="flex items-center gap-1 text-[11px] font-medium text-slate-700 dark:text-slate-200 bg-slate-100/90 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80 px-2.5 py-1.5 rounded-xl transition cursor-pointer"
+                    title="إضافة تسجيل صوتي آخر"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">إضافة فويس</span>
+                    <Plus className="w-3.5 h-3.5 text-indigo-500" />
+                    <span className="hidden sm:inline">إضافة مقطع</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={handleSortNatural}
-                    className="flex items-center gap-1 text-[11px] font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 px-2 py-1.5 rounded-xl transition cursor-pointer"
-                    title="ترتيب التسجيلات تلقائياً حسب الاسم والوقت"
+                    className="flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 px-2 py-1.5 rounded-xl transition cursor-pointer"
+                    title="ترتيب التسجيلات تلقائياً حسب التسلسل الزمني"
                   >
-                    <ArrowUpDown className="w-3.5 h-3.5 text-indigo-500" />
+                    <ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
                     <span className="hidden sm:inline">ترتيب</span>
                   </button>
                 </>
@@ -688,7 +688,7 @@ export default function AudioUploadCard({
               <button
                 type="button"
                 onClick={handleClear}
-                className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition cursor-pointer shrink-0"
+                className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition cursor-pointer shrink-0"
                 title="إزالة الصوت"
               >
                 <X className="w-4 h-4" />
@@ -699,13 +699,13 @@ export default function AudioUploadCard({
           {/* Multi-Audio Studio List & Reorder Section */}
           {isMultiMode && (
             <div className="mt-2 pt-2 border-t border-slate-200/80 dark:border-slate-800 flex flex-col gap-2">
-              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-semibold px-1">
-                <span className="flex items-center gap-1">
+              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium px-1">
+                <span className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300">
                   <Layers className="w-3.5 h-3.5 text-indigo-500" />
-                  قائمة التسجيلات المرتبة للدمج:
+                  تسلسل المقاطع الصوتية
                 </span>
                 <span className="text-[10px] text-slate-400">
-                  (استخدم الأسهم ⬆️ ⬇️ لتعديل ترتيب المقاطع)
+                  تُدمج المقاطع تسلسلياً حسب الترتيب أدناه
                 </span>
               </div>
 
@@ -720,24 +720,24 @@ export default function AudioUploadCard({
                   return (
                     <div
                       key={item.id}
-                      className={`flex items-center justify-between gap-2 p-2 rounded-xl text-xs transition border ${
+                      className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl text-xs transition border ${
                         isCurUploading
                           ? "bg-indigo-50/70 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800/80"
                           : isErr
                           ? "bg-rose-50/70 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900"
                           : isDone
-                          ? "bg-white/80 dark:bg-slate-800/60 border-slate-200/70 dark:border-slate-700/60"
+                          ? "bg-white/80 dark:bg-slate-800/60 border-slate-200/70 dark:border-slate-700/60 shadow-xs"
                           : "bg-slate-50/60 dark:bg-slate-800/30 border-slate-200/40 dark:border-slate-800"
                       }`}
                     >
                       {/* Left: Index badge & Name */}
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="w-5 h-5 rounded-md bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-mono text-[10px] flex items-center justify-center font-bold shrink-0">
+                        <span className="w-5 h-5 rounded-md bg-slate-100 dark:bg-slate-700/70 text-slate-600 dark:text-slate-300 font-mono text-[10px] flex items-center justify-center font-semibold shrink-0">
                           {idx + 1}
                         </span>
 
                         <div className="min-w-0">
-                          <p className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[140px] sm:max-w-[200px]" dir="ltr">
+                          <p className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[140px] sm:max-w-[200px]" dir="ltr">
                             {item.file.name}
                           </p>
                           {item.duration > 0 && (
@@ -751,23 +751,23 @@ export default function AudioUploadCard({
                       {/* Right: Status badge & Reorder buttons */}
                       <div className="flex items-center gap-1.5 shrink-0">
                         {isCurUploading && (
-                          <div className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                          <div className="flex items-center gap-1 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">
                             <RotateCw className="w-3 h-3 animate-spin" />
                             <span>{item.progress}%</span>
                           </div>
                         )}
 
                         {isDone && (
-                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
-                            <CheckCircle className="w-3.5 h-3.5" />
+                          <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/50 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                            <CheckCircle className="w-3 h-3" />
                             <span className="hidden sm:inline">جاهز</span>
                           </span>
                         )}
 
                         {isPending && (
-                          <span className="text-[10px] font-medium text-slate-400 flex items-center gap-0.5">
+                          <span className="text-[10px] font-medium text-slate-400 bg-slate-100 dark:bg-slate-800/60 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
                             <Clock className="w-3 h-3" />
-                            <span className="hidden sm:inline">بالطابور</span>
+                            <span className="hidden sm:inline">في الطابور</span>
                           </span>
                         )}
 
@@ -775,7 +775,7 @@ export default function AudioUploadCard({
                           <button
                             type="button"
                             onClick={(e) => handleRetryItem(item.id, e)}
-                            className="text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-100/80 dark:bg-rose-900/40 px-1.5 py-0.5 rounded flex items-center gap-1 hover:underline cursor-pointer"
+                            className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-100/80 dark:bg-rose-900/40 px-1.5 py-0.5 rounded-md flex items-center gap-1 hover:underline cursor-pointer"
                           >
                             <AlertCircle className="w-3 h-3" />
                             <span>إعادة</span>
@@ -783,24 +783,24 @@ export default function AudioUploadCard({
                         )}
 
                         {/* Reorder Buttons */}
-                        <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden ml-1">
+                        <div className="flex items-center gap-0.5 ml-1">
                           <button
                             type="button"
                             disabled={idx === 0}
                             onClick={(e) => moveUp(idx, e)}
-                            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 dark:text-slate-300 transition"
+                            className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 disabled:opacity-20 disabled:pointer-events-none transition cursor-pointer"
                             title="تقديم المقطع للأعلى"
                           >
-                            <ChevronUp className="w-3 h-3" />
+                            <ChevronUp className="w-3.5 h-3.5" />
                           </button>
                           <button
                             type="button"
                             disabled={idx === multiAudioFiles.length - 1}
                             onClick={(e) => moveDown(idx, e)}
-                            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-slate-600 dark:text-slate-300 transition border-r border-slate-200 dark:border-slate-700"
+                            className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 disabled:opacity-20 disabled:pointer-events-none transition cursor-pointer"
                             title="تأخير المقطع للأسفل"
                           >
-                            <ChevronDown className="w-3 h-3" />
+                            <ChevronDown className="w-3.5 h-3.5" />
                           </button>
                         </div>
 
@@ -808,7 +808,7 @@ export default function AudioUploadCard({
                         <button
                           type="button"
                           onClick={(e) => handleRemoveSingleItem(item.id, e)}
-                          className="p-1 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+                          className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
                           title="حذف هذا المقطع"
                         >
                           <X className="w-3.5 h-3.5" />
@@ -819,11 +819,14 @@ export default function AudioUploadCard({
                 })}
               </div>
 
-              {/* Bottom reassurance pill */}
-              <div className="mt-1 flex items-center justify-center gap-1.5 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50/90 dark:bg-indigo-950/50 border border-indigo-200/80 dark:border-indigo-800/80 p-2 rounded-xl text-center">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                <span>
-                  سيتم دمج جميع الفويسات أعلاه تلقائياً بتفريغ صوتي موحد ومطابقتها مع السلايدات بدقة 100%!
+              {/* Bottom reassurance bar - official styling */}
+              <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/50 px-3 py-2 rounded-xl">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                  <span>تُدمج المقاطع تسلسلياً وتُفرّغ صوتياً بدقة لمطابقتها مع الشرائح</span>
+                </div>
+                <span className="text-[10px] font-mono text-slate-400">
+                  {completedCount} من {multiAudioFiles.length} جاهز
                 </span>
               </div>
             </div>
@@ -835,14 +838,14 @@ export default function AudioUploadCard({
             <FileAudio className="w-5 h-5" />
           </div>
           <p className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-0.5">
-            تسجيل المحاضرة (يدعم دمج عدة فويسات)
+            تسجيل المحاضرة
           </p>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            اسحب الصوت هنا أو{" "}
-            <span className="text-indigo-600 dark:text-indigo-400 font-semibold underline">اختر ملفاً أو عدة ملفات</span>
+            اسحب التسجيل الصوتي هنا أو{" "}
+            <span className="text-indigo-600 dark:text-indigo-400 font-semibold underline">اختر ملفاً أو عدة مقاطع</span>
           </p>
           <span className="text-[10px] text-slate-400 mt-1 font-medium">
-            MP3, WAV, M4A, OGG • يدعم اختيار حتى 15 فويساً معاً
+            MP3, WAV, M4A, OGG • يدعم دمج عدة تسجيلات صوتية
           </span>
         </div>
       )}

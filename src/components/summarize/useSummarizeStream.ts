@@ -49,7 +49,15 @@ export function useSummarizeStream() {
       const clamped = Math.min(100, Math.max(0, incomingTarget));
       return Math.max(prev, clamped);
     });
-  }, []);
+    // Dynamically elevate phase if progress indicates we have advanced
+    if (incomingTarget >= 85 && phaseRef.current !== "pdf" && phaseRef.current !== "done") {
+      updatePhase("ai");
+    } else if (incomingTarget >= 55 && (phaseRef.current === "uploading" || phaseRef.current === "audio")) {
+      updatePhase("slides");
+    } else if (incomingTarget >= 25 && phaseRef.current === "uploading") {
+      updatePhase("audio");
+    }
+  }, [updatePhase]);
 
   // Reset function
   const resetProcessing = useCallback(() => {
@@ -166,23 +174,29 @@ export function useSummarizeStream() {
     creepIntervalRef.current = setInterval(() => {
       setTimeLeft((prev) => (prev !== null && prev > 3 ? prev - 1 : prev));
       const curPhase = phaseRef.current;
-      const maxCap =
+      const nominalCap =
         curPhase === "idle" || curPhase === "uploading"
-          ? 18
+          ? 26
           : curPhase === "audio"
-          ? 52
+          ? 55
           : curPhase === "slides"
-          ? 68
+          ? 72
           : curPhase === "ai"
-          ? 88
+          ? 90
           : 98;
 
       setDisplayedProgress((prev) => {
-        if (prev >= maxCap) return prev;
-        if (prev < 20) return Math.min(maxCap, prev + 0.4);
-        if (prev < 50) return Math.min(maxCap, prev + 0.25);
-        if (prev < 80) return Math.min(maxCap, prev + 0.12);
-        return Math.min(maxCap, prev + 0.04);
+        if (prev < nominalCap) {
+          if (prev < 20) return Math.min(nominalCap, prev + 0.35);
+          if (prev < 50) return Math.min(nominalCap, prev + 0.22);
+          if (prev < 80) return Math.min(nominalCap, prev + 0.12);
+          return Math.min(nominalCap, prev + 0.05);
+        }
+        // Micro-creep when waiting past nominalCap (never completely freeze, asymptotically approach 98.5%)
+        if (prev < 98.5) {
+          return prev + 0.015;
+        }
+        return prev;
       });
     }, 500);
 
@@ -289,7 +303,8 @@ export function useSummarizeStream() {
                   if (data.message) setProgressMessage(data.message);
                   if (data.time_estimate !== undefined) setTimeLeft(data.time_estimate);
                   if (data.step) {
-                    if (data.step.includes("1/5")) updatePhase("audio");
+                    if (data.step.includes("0/5")) updatePhase("uploading");
+                    else if (data.step.includes("1/5")) updatePhase("audio");
                     else if (data.step.includes("2/5")) updatePhase("slides");
                     else if (data.step.includes("3/5") || data.step.includes("4/5")) updatePhase("ai");
                     else if (data.step.includes("5/5")) updatePhase("pdf");
