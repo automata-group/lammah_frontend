@@ -17,7 +17,7 @@ import { getApiBaseUrl } from "@/lib/apiConfig";
 
 interface AppHeaderProps {
   quota?: number | null;
-  activePage?: "dashboard" | "summarize" | "tasks" | "notebook" | "plans" | "ytdl" | "marketplace" | "history" | "profile" | "tutor" | "sessions" | "study" | "kiosk";
+  activePage?: "dashboard" | "summarize" | "tasks" | "notebook" | "plans" | "marketplace" | "history" | "profile" | "tutor" | "sessions" | "study" | "kiosk";
 }
 
 export default function AppHeader({ quota = null, activePage: propActivePage }: AppHeaderProps) {
@@ -41,7 +41,6 @@ export default function AppHeader({ quota = null, activePage: propActivePage }: 
     if (pathname.startsWith("/history")) return "history";
     if (pathname.startsWith("/profile")) return "profile";
     if (pathname.startsWith("/sessions")) return "sessions";
-    if (pathname.startsWith("/ytdl")) return "ytdl";
     if (pathname.startsWith("/dashboard")) return "dashboard";
     return undefined;
   }, [pathname, propActivePage]);
