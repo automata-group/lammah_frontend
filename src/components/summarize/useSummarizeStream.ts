@@ -28,6 +28,7 @@ export function useSummarizeStream() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [phase, setPhase] = useState<ProcessingPhase>("idle");
+  const phaseRef = useRef<ProcessingPhase>("idle");
   const [displayedProgress, setDisplayedProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
   const [queuePosition, setQueuePosition] = useState(0);
@@ -36,6 +37,11 @@ export function useSummarizeStream() {
   const [error, setError] = useState<string | null>(null);
 
   const creepIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const updatePhase = useCallback((newPhase: ProcessingPhase) => {
+    phaseRef.current = newPhase;
+    setPhase(newPhase);
+  }, []);
 
   // Monotonic Progress Updater (Guarantees progress never regresses)
   const setMonotonicProgress = useCallback((incomingTarget: number) => {
@@ -53,7 +59,7 @@ export function useSummarizeStream() {
     }
     setIsProcessing(false);
     setIsStreaming(false);
-    setPhase("idle");
+    updatePhase("idle");
     setDisplayedProgress(0);
     setProgressMessage("");
     setQueuePosition(0);
@@ -144,7 +150,7 @@ export function useSummarizeStream() {
     // Initialize State Machine
     setIsProcessing(true);
     setIsStreaming(false);
-    setPhase("uploading");
+    updatePhase("uploading");
     setDisplayedProgress(5);
     setQueuePosition(0);
     setProgressMessage("جاري بدء المعالجة وتهيئة البيئة...");
@@ -155,17 +161,28 @@ export function useSummarizeStream() {
     setTimeLeft(estimatedSecs);
     setInitialEstimate(estimatedSecs);
 
-    // Start asymptotic creep engine
+    // Start phase-aware asymptotic creep engine
     if (creepIntervalRef.current) clearInterval(creepIntervalRef.current);
     creepIntervalRef.current = setInterval(() => {
       setTimeLeft((prev) => (prev !== null && prev > 3 ? prev - 1 : prev));
+      const curPhase = phaseRef.current;
+      const maxCap =
+        curPhase === "idle" || curPhase === "uploading"
+          ? 18
+          : curPhase === "audio"
+          ? 52
+          : curPhase === "slides"
+          ? 68
+          : curPhase === "ai"
+          ? 88
+          : 98;
+
       setDisplayedProgress((prev) => {
-        if (prev < 20) return prev + 0.5;
-        if (prev < 50) return prev + 0.3;
-        if (prev < 85) return prev + 0.15;
-        if (prev < 94) return prev + 0.08;
-        if (prev < 98.5) return prev + 0.025;
-        return prev;
+        if (prev >= maxCap) return prev;
+        if (prev < 20) return Math.min(maxCap, prev + 0.4);
+        if (prev < 50) return Math.min(maxCap, prev + 0.25);
+        if (prev < 80) return Math.min(maxCap, prev + 0.12);
+        return Math.min(maxCap, prev + 0.04);
       });
     }, 500);
 
@@ -272,17 +289,17 @@ export function useSummarizeStream() {
                   if (data.message) setProgressMessage(data.message);
                   if (data.time_estimate !== undefined) setTimeLeft(data.time_estimate);
                   if (data.step) {
-                    if (data.step.includes("1/5")) setPhase("audio");
-                    else if (data.step.includes("2/5")) setPhase("slides");
-                    else if (data.step.includes("3/5") || data.step.includes("4/5")) setPhase("ai");
-                    else if (data.step.includes("5/5")) setPhase("pdf");
+                    if (data.step.includes("1/5")) updatePhase("audio");
+                    else if (data.step.includes("2/5")) updatePhase("slides");
+                    else if (data.step.includes("3/5") || data.step.includes("4/5")) updatePhase("ai");
+                    else if (data.step.includes("5/5")) updatePhase("pdf");
                   }
                 } else if (data.type === "queued") {
-                  setPhase("uploading");
+                  updatePhase("uploading");
                   setQueuePosition(data.position || 1);
                   if (data.message) setProgressMessage(data.message);
                 } else if (data.type === "done") {
-                  setPhase("done");
+                  updatePhase("done");
                   setMonotonicProgress(100);
                   setProgressMessage("🎉 اكتملت المعالجة بنجاح! جاري تحويلك إلى لوحة التحكم...");
 
@@ -333,7 +350,7 @@ export function useSummarizeStream() {
       }
       setIsProcessing(false);
       setIsStreaming(false);
-      setPhase("idle");
+      updatePhase("idle");
       let msg = err?.message || "تعذر إكمال المعالجة. يرجى المحاولة مرة أخرى.";
       if (
         msg.includes("Failed to fetch") ||
