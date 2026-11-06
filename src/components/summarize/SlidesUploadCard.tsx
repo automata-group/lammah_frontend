@@ -223,15 +223,15 @@ export default function SlidesUploadCard({
                     <span className="text-[11px] text-slate-400 font-medium">جاري الرفع...</span>
                   ) : (
                     <>
-                      <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200/80 dark:border-indigo-800 px-2 py-0.5 rounded-md tabular-nums">
+                      <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200/80 dark:border-indigo-800 px-2 py-0.5 rounded-md tabular-nums whitespace-nowrap inline-flex items-center gap-1">
                         📄 {quotaCostBreakdown.selectedPages} شريحة
                       </span>
                       {hasAudio ? (
-                        <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200/80 dark:border-indigo-800 px-2 py-0.5 rounded-md">
+                        <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200/80 dark:border-indigo-800 px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1">
                           مشمولة برصيد الصوت
                         </span>
                       ) : (
-                        <span className="text-[10px] font-black text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-800 px-2 py-0.5 rounded-md tabular-nums">
+                        <span className="text-[10px] font-black text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-800 px-2 py-0.5 rounded-md tabular-nums whitespace-nowrap inline-flex items-center gap-1">
                           ⚡ سيخصم: {quotaCostBreakdown.docCostMinutes} دقيقة
                         </span>
                       )}
