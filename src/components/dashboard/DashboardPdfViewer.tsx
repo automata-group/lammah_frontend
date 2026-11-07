@@ -11,16 +11,21 @@ interface DashboardPdfViewerProps {
   pdfFlash: number | null;
   downloadUrl: string;
   pdfPage: number;
+  pdfNonce?: number;
   isBasicPlan: boolean;
   lectureTitle: string;
   isDocumentOnly?: boolean;
 }
+
+// Persistent In-Memory PDF Blob Cache: prevents refetching and reloading on tab switches
+const globalPdfBlobCache = new Map<string, string>();
 
 export default function DashboardPdfViewer({
   pdfContainerRef,
   pdfFlash,
   downloadUrl,
   pdfPage,
+  pdfNonce,
   isBasicPlan,
   lectureTitle,
   isDocumentOnly,
@@ -33,13 +38,18 @@ export default function DashboardPdfViewer({
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState<number>(0);
 
-  const cleanTitle = (lectureTitle || "المادة الدراسية")
-    .replace(/^محاضرة\s+/, "")
-    .replace(/^(?:دفتر|ملف)\s+/, "")
-    .replace(/[\\/*?:"<>|]/g, " ")
-    .trim() || "المادة الدراسية";
+  const cleanTitle = (lectureTitle || "المحاضرة الدراسية")
+    .replace(/\.pdf$/i, "")
+    .replace(/[:|]/g, " - ")
+    .replace(/[\\/*?"<>`']/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/(\s*-\s*لمّاح)+$/i, "")
+    .replace(/(\s*-\s*Lammah)+$/i, "")
+    .replace(/(\s*-\s*(مخططة|دفتر|تحضير|فويسات|سلايدات).*)+$/, "")
+    .trim()
+    .replace(/^[-\s]+|[-\s]+$/g, "") || "المحاضرة الدراسية";
   const isPrep = !!isDocumentOnly;
-  const suggestedFilename = `${cleanTitle} - ${isPrep ? "تحضير سلايدات" : "مخططة فويسات"} - لمّاح.pdf`;
+  const suggestedFilename = `${cleanTitle} - لمّاح.pdf`;
   const sep = downloadUrl.includes("?") ? "&" : "?";
   const fullDownloadUrl = `${apiUrl}${downloadUrl}${sep}title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`;
   const sepChar = fullDownloadUrl.includes("?") ? "&" : "?";
@@ -47,10 +57,18 @@ export default function DashboardPdfViewer({
 
   useEffect(() => {
     let isMounted = true;
-    let currentObjectUrl: string | null = null;
     const abortController = new AbortController();
 
     if (!downloadUrl) return;
+
+    // 0ms instant cache hit: tab switching or remount never re-fetches or flickers!
+    if (globalPdfBlobCache.has(fullDownloadUrl)) {
+      const cached = globalPdfBlobCache.get(fullDownloadUrl)!;
+      setBlobUrl(cached);
+      setIsPdfLoading(false);
+      setHasPdfError(false);
+      return;
+    }
 
     let retryTimer: NodeJS.Timeout | null = null;
     let attempts = 0;
@@ -90,7 +108,7 @@ export default function DashboardPdfViewer({
         }
 
         const objectUrl = URL.createObjectURL(blob);
-        currentObjectUrl = objectUrl;
+        globalPdfBlobCache.set(fullDownloadUrl, objectUrl);
         setBlobUrl(objectUrl);
         setHasPdfError(false);
       } catch (err: any) {
@@ -112,9 +130,6 @@ export default function DashboardPdfViewer({
       isMounted = false;
       abortController.abort();
       if (retryTimer) clearTimeout(retryTimer);
-      if (currentObjectUrl) {
-        URL.revokeObjectURL(currentObjectUrl);
-      }
     };
   }, [fullDownloadUrl, downloadUrl, retryCount]);
 
@@ -177,12 +192,12 @@ export default function DashboardPdfViewer({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="w-full sm:w-auto flex items-stretch sm:items-center gap-2 mt-1 sm:mt-0">
           <a
             href={fullDownloadUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-3 py-1.5 rounded-xl font-bold transition-all flex items-center text-xs shadow-2xs cursor-pointer"
+            className="flex-1 sm:flex-initial justify-center bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-3 py-2.5 sm:py-1.5 rounded-xl font-bold transition-all flex items-center text-xs shadow-2xs cursor-pointer active:scale-95"
           >
             <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
             عرض بملء الشاشة
@@ -192,7 +207,7 @@ export default function DashboardPdfViewer({
             target="_blank"
             rel="noopener noreferrer"
             download={suggestedFilename}
-            className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center shadow-xs shadow-indigo-500/20 hover:shadow-indigo-500/30 text-xs cursor-pointer"
+            className="flex-1 sm:flex-initial justify-center bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 py-2.5 sm:py-1.5 rounded-xl font-bold transition-all flex items-center shadow-xs shadow-indigo-500/20 hover:shadow-indigo-500/30 text-xs cursor-pointer active:scale-95"
           >
             <Download className="w-3.5 h-3.5 ml-1.5" />
             تحميل الملف
@@ -281,7 +296,7 @@ export default function DashboardPdfViewer({
             )}
             {blobUrl ? (
               <iframe
-                key={blobUrl}
+                key={`${blobUrl}-p${pdfPage || 1}-${pdfNonce || 0}`}
                 src={`${blobUrl}#page=${pdfPage || 1}`}
                 onLoad={() => setIsPdfLoading(false)}
                 className="w-full h-[400px] sm:h-[550px] lg:h-[700px] rounded-lg bg-white dark:bg-slate-950 transition-all border border-slate-200 dark:border-slate-900"

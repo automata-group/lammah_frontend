@@ -813,7 +813,7 @@ function NotebookCreatorContent() {
                     .replace(/[\\/*?:"<>|]/g, " ")
                     .trim() || "المادة الدراسية";
                   const isPrep = result.isPrep ?? !(audioFile || multiAudioFiles.length > 0);
-                  const notebookFilename = `${cleanTitle} - ${isPrep ? "دفتر تحضير سلايدات" : "دفتر مخطط فويسات"} - لمّاح.pdf`;
+                  const notebookFilename = `${cleanTitle} - لمّاح.pdf`;
                   const sep = result.downloadUrl.includes("?") ? "&" : "?";
                   const finalDownloadUrl = `${getApiBaseUrl()}${result.downloadUrl}${sep}download=true&title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`;
 

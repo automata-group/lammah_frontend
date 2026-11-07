@@ -501,7 +501,7 @@ export default function HistoryPage() {
                           ? !!log.metadata.is_prep
                           : (log.metadata?.has_audio !== undefined ? !log.metadata.has_audio : !log.metadata?.transcript?.trim());
                         const cleanTitle = (title || "المادة الدراسية").replace(/^دفتر\s+/, "").replace(/^محاضرة\s+/, "").replace(/[\\/*?:"<>|]/g, " ").trim() || "المادة الدراسية";
-                        const filename = `${cleanTitle} - ${isNotebook ? (isPrep ? "دفتر تحضير سلايدات" : "دفتر مخطط فويسات") : "ملف مخطط ومظلل"} - لمّاح.pdf`;
+                        const filename = `${cleanTitle} - لمّاح.pdf`;
                         const dlUrl = isNotebook
                           ? `${getApiBaseUrl()}/api/v1/notebook/download/${jobId}.pdf?download=true&title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`
                           : (log.metadata?.download_url || `${getApiBaseUrl()}/api/v1/summarize/download/${jobId || log.id}.pdf`);
@@ -707,7 +707,7 @@ export default function HistoryPage() {
                             ? !!log.metadata.is_prep
                             : (log.metadata?.has_audio !== undefined ? !log.metadata.has_audio : !log.metadata?.transcript?.trim());
                           const cleanTitle = (getTitle(log) || "المادة الدراسية").replace(/^محاضرة\s+/, "").replace(/^دفتر\s+/, "").replace(/[\\/*?:"<>|]/g, " ").trim() || "المادة الدراسية";
-                          const filename = `${cleanTitle} - ${isPrep ? "تحضير سلايدات" : "مخططة فويسات"} - لمّاح.pdf`;
+                          const filename = `${cleanTitle} - لمّاح.pdf`;
                           const dlUrl = `${getApiBaseUrl()}/api/v1/summarize/download/${log.metadata.job_id}.pdf?title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`;
 
                           return (

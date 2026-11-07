@@ -10,7 +10,8 @@ import {
   Brain, 
   Zap, 
   FileText,
-  Loader2
+  Loader2,
+  Star
 } from "lucide-react";
 
 export default function HeroSection() {
@@ -130,15 +131,15 @@ export default function HeroSection() {
         </Link>
 
         <a
-          href="#interactive-demo"
+          href="#reviews"
           onClick={(e) => {
             e.preventDefault();
-            document.getElementById('interactive-demo')?.scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' });
           }}
           className="w-full sm:w-auto px-7 py-4 rounded-full font-bold text-[15px] xs:text-base text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
         >
-          <Play className="w-3.5 h-3.5 fill-indigo-600 dark:fill-indigo-400 text-indigo-600 dark:text-indigo-400 translate-x-0.5" />
-          <span>جرب لماح مجانا</span>
+          <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+          <span>تقييمات الطلاب ⭐</span>
         </a>
       </div>
     </section>

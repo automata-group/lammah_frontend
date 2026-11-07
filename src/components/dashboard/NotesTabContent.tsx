@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { BookOpen, ExternalLink } from "lucide-react";
+import { BookOpen, ExternalLink, Eye } from "lucide-react";
 import { DashboardAnnotations } from "@/types/dashboard";
 import { getActualSlidePage } from "@/lib/dashboardUtils";
 
@@ -71,7 +71,7 @@ export default function NotesTabContent({
                           title={`انقر للانتقال للشريحة ${pageNum} (صفحة ${actualPage})`}
                         >
                           <span>عرض الشريحة {pageNum}</span>
-                          <ExternalLink className="w-2.5 h-2.5" />
+                          <Eye className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
                         </button>
 
                         {companionMap?.[pageNum] && (

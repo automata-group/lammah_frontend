@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Target, CheckCircle2, Circle, Sparkles, ExternalLink } from "lucide-react";
+import { Target, CheckCircle2, Circle, Sparkles, Eye } from "lucide-react";
 import { FocusPoint } from "@/types/dashboard";
 import { getActualSlidePage, getActualCompPage } from "@/lib/dashboardUtils";
 
@@ -232,11 +232,11 @@ export default function FocusPointsTabContent({
                       <button
                         type="button"
                         onClick={() => jumpToPdfSlide(fp.page_number, "slide")}
-                        className="text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                        className="text-xs font-bold bg-slate-100 hover:bg-slate-200 active:scale-95 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs hover:shadow-xs"
                         title={`انتقل للشريحة ${fp.page_number} في ملف الـ PDF المخطط (صفحة ${actualSlide})`}
                       >
                         <span>عرض الشريحة {fp.page_number}</span>
-                        <ExternalLink className="w-3 h-3 text-slate-400" />
+                        <Eye className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                       </button>
                     )}
 

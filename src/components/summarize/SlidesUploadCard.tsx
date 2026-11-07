@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { FileText, CheckCircle, X } from "lucide-react";
 import PdfRangeSelector from "./PdfRangeSelector";
 import { QuotaCostBreakdown } from "./types";
@@ -77,10 +77,20 @@ export default function SlidesUploadCard({
 
     const uploaderUrl = getUploaderBaseUrl();
     const apiUrl = getApiBaseUrl();
-    const endpoints = [
-      `${uploaderUrl}/api/v1/summarize/upload-temp`,
-      `${apiUrl}/api/v1/summarize/upload-temp-py`,
-    ];
+    const CHUNK_SIZE = 15 * 1024 * 1024;
+    const isChunked = file.size > CHUNK_SIZE;
+    const totalChunks = isChunked ? Math.ceil(file.size / CHUNK_SIZE) : 1;
+    const uploadId = isChunked ? `${Date.now()}-${Math.random().toString(36).substring(2, 9)}` : "";
+
+    const endpoints = isChunked
+      ? [
+          `${apiUrl}/api/v1/summarize/upload-temp-py`,
+          `${uploaderUrl}/api/v1/summarize/upload-temp`,
+        ]
+      : [
+          `${uploaderUrl}/api/v1/summarize/upload-temp`,
+          `${apiUrl}/api/v1/summarize/upload-temp-py`,
+        ];
     const uniqueEndpoints = Array.from(new Set(endpoints));
 
     let lastError = "فشل رفع السلايدات";
@@ -88,85 +98,156 @@ export default function SlidesUploadCard({
     for (let attempt = 0; attempt < uniqueEndpoints.length; attempt++) {
       const url = uniqueEndpoints[attempt];
       try {
-        const tempId = await new Promise<string>((resolve, reject) => {
-          const formData = new FormData();
-          formData.append("file", file);
+        if (!isChunked) {
+          const tempId = await new Promise<string>((resolve, reject) => {
+            const formData = new FormData();
+            formData.append("file", file);
 
-          const xhr = new XMLHttpRequest();
-          activeXhrRef.current = xhr;
+            const xhr = new XMLHttpRequest();
+            activeXhrRef.current = xhr;
 
-          xhr.open("POST", url, true);
-          if (token) {
-            xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-          }
-
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              const pct = Math.round((e.loaded / e.total) * 100);
-              setPdfUploadProgress(pct);
+            xhr.open("POST", url, true);
+            if (token) {
+              xhr.setRequestHeader("Authorization", `Bearer ${token}`);
             }
-          };
 
-          xhr.onload = () => {
-            activeXhrRef.current = null;
-            if (xhr.status === 200) {
-              try {
-                const res = JSON.parse(xhr.responseText);
-                if (res.temp_id) {
-                  resolve(res.temp_id);
-                } else {
-                  reject(new Error("استجابة غير صالحة"));
+            xhr.upload.onprogress = (e) => {
+              if (e.lengthComputable) {
+                const pct = Math.round((e.loaded / e.total) * 100);
+                setPdfUploadProgress(pct);
+              }
+            };
+
+            xhr.onload = () => {
+              activeXhrRef.current = null;
+              if (xhr.status === 200) {
+                try {
+                  const res = JSON.parse(xhr.responseText);
+                  if (res.temp_id) {
+                    resolve(res.temp_id);
+                  } else {
+                    reject(new Error("لم يتم استلام معرّف السلايدات المؤقت"));
+                  }
+                } catch {
+                  reject(new Error("فشل فك استجابة السيرفر"));
                 }
-              } catch {
-                reject(new Error("فشل فك استجابة السيرفر"));
-              }
-            } else {
-              let msg = "";
-              try {
-                const parsed = JSON.parse(xhr.responseText);
-                msg = parsed.detail?.user_message || (typeof parsed.detail === "string" ? parsed.detail : "") || parsed.message || "";
-              } catch {
-                msg = xhr.responseText || "";
-              }
-              if (xhr.status === 401 || xhr.status === 403) {
-                reject(new Error(msg || "🔒 يرجى تسجيل الدخول بحسابك للمتابعة"));
               } else {
-                reject(new Error(msg || `فشل الرفع (${xhr.status})`));
+                reject(new Error(`فشل رفع السلايدات (${xhr.status})`));
               }
+            };
+
+            xhr.onerror = () => {
+              activeXhrRef.current = null;
+              reject(new Error("انقطاع في اتصال الشبكة أثناء رفع السلايدات"));
+            };
+
+            xhr.onabort = () => {
+              activeXhrRef.current = null;
+              reject(new Error("تم إلغاء رفع السلايدات"));
+            };
+
+            xhr.send(formData);
+          });
+
+          setPdfTempId(tempId);
+          setIsPdfUploading(false);
+          setPdfUploadProgress(100);
+          return;
+        }
+
+        // Sequential Chunked Upload (> 15MB)
+        let finalTempId = "";
+        for (let chunkIdx = 0; chunkIdx < totalChunks; chunkIdx++) {
+          const start = chunkIdx * CHUNK_SIZE;
+          const end = Math.min(start + CHUNK_SIZE, file.size);
+          const chunkBlob = file.slice(start, end);
+
+          const res = await new Promise<any>((resolve, reject) => {
+            const formData = new FormData();
+            formData.append("file", chunkBlob, file.name);
+            formData.append("upload_id", uploadId);
+            formData.append("chunk_index", chunkIdx.toString());
+            formData.append("total_chunks", totalChunks.toString());
+
+            const xhr = new XMLHttpRequest();
+            activeXhrRef.current = xhr;
+
+            xhr.open("POST", url, true);
+            if (token) {
+              xhr.setRequestHeader("Authorization", `Bearer ${token}`);
             }
-          };
 
-          xhr.onerror = () => {
-            activeXhrRef.current = null;
-            reject(new Error("انقطاع في اتصال الشبكة"));
-          };
+            xhr.upload.onprogress = (e) => {
+              if (e.lengthComputable) {
+                const chunkLoaded = e.loaded;
+                const overallLoaded = chunkIdx * CHUNK_SIZE + chunkLoaded;
+                const overallPct = Math.min(99, Math.round((overallLoaded / file.size) * 100));
+                setPdfUploadProgress(overallPct);
+              }
+            };
 
-          xhr.send(formData);
-        });
+            xhr.onload = () => {
+              activeXhrRef.current = null;
+              if (xhr.status === 200) {
+                try {
+                  resolve(JSON.parse(xhr.responseText));
+                } catch {
+                  reject(new Error("فشل فك استجابة خادم السلايدات"));
+                }
+              } else {
+                reject(new Error(`فشل رفع جزء السلايدات ${chunkIdx + 1}/${totalChunks}`));
+              }
+            };
 
-        setPdfTempId(tempId);
-        setPdfUploadProgress(100);
+            xhr.onerror = () => {
+              activeXhrRef.current = null;
+              reject(new Error("انقطاع في اتصال الشبكة أثناء رفع أجزاء السلايدات"));
+            };
+
+            xhr.onabort = () => {
+              activeXhrRef.current = null;
+              reject(new Error("تم إلغاء رفع السلايدات"));
+            };
+
+            xhr.send(formData);
+          });
+
+          if (chunkIdx === totalChunks - 1) {
+            if (res.temp_id) {
+              finalTempId = res.temp_id;
+            } else {
+              throw new Error("لم يتم استلام معرّف السلايدات النهائي");
+            }
+          }
+        }
+
+        setPdfTempId(finalTempId);
         setIsPdfUploading(false);
+        setPdfUploadProgress(100);
         return;
       } catch (err: any) {
-        lastError = err.message || lastError;
+        lastError = err.message || "فشل الرفع";
+        if (err.message === "تم إلغاء رفع السلايدات") {
+          setIsPdfUploading(false);
+          return;
+        }
         await new Promise((r) => setTimeout(r, 600));
       }
     }
 
     setIsPdfUploading(false);
-    activeXhrRef.current = null;
-    setError(`تعذر رفع ملف السلايدات «${file.name}»: ${lastError}`);
     setPdfFile(null);
-  }, [session, setIsPdfUploading, setPdfUploadProgress, setPdfTempId, setError, setPdfFile]);
+    setError(lastError);
+  }, [session, setError, setIsPdfUploading, setPdfFile, setPdfTempId, setPdfUploadProgress]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setError(null);
       setPdfFile(file);
-      setPdfUploadProgress(0);
-      setPdfTempId(null);
+      setStartPage("");
+      setEndPage("");
+      setPdfDetectedPages(null);
       uploadPdf(file);
     }
   };
@@ -175,15 +256,14 @@ export default function SlidesUploadCard({
     e.stopPropagation();
     if (activeXhrRef.current) {
       activeXhrRef.current.abort();
-      activeXhrRef.current = null;
     }
     setPdfFile(null);
     setPdfTempId(null);
+    setPdfUploadProgress(0);
+    setIsPdfUploading(false);
     setStartPage("");
     setEndPage("");
     setPdfDetectedPages(null);
-    setIsPdfUploading(false);
-    setPdfUploadProgress(0);
   };
 
   return (
@@ -205,9 +285,9 @@ export default function SlidesUploadCard({
         <div className="w-full z-20 relative flex flex-col gap-2">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200/80 dark:border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
                 {isPdfUploading ? (
-                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                  <span className="text-xs font-bold font-mono">
                     {pdfUploadProgress}%
                   </span>
                 ) : (
@@ -226,15 +306,9 @@ export default function SlidesUploadCard({
                       <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200/80 dark:border-indigo-800 px-2 py-0.5 rounded-md tabular-nums whitespace-nowrap inline-flex items-center gap-1">
                         📄 {quotaCostBreakdown.selectedPages} شريحة
                       </span>
-                      {hasAudio ? (
-                        <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200/80 dark:border-indigo-800 px-2 py-0.5 rounded-md whitespace-nowrap inline-flex items-center gap-1">
-                          مشمولة برصيد الصوت
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-black text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-800 px-2 py-0.5 rounded-md tabular-nums whitespace-nowrap inline-flex items-center gap-1">
-                          ⚡ سيخصم: {quotaCostBreakdown.docCostMinutes} دقيقة
-                        </span>
-                      )}
+                      <span className="text-[10px] font-black text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-800 px-2 py-0.5 rounded-md tabular-nums whitespace-nowrap inline-flex items-center gap-1">
+                        ⚡ سيخصم: {quotaCostBreakdown.docCostMinutes} دقيقة
+                      </span>
                     </>
                   )}
                 </div>

@@ -16,6 +16,7 @@ import AudioUploadCard from "@/components/summarize/AudioUploadCard";
 import SlidesUploadCard from "@/components/summarize/SlidesUploadCard";
 import QuotaBreakdownCard from "@/components/summarize/QuotaBreakdownCard";
 import SummarizePaywall from "@/components/summarize/SummarizePaywall";
+import StudyLanguageSelector, { StudyLanguage } from "@/components/summarize/StudyLanguageSelector";
 
 function SummarizeContent() {
   const { session } = useAuth();
@@ -35,8 +36,10 @@ function SummarizeContent() {
   const [startPage, setStartPage] = useState<string>("");
   const [endPage, setEndPage] = useState<string>("");
   const [pdfDetectedPages, setPdfDetectedPages] = useState<number | null>(null);
-  const [studyLanguage] = useState<"ar" | "en" | "bilingual">("ar");
-
+  const [studyLanguage, setStudyLanguage] = useState<StudyLanguage>("ar");
+  const [lectureUrls, setLectureUrls] = useState<string[]>([]);
+  const [isProbingLinks, setIsProbingLinks] = useState<boolean>(false);
+  
   const {
     quota,
     hasPaidPlan,
@@ -83,18 +86,28 @@ function SummarizeContent() {
     multiAudioFiles.some((f) => f.isUploading || (f.status === "pending" && !f.error));
   const isAnyAudioUploading = isAudioUploading || isMultiAudioUploading;
   const completedAudioCount = multiAudioFiles.filter((f) => Boolean(f.tempId)).length;
-  const totalAudioCount = multiAudioFiles.length;
+  const totalAudioCount = multiAudioFiles.length + lectureUrls.length;
 
   const totalAudioSeconds = useMemo(() => {
+    const filesDur = multiAudioFiles.reduce((acc, f) => acc + (f.duration || 0), 0);
     if (multiAudioFiles.length > 0) {
-      return multiAudioFiles.reduce((acc, f) => acc + (f.duration || 0), 0);
+      return filesDur + (audioDuration > 0 && lectureUrls.length > 0 ? audioDuration : 0);
     }
     return audioDuration;
-  }, [multiAudioFiles, audioDuration]);
+  }, [multiAudioFiles, audioDuration, lectureUrls]);
+
+  const isAudioDurationPending = useMemo(() => {
+    if (isProbingLinks) return true;
+    if (lectureUrls.length > 0 && totalAudioSeconds === 0) return true;
+    if ((audioFile || multiAudioFiles.length > 0) && totalAudioSeconds === 0) return true;
+    if (multiAudioFiles.some((f) => !f.error && (f.duration === 0 || f.status === "pending" || f.isUploading))) return true;
+    return false;
+  }, [isProbingLinks, lectureUrls, totalAudioSeconds, audioFile, multiAudioFiles]);
 
   const hasAudio =
     !!audioFile ||
     !!audioTempId ||
+    lectureUrls.length > 0 ||
     (multiAudioFiles.length > 0 ? completedAudioCount > 0 : false);
   const hasPdf = !!pdfFile || !!pdfTempId;
   const processingMode: "slides_only" | "slides_and_audio" | "audio_only" = useMemo(() => {
@@ -162,6 +175,7 @@ function SummarizeContent() {
       pdfFile,
       audioTempId,
       pdfTempId,
+      lectureUrls,
       startPage,
       endPage,
       studyLanguage,
@@ -286,6 +300,10 @@ function SummarizeContent() {
                     setAudioFile={setAudioFile}
                     multiAudioFiles={multiAudioFiles}
                     setMultiAudioFiles={setMultiAudioFiles}
+                    lectureUrls={lectureUrls}
+                    setLectureUrls={setLectureUrls}
+                    isProbingLinks={isProbingLinks}
+                    setIsProbingLinks={setIsProbingLinks}
                     audioDuration={audioDuration}
                     setAudioDuration={setAudioDuration}
                     audioTempId={audioTempId}
@@ -325,6 +343,13 @@ function SummarizeContent() {
                   />
                 </div>
 
+                {/* Study Language & Mode Selector */}
+                <StudyLanguageSelector
+                  value={studyLanguage}
+                  onChange={setStudyLanguage}
+                  disabled={isProcessing || isStreaming}
+                />
+
 
 
                 {/* Quota Deduction Summary & Action Button */}
@@ -339,6 +364,7 @@ function SummarizeContent() {
                   isAnyAudioUploading={isAnyAudioUploading}
                   isPdfUploading={isPdfUploading}
                   isRangeInvalid={isRangeInvalid}
+                  isAudioDurationPending={isAudioDurationPending}
                   isProcessing={isProcessing}
                   audioUploadProgress={audioUploadProgress}
                   pdfUploadProgress={pdfUploadProgress}

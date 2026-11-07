@@ -61,6 +61,9 @@ export function useSummarizeQuota({
         const secs = f.duration || 0;
         return acc + Math.max(5, Math.ceil(secs / 60));
       }, 0);
+      if (audioDuration > 0) {
+        audioCostMinutes += Math.max(5, Math.ceil(audioDuration / 60));
+      }
     } else if (hasSingleAudio) {
       audioCostMinutes = Math.max(5, Math.ceil(audioDuration / 60));
     }
@@ -83,9 +86,9 @@ export function useSummarizeQuota({
       selectedPages = 1;
     }
 
-    // 3. Document-only mode: 1 minute per 2 slides, minimum 3 minutes. Free if audio is attached!
-    const docCostMinutes = hasPdf && !hasAudio ? Math.max(3, Math.ceil(selectedPages / 2)) : 0;
-    const totalCost = hasAudio ? audioCostMinutes : docCostMinutes;
+    // 3. Slides Pricing Rule: 1 slide = 1 minute of quota (1:1 with OpenRouter processing cost)
+    const docCostMinutes = hasPdf ? Math.max(1, selectedPages) : 0;
+    const totalCost = (hasAudio ? audioCostMinutes : 0) + (hasPdf ? docCostMinutes : 0);
 
     const currentQuota = quota ?? 0;
     const remainingAfter = Math.max(0, currentQuota - totalCost);

@@ -17,6 +17,7 @@ interface QuotaBreakdownCardProps {
   isAnyAudioUploading: boolean;
   isPdfUploading: boolean;
   isRangeInvalid: boolean;
+  isAudioDurationPending?: boolean;
   isProcessing: boolean;
   audioUploadProgress: number;
   pdfUploadProgress: number;
@@ -37,6 +38,7 @@ export default function QuotaBreakdownCard({
   isAnyAudioUploading,
   isPdfUploading,
   isRangeInvalid,
+  isAudioDurationPending = false,
   isProcessing,
   audioUploadProgress,
   pdfUploadProgress,
@@ -69,6 +71,26 @@ export default function QuotaBreakdownCard({
         </div>
       )}
 
+      {/* Transparent Combined Cost Breakdown Pill (Audio + Slides) */}
+      {hasAudio && hasPdf && quotaCostBreakdown.totalCost > 0 && (
+        <div className="mb-2.5 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-xs flex items-center justify-between text-slate-700 dark:text-slate-300">
+          <span className="font-semibold text-[11px] text-slate-500">تفصيل الخصم من الرصيد:</span>
+          <div className="flex items-center gap-1.5 font-bold tabular-nums text-[11px]">
+            <span className="text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/60 dark:border-indigo-800/60 px-2 py-0.5 rounded-md">
+              🎙️ {quotaCostBreakdown.audioCostMinutes} د صوت
+            </span>
+            <span className="text-slate-400 font-normal">+</span>
+            <span className="text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200/60 dark:border-amber-800/60 px-2 py-0.5 rounded-md">
+              📄 {quotaCostBreakdown.docCostMinutes} د سلايدات
+            </span>
+            <span className="text-slate-400 font-normal">=</span>
+            <span className="text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/60 px-2 py-0.5 rounded-md font-black">
+              ⚡ {quotaCostBreakdown.totalCost} دقيقة
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Submit Action Button */}
       <div className="pt-2">
         <SmartGenerateButton
@@ -78,6 +100,7 @@ export default function QuotaBreakdownCard({
             isAnyAudioUploading ||
             isPdfUploading ||
             isRangeInvalid ||
+            isAudioDurationPending ||
             (hasFiles && !quotaCostBreakdown.isSufficient)
           }
           isProcessing={isProcessing}
@@ -85,6 +108,8 @@ export default function QuotaBreakdownCard({
           text={
             isRangeInvalid
               ? "⚠️ نطاق الصفحات غير صحيح (البداية أكبر من النهاية)"
+              : isAudioDurationPending
+              ? "⏳ جاري فحص وحساب مدة التسجيلات والتكلفة..."
               : isAnyAudioUploading
               ? multiAudioFiles.length > 0
                 ? `جاري رفع التسجيلات (${completedAudioCount}/${totalAudioCount})...`

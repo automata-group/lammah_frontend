@@ -15,7 +15,9 @@ import {
   Music,
   AlertCircle,
   Layers,
-  Zap
+  Zap,
+  Video,
+  Link2
 } from "lucide-react";
 import { UploadedAudio } from "./types";
 import { getUploaderBaseUrl, getApiBaseUrl } from "@/lib/apiConfig";
@@ -26,8 +28,10 @@ interface AudioUploadCardProps {
   setAudioFile: (file: File | null) => void;
   multiAudioFiles: UploadedAudio[];
   setMultiAudioFiles: React.Dispatch<React.SetStateAction<UploadedAudio[]>>;
+  lectureUrls?: string[];
+  setLectureUrls?: React.Dispatch<React.SetStateAction<string[]>>;
   audioDuration: number;
-  setAudioDuration: (dur: number) => void;
+  setAudioDuration: React.Dispatch<React.SetStateAction<number>>;
   audioTempId: string | null;
   setAudioTempId: (id: string | null) => void;
   audioUploadProgress: number;
@@ -39,6 +43,8 @@ interface AudioUploadCardProps {
   formatDuration: (seconds: number) => string;
   audioCostMinutes: number;
   totalAudioSeconds: number;
+  isProbingLinks?: boolean;
+  setIsProbingLinks?: (val: boolean) => void;
 }
 
 export default function AudioUploadCard({
@@ -46,6 +52,8 @@ export default function AudioUploadCard({
   setAudioFile,
   multiAudioFiles,
   setMultiAudioFiles,
+  lectureUrls = [],
+  setLectureUrls,
   audioDuration,
   setAudioDuration,
   audioTempId,
@@ -59,12 +67,19 @@ export default function AudioUploadCard({
   formatDuration,
   audioCostMinutes,
   totalAudioSeconds,
+  isProbingLinks,
+  setIsProbingLinks,
 }: AudioUploadCardProps) {
   const activeXhrMap = useRef<Map<string, XMLHttpRequest>>(new Map());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const appendFileInputRef = useRef<HTMLInputElement>(null);
   const isQueueRunningRef = useRef<boolean>(false);
   const [showList, setShowList] = useState<boolean>(true);
+  const [activeMode, setActiveMode] = useState<"file" | "link">("file");
+  const [linkInput, setLinkInput] = useState<string>("");
+  const [showAddUrlInput, setShowAddUrlInput] = useState<boolean>(false);
+  const urlInputRef = useRef<HTMLInputElement>(null);
+  const [urlMetadata, setUrlMetadata] = useState<Record<string, { duration: number; cost_minutes: number; title: string; isProbing?: boolean }>>({});
 
   const multiAudioFilesRef = useRef<UploadedAudio[]>(multiAudioFiles);
   multiAudioFilesRef.current = multiAudioFiles;
@@ -80,7 +95,7 @@ export default function AudioUploadCard({
     [setMultiAudioFiles]
   );
 
-  // Resilient duration detector with timeout guard & OGG Opus safety (< 1.2s fallback)
+  // Resilient duration detector with Video & Audio support and timeout guard
   const getAudioDuration = useCallback((file: File): Promise<number> => {
     return new Promise((resolve) => {
       if (typeof window === "undefined") {
@@ -88,26 +103,28 @@ export default function AudioUploadCard({
         return;
       }
       try {
-        const audio = document.createElement("audio");
+        const isVideo = file.type.startsWith("video/") || /\.(mp4|mov|mkv|webm|avi|m4v)$/i.test(file.name);
+        const media = isVideo ? document.createElement("video") : document.createElement("audio");
         const objectUrl = URL.createObjectURL(file);
-        audio.preload = "metadata";
-        audio.src = objectUrl;
+        media.preload = "metadata";
+        media.src = objectUrl;
 
         let resolved = false;
+        const timeoutMs = isVideo ? 3500 : 1200;
         const timer = setTimeout(() => {
           if (!resolved) {
             resolved = true;
             URL.revokeObjectURL(objectUrl);
             resolve(Math.max(15, Math.round(file.size / 16000)));
           }
-        }, 1200);
+        }, timeoutMs);
 
-        audio.onloadedmetadata = () => {
+        media.onloadedmetadata = () => {
           if (!resolved) {
             resolved = true;
             clearTimeout(timer);
             URL.revokeObjectURL(objectUrl);
-            const dur = Math.round(audio.duration || 0);
+            const dur = Math.round(media.duration || 0);
             if (!dur || !isFinite(dur) || dur <= 0) {
               resolve(Math.max(15, Math.round(file.size / 16000)));
             } else {
@@ -116,7 +133,7 @@ export default function AudioUploadCard({
           }
         };
 
-        audio.onerror = () => {
+        media.onerror = () => {
           if (!resolved) {
             resolved = true;
             clearTimeout(timer);
@@ -159,7 +176,7 @@ export default function AudioUploadCard({
     [session]
   );
 
-  // Indestructible upload helper: tries Go Uploader first, then Python backend fallback
+  // Indestructible upload helper: Sequential Chunked Upload (>15MB) & Single Upload (<=15MB)
   const uploadWithEngineFallback = useCallback(
     async (
       id: string,
@@ -169,12 +186,21 @@ export default function AudioUploadCard({
       const uploaderUrl = getUploaderBaseUrl();
       const apiUrl = getApiBaseUrl();
 
-      // Dual-engine targets: 1. Go uploader (/upload-temp), 2. Python backend (/upload-temp-py)
-      const endpoints = [
-        `${uploaderUrl}/api/v1/summarize/upload-temp`,
-        `${apiUrl}/api/v1/summarize/upload-temp-py`,
-      ];
-      // Deduplicate if both point to same origin
+      // Prefer Python backend for large chunked uploads, Go uploader for single uploads
+      const CHUNK_SIZE = 15 * 1024 * 1024; // 15MB chunks (effortlessly bypasses Cloudflare 100MB body limit)
+      const isChunked = file.size > CHUNK_SIZE;
+      const totalChunks = isChunked ? Math.ceil(file.size / CHUNK_SIZE) : 1;
+      const uploadId = isChunked ? `${Date.now()}-${Math.random().toString(36).substring(2, 9)}` : "";
+
+      const endpoints = isChunked
+        ? [
+            `${apiUrl}/api/v1/summarize/upload-temp-py`,
+            `${uploaderUrl}/api/v1/summarize/upload-temp`,
+          ]
+        : [
+            `${uploaderUrl}/api/v1/summarize/upload-temp`,
+            `${apiUrl}/api/v1/summarize/upload-temp-py`,
+          ];
       const uniqueEndpoints = Array.from(new Set(endpoints));
 
       let lastError: Error = new Error("فشل رفع الملف");
@@ -182,83 +208,134 @@ export default function AudioUploadCard({
       for (let attempt = 0; attempt < uniqueEndpoints.length; attempt++) {
         const url = uniqueEndpoints[attempt];
         try {
-          // Resolve fresh token before attempt (and force refresh on retry)
           let token = await getValidToken(attempt > 0);
 
-          const tempId = await new Promise<string>((resolve, reject) => {
-            const formData = new FormData();
-            formData.append("file", file);
+          if (!isChunked) {
+            // Standard single file upload (< 15MB)
+            const tempId = await new Promise<string>((resolve, reject) => {
+              const formData = new FormData();
+              formData.append("file", file);
 
-            const xhr = new XMLHttpRequest();
-            activeXhrMap.current.set(id, xhr);
+              const xhr = new XMLHttpRequest();
+              activeXhrMap.current.set(id, xhr);
 
-            xhr.open("POST", url, true);
-            if (token) {
-              xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-            }
-
-            xhr.upload.onprogress = (e) => {
-              if (e.lengthComputable) {
-                const pct = Math.round((e.loaded / e.total) * 100);
-                onProgress(pct);
+              xhr.open("POST", url, true);
+              if (token) {
+                xhr.setRequestHeader("Authorization", `Bearer ${token}`);
               }
-            };
 
-            xhr.onload = async () => {
-              activeXhrMap.current.delete(id);
-              if (xhr.status === 200) {
-                try {
-                  const res = JSON.parse(xhr.responseText);
-                  if (res.temp_id) {
-                    resolve(res.temp_id);
-                  } else {
-                    reject(new Error("استجابة غير صالحة من السيرفر"));
-                  }
-                } catch {
-                  reject(new Error("فشل فك استجابة السيرفر"));
+              xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                  const pct = Math.round((e.loaded / e.total) * 100);
+                  onProgress(pct);
                 }
-              } else {
-                let msg = "";
-                try {
-                  const parsed = JSON.parse(xhr.responseText);
-                  msg =
-                    parsed.detail?.user_message ||
-                    (typeof parsed.detail === "string" ? parsed.detail : "") ||
-                    parsed.message ||
-                    "";
-                } catch {
-                  msg = xhr.responseText || "";
-                }
-                if (xhr.status === 401 || xhr.status === 403) {
-                  // Silent auto-refresh attempt
+              };
+
+              xhr.onload = async () => {
+                activeXhrMap.current.delete(id);
+                if (xhr.status === 200) {
                   try {
-                    await createClient().auth.refreshSession();
-                  } catch {}
-                  reject(new Error(msg || "🔒 يرجى تسجيل الدخول بحسابك للمتابعة"));
+                    const res = JSON.parse(xhr.responseText);
+                    if (res.temp_id) {
+                      resolve(res.temp_id);
+                    } else {
+                      reject(new Error("استجابة غير صالحة من السيرفر"));
+                    }
+                  } catch {
+                    reject(new Error("فشل فك استجابة السيرفر"));
+                  }
                 } else {
-                  reject(new Error(msg || `فشل الرفع (${xhr.status})`));
+                  reject(new Error(`فشل الرفع (${xhr.status})`));
                 }
+              };
+
+              xhr.onerror = () => {
+                activeXhrMap.current.delete(id);
+                reject(new Error("انقطاع في اتصال الشبكة"));
+              };
+
+              xhr.onabort = () => {
+                activeXhrMap.current.delete(id);
+                reject(new Error("تم إلغاء الرفع"));
+              };
+
+              xhr.send(formData);
+            });
+
+            return tempId;
+          }
+
+          // Resilient Sequential Chunked Upload (> 15MB)
+          let finalTempId = "";
+          for (let chunkIdx = 0; chunkIdx < totalChunks; chunkIdx++) {
+            const start = chunkIdx * CHUNK_SIZE;
+            const end = Math.min(start + CHUNK_SIZE, file.size);
+            const chunkBlob = file.slice(start, end);
+
+            const res = await new Promise<any>((resolve, reject) => {
+              const formData = new FormData();
+              formData.append("file", chunkBlob, file.name);
+              formData.append("upload_id", uploadId);
+              formData.append("chunk_index", chunkIdx.toString());
+              formData.append("total_chunks", totalChunks.toString());
+
+              const xhr = new XMLHttpRequest();
+              activeXhrMap.current.set(id, xhr);
+
+              xhr.open("POST", url, true);
+              if (token) {
+                xhr.setRequestHeader("Authorization", `Bearer ${token}`);
               }
-            };
 
-            xhr.onerror = () => {
-              activeXhrMap.current.delete(id);
-              reject(new Error("انقطاع في اتصال الشبكة"));
-            };
+              xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                  const chunkLoaded = e.loaded;
+                  const overallLoaded = chunkIdx * CHUNK_SIZE + chunkLoaded;
+                  const overallPct = Math.min(99, Math.round((overallLoaded / file.size) * 100));
+                  onProgress(overallPct);
+                }
+              };
 
-            xhr.onabort = () => {
-              activeXhrMap.current.delete(id);
-              reject(new Error("تم إلغاء الرفع"));
-            };
+              xhr.onload = () => {
+                activeXhrMap.current.delete(id);
+                if (xhr.status === 200) {
+                  try {
+                    resolve(JSON.parse(xhr.responseText));
+                  } catch {
+                    reject(new Error("فشل فك استجابة خادم التجزيء"));
+                  }
+                } else {
+                  reject(new Error(`فشل رفع الجزء ${chunkIdx + 1}/${totalChunks} (${xhr.status})`));
+                }
+              };
 
-            xhr.send(formData);
-          });
+              xhr.onerror = () => {
+                activeXhrMap.current.delete(id);
+                reject(new Error("انقطاع في اتصال الشبكة أثناء رفع أجزاء الملف"));
+              };
 
-          return tempId;
+              xhr.onabort = () => {
+                activeXhrMap.current.delete(id);
+                reject(new Error("تم إلغاء الرفع"));
+              };
+
+              xhr.send(formData);
+            });
+
+            if (chunkIdx === totalChunks - 1) {
+              if (res.temp_id) {
+                finalTempId = res.temp_id;
+              } else {
+                throw new Error("لم يتم استلام معرّف الملف النهائي بعد تجميع الأجزاء");
+              }
+            }
+          }
+
+          onProgress(100);
+          return finalTempId;
         } catch (err: any) {
           lastError = err;
           if (err.message === "تم إلغاء الرفع") throw err;
-          // Short delay before fallback attempt
           await new Promise((r) => setTimeout(r, 600));
         }
       }
@@ -541,6 +618,68 @@ export default function AudioUploadCard({
     }, 50);
   };
 
+  const handleAddUrl = async (e: React.FormEvent | React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const trimmed = linkInput.trim();
+    if (!trimmed) return;
+    if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+      setError("يرجى إدخال رابط صحيح يبدأ بـ https:// أو http://");
+      return;
+    }
+    if (setLectureUrls) {
+      setLectureUrls((prev) => [...prev, trimmed]);
+    }
+    setLinkInput("");
+    setShowAddUrlInput(false);
+    setError(null);
+
+    // Immediately probe link duration and quota from backend
+    setUrlMetadata((prev) => ({ ...prev, [trimmed]: { duration: 0, cost_minutes: 0, title: "", isProbing: true } }));
+    setIsProbingLinks?.(true);
+    try {
+      const apiUrl = getApiBaseUrl();
+      const res = await fetch(`${apiUrl}/api/v1/summarize/probe-link`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: trimmed }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.duration > 0) {
+          setUrlMetadata((prev) => ({
+            ...prev,
+            [trimmed]: { duration: data.duration, cost_minutes: data.cost_minutes, title: data.title, isProbing: false }
+          }));
+          setAudioDuration((prev: number) => prev + data.duration);
+        } else {
+          setUrlMetadata((prev) => ({
+            ...prev,
+            [trimmed]: { duration: 0, cost_minutes: 0, title: "", isProbing: false }
+          }));
+        }
+      }
+    } catch {
+      setUrlMetadata((prev) => ({
+        ...prev,
+        [trimmed]: { duration: 0, cost_minutes: 0, title: "", isProbing: false }
+      }));
+    } finally {
+      setIsProbingLinks?.(false);
+    }
+  };
+
+  const handleRemoveUrl = (urlIndex: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (setLectureUrls && lectureUrls) {
+      const targetUrl = lectureUrls[urlIndex];
+      if (targetUrl && urlMetadata[targetUrl]?.duration) {
+        setAudioDuration((prev: number) => Math.max(0, prev - (urlMetadata[targetUrl]?.duration || 0)));
+      }
+      setLectureUrls((prev) => prev.filter((_, idx) => idx !== urlIndex));
+    }
+  };
+
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Abort all active uploads
@@ -552,6 +691,7 @@ export default function AudioUploadCard({
     setAudioTempId(null);
     setAudioDuration(0);
     setMultiAudioFiles([]);
+    if (setLectureUrls) setLectureUrls([]);
     setIsAudioUploading(false);
     setAudioUploadProgress(0);
   };
@@ -563,8 +703,8 @@ export default function AudioUploadCard({
     ? Math.round(multiAudioFiles.reduce((acc, f) => acc + (f.progress || 0), 0) / multiAudioFiles.length)
     : 0;
 
-  const hasAudioContent = !!audioFile || multiAudioFiles.length > 0;
-  const isMultiMode = multiAudioFiles.length > 0;
+  const hasAudioContent = !!audioFile || multiAudioFiles.length > 0 || (lectureUrls && lectureUrls.length > 0);
+  const isMultiMode = multiAudioFiles.length > 0 || (lectureUrls && lectureUrls.length > 0);
 
   return (
     <div
@@ -583,7 +723,7 @@ export default function AudioUploadCard({
         accept="audio/*,video/*,.mp3,.wav,.m4a,.ogg,.opus,.aac,.flac,.webm,.weba,.wma,.mp4,.m4v,.mov"
         multiple
         onChange={handleFileChange}
-        className={hasAudioContent ? "hidden" : "absolute inset-0 opacity-0 cursor-pointer z-10"}
+        className={(hasAudioContent || activeMode === "link") ? "hidden" : "absolute inset-0 opacity-0 cursor-pointer z-10"}
       />
 
       {/* Hidden file input for appending more recordings */}
@@ -639,28 +779,36 @@ export default function AudioUploadCard({
               </div>
             </div>
 
-            {/* Left (RTL End): WebGPU Glassmorphic Button & Clear Button */}
-            <div className="flex items-center gap-2 shrink-0">
-              {isMultiMode && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    appendFileInputRef.current?.click();
-                  }}
-                  className="relative group/glass overflow-hidden inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold px-3 py-1.5 rounded-xl cursor-pointer transition-all duration-300 active:scale-95 whitespace-nowrap shadow-[0_4px_14px_0_rgba(99,102,241,0.12),inset_0_1px_1px_0_rgba(255,255,255,0.8),inset_0_-1px_2px_0_rgba(99,102,241,0.08)] border border-white/70 dark:border-white/20 bg-white/50 dark:bg-slate-800/50 backdrop-blur-xl text-indigo-700 dark:text-indigo-200 hover:text-indigo-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-slate-700/60 hover:shadow-[0_6px_20px_0_rgba(99,102,241,0.22),inset_0_1px_2px_0_rgba(255,255,255,0.95)]"
-                  title="إضافة تسجيل صوتي آخر"
-                >
-                  {/* Glass refraction light sweep sheen */}
-                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 dark:via-white/25 to-transparent -translate-x-[150%] group-hover/glass:translate-x-[150%] transition-transform duration-700 ease-out pointer-events-none" />
-                  
-                  {/* Top specular highlight line */}
-                  <span className="absolute top-0 inset-x-2 h-[1px] bg-gradient-to-r from-transparent via-white/90 dark:via-white/50 to-transparent pointer-events-none" />
+            {/* Left (RTL End): Action Buttons & Clear Button */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* Add file button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  appendFileInputRef.current?.click();
+                }}
+                className="relative group/glass overflow-hidden inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-xl cursor-pointer transition-all duration-300 active:scale-95 whitespace-nowrap border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50/70 dark:hover:bg-slate-700 shadow-2xs"
+                title="إضافة ملف صوتي أو فيديو من جهازك"
+              >
+                <Plus className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300" />
+                <span>+ مقطع</span>
+              </button>
 
-                  <Plus className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300 transition-transform group-hover/glass:rotate-90 duration-300" />
-                  <span>إضافة مقطع</span>
-                </button>
-              )}
+              {/* Add link button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAddUrlInput((prev) => !prev);
+                  setTimeout(() => urlInputRef.current?.focus(), 100);
+                }}
+                className="relative group/glass overflow-hidden inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-xl cursor-pointer transition-all duration-300 active:scale-95 whitespace-nowrap border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/70 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50/70 dark:hover:bg-slate-700 shadow-2xs"
+                title="إضافة رابط يوتيوب أو زووم إضافي"
+              >
+                <Link2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300" />
+                <span>+ رابط</span>
+              </button>
 
               <button
                 type="button"
@@ -691,6 +839,62 @@ export default function AudioUploadCard({
               )}
 
               <div className="max-h-36 overflow-y-auto space-y-1 pr-0.5 custom-scrollbar">
+                {/* Render Attached URLs (YouTube / Zoom) */}
+                {lectureUrls && lectureUrls.map((url, uIdx) => {
+                  const lower = url.toLowerCase();
+                  const isYt = lower.includes("youtube.com") || lower.includes("youtu.be");
+                  const isZoom = lower.includes("zoom.us") || lower.includes("zoom.com");
+
+                  return (
+                    <div
+                      key={`url-${uIdx}`}
+                      className="group/item flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-xs bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/60 transition-colors"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="w-4 h-4 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 font-mono text-[10px] flex items-center justify-center font-bold shrink-0">
+                          {multiAudioFiles.length + uIdx + 1}
+                        </span>
+
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold shrink-0 flex items-center gap-1 border ${
+                          isYt
+                            ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800'
+                            : isZoom
+                            ? 'bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 border-sky-200 dark:border-sky-800'
+                            : 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800'
+                        }">
+                          {isYt ? '🔴 يوتيوب' : isZoom ? '🔵 زووم' : '🔗 رابط'}
+                        </span>
+
+                        <p className="font-medium text-slate-700 dark:text-slate-200 truncate max-w-[130px] sm:max-w-[190px]" dir="ltr">
+                          {url}
+                        </p>
+
+                        {urlMetadata[url]?.isProbing ? (
+                          <span className="text-[10px] text-indigo-500 animate-pulse font-medium shrink-0">
+                            جاري قياس المدة... ⏳
+                          </span>
+                        ) : urlMetadata[url]?.duration ? (
+                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold shrink-0">
+                            ({formatDuration(urlMetadata[url].duration)})
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium shrink-0">
+                            {isYt ? '(تفريغ فوري ⚡)' : '(تسجيل سحابي)'}
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => handleRemoveUrl(uIdx, e)}
+                        className="p-1 rounded text-slate-400 hover:text-rose-500 transition cursor-pointer"
+                        title="حذف هذا الرابط"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
                 {multiAudioFiles.map((item, idx) => {
                   const isCurUploading = item.isUploading;
                   const isPending = !item.tempId && !isCurUploading && !item.error;
@@ -706,9 +910,15 @@ export default function AudioUploadCard({
                           {idx + 1}
                         </span>
 
-                        <p className="font-medium text-slate-700 dark:text-slate-200 truncate max-w-[140px] sm:max-w-[200px]" dir="ltr">
+                        <p className="font-medium text-slate-700 dark:text-slate-200 truncate max-w-[130px] sm:max-w-[180px]" dir="ltr">
                           {item.file.name}
                         </p>
+
+                        {(item.file.type.startsWith("video/") || /\.(mp4|mov|mkv|webm|avi|m4v)$/i.test(item.file.name)) && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800 font-medium shrink-0">
+                            🎬 فيديو
+                          </span>
+                        )}
 
                         {item.duration > 0 && (
                           <span className="text-[10px] text-slate-400 font-mono shrink-0">
@@ -774,6 +984,34 @@ export default function AudioUploadCard({
                     </div>
                   );
                 })}
+                {/* Inline Quick Add URL Form */}
+                <div className="pt-1.5 sticky bottom-0 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-xs pb-0.5">
+                  <form
+                    onSubmit={handleAddUrl}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center gap-1.5 w-full bg-white/90 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/90 dark:border-slate-700/80 focus-within:border-indigo-400 focus-within:ring-1 focus-within:ring-indigo-400/30 transition-all shadow-2xs"
+                  >
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0 px-1">
+                      <Link2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                      <input
+                        ref={urlInputRef}
+                        type="url"
+                        value={linkInput}
+                        onChange={(e) => setLinkInput(e.target.value)}
+                        placeholder="الصق رابط يوتيوب أو زووم إضافي هنا..."
+                        dir="ltr"
+                        className="w-full bg-transparent text-[11px] text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none font-mono"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={!linkInput.trim()}
+                      className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white transition-all cursor-pointer shrink-0 shadow-2xs"
+                    >
+                      + إضافة
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
           )}
@@ -782,35 +1020,74 @@ export default function AudioUploadCard({
           <div className="mt-auto pt-2.5 border-t border-slate-200/60 dark:border-slate-800/80">
             <div className="grid grid-cols-3 gap-2 p-2 rounded-xl bg-slate-100/70 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 backdrop-blur-sm shadow-2xs">
               {/* 1. عدد المقاطع */}
-              <div className="flex flex-col items-center justify-center text-center px-1">
+              <div className="flex flex-col items-center justify-center text-center px-1 overflow-hidden">
                 <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium flex items-center gap-1 whitespace-nowrap">
                   <Layers className="w-3 h-3 text-indigo-500 shrink-0" />
                   المقاطع
                 </span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-100 mt-0.5 whitespace-nowrap">
-                  {multiAudioFiles.length > 0 ? `${multiAudioFiles.length} مقاطع` : "مقطع واحد"}
+                <span className="text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-100 mt-0.5 truncate max-w-full">
+                  {(() => {
+                    const filesCount = (audioFile ? 1 : 0) + multiAudioFiles.length;
+                    const urlsCount = lectureUrls?.length || 0;
+                    const total = filesCount + urlsCount;
+                    if (total <= 1) {
+                      return urlsCount === 1 ? "رابط واحد" : "مقطع واحد";
+                    }
+                    if (total === 2) {
+                      if (urlsCount === 2) return "رابطان (2)";
+                      if (filesCount === 2) return "مقطعان (2)";
+                      return "مقطع ورابط";
+                    }
+                    if (urlsCount > 0 && filesCount > 0) {
+                      return `${filesCount} مقاطع + ${urlsCount} روابط`;
+                    }
+                    if (urlsCount > 0) {
+                      return `${urlsCount} روابط`;
+                    }
+                    return `${filesCount} مقاطع`;
+                  })()}
                 </span>
               </div>
 
               {/* 2. المدة الكلية */}
-              <div className="flex flex-col items-center justify-center text-center px-1 border-x border-slate-200/70 dark:border-slate-700/60">
+              <div className="flex flex-col items-center justify-center text-center px-1 border-x border-slate-200/70 dark:border-slate-700/60 overflow-hidden">
                 <span className="text-[10px] text-slate-400 dark:text-slate-400 font-medium flex items-center gap-1 whitespace-nowrap">
                   <Clock className="w-3 h-3 text-indigo-500 shrink-0" />
                   المدة الكلية
                 </span>
-                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mt-0.5 tabular-nums whitespace-nowrap">
-                  {totalAudioSeconds > 0 ? formatDuration(totalAudioSeconds) : "—"}
+                <span className="text-[10.5px] sm:text-xs font-bold text-indigo-600 dark:text-indigo-400 mt-0.5 tabular-nums truncate max-w-full">
+                  {(() => {
+                    if (totalAudioSeconds > 0) {
+                      return formatDuration(totalAudioSeconds);
+                    }
+                    const isAnyUrlProbing = lectureUrls?.some((u) => urlMetadata[u]?.isProbing);
+                    if (isAnyUrlProbing) {
+                      return "جاري الفحص...";
+                    }
+                    if (lectureUrls && lectureUrls.length > 0) {
+                      return "حسب الرابط";
+                    }
+                    return "—";
+                  })()}
                 </span>
               </div>
 
               {/* 3. الخصم من الرصيد */}
-              <div className="flex flex-col items-center justify-center text-center px-1">
+              <div className="flex flex-col items-center justify-center text-center px-1 overflow-hidden">
                 <span className="text-[10px] text-amber-600/90 dark:text-amber-400 font-medium flex items-center gap-1 whitespace-nowrap">
                   <Zap className="w-3 h-3 text-amber-500 fill-amber-500 shrink-0" />
                   الخصم
                 </span>
-                <span className="text-xs font-bold text-amber-700 dark:text-amber-300 mt-0.5 tabular-nums whitespace-nowrap">
-                  {audioCostMinutes} دقيقة
+                <span className="text-[10.5px] sm:text-xs font-bold text-amber-700 dark:text-amber-300 mt-0.5 tabular-nums truncate max-w-full">
+                  {(() => {
+                    if (audioCostMinutes > 0) {
+                      return `${audioCostMinutes} دقيقة`;
+                    }
+                    if (lectureUrls && lectureUrls.length > 0) {
+                      return "حسب الرابط";
+                    }
+                    return "0 دقيقة";
+                  })()}
                 </span>
               </div>
             </div>
@@ -818,20 +1095,78 @@ export default function AudioUploadCard({
         </div>
 
       ) : (
-        <div className="flex flex-col items-center justify-center text-center py-2">
-          <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 mb-2 group-hover:scale-105 transition-transform">
-            <FileAudio className="w-5 h-5" />
+        <div className="flex flex-col items-center justify-center text-center py-1 w-full">
+          {/* Top Pill Tabs Switcher */}
+          <div className="inline-flex p-0.5 mb-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-[11px] font-semibold z-20">
+            <button
+              type="button"
+              onClick={() => setActiveMode("file")}
+              className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeMode === "file"
+                  ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-2xs font-bold"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+              }`}
+            >
+              <FileAudio className="w-3.5 h-3.5" />
+              <span>رفع ملفات</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveMode("link")}
+              className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeMode === "link"
+                  ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-2xs font-bold"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+              }`}
+            >
+              <Link2 className="w-3.5 h-3.5" />
+              <span>رابط يوتيوب / زووم</span>
+            </button>
           </div>
-          <p className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-0.5">
-            تسجيل المحاضرة
-          </p>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            اسحب التسجيل الصوتي هنا أو{" "}
-            <span className="text-indigo-600 dark:text-indigo-400 font-semibold underline">اختر ملفاً أو عدة مقاطع</span>
-          </p>
-          <span className="text-[10px] text-slate-400 mt-1 font-medium">
-            MP3, WAV, M4A, OGG • يدعم دمج عدة تسجيلات صوتية
-          </span>
+
+          {activeMode === "file" ? (
+            <div className="flex flex-col items-center justify-center text-center">
+              <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 mb-1.5 group-hover:scale-105 transition-transform">
+                <FileAudio className="w-4 h-4" />
+              </div>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-0.5">
+                تسجيل المحاضرة
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                اسحب الملف هنا أو{" "}
+                <span className="text-indigo-600 dark:text-indigo-400 font-semibold underline">اختر ملفاً أو عدة مقاطع</span>
+              </p>
+              <span className="text-[10px] text-slate-400 mt-1 font-medium">
+                يدعم MP3, M4A, WAV وفيديوهات زووم (MP4) • دمج عدة تسجيلات
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center text-center w-full px-2 z-20" onClick={(e) => e.stopPropagation()}>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                إضافة رابط المحاضرة (يوتيوب أو تسجيل زووم)
+              </p>
+              <form onSubmit={handleAddUrl} className="flex items-center gap-1.5 w-full max-w-sm">
+                <input
+                  type="url"
+                  value={linkInput}
+                  onChange={(e) => setLinkInput(e.target.value)}
+                  placeholder="الصق رابط يوتيوب أو زووم هنا..."
+                  dir="ltr"
+                  className="flex-1 px-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono text-left"
+                />
+                <button
+                  type="submit"
+                  disabled={!linkInput.trim()}
+                  className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-xs font-bold transition-all cursor-pointer whitespace-nowrap shadow-sm"
+                >
+                  + إضافة
+                </button>
+              </form>
+              <span className="text-[10px] text-slate-400 mt-1.5 font-medium">
+                ⚡ تفريغ فوري فائق السرعة لروابط يوتيوب ودعم تسجيلات زووم السحابية
+              </span>
+            </div>
+          )}
         </div>
       )}
     </div>

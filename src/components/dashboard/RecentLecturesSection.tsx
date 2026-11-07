@@ -196,9 +196,7 @@ export default function RecentLecturesSection({
                       : (log.metadata?.has_audio !== undefined ? !log.metadata.has_audio : !log.metadata?.transcript?.trim());
                     const rawTitle = log.metadata?.title || "المادة الدراسية";
                     const cleanTitle = rawTitle.replace(/^دفتر\s+/, "").replace(/^محاضرة\s+/, "").replace(/[\\/*?:"<>|]/g, " ").trim() || "المادة الدراسية";
-                    const filename = isNotebook
-                      ? `${cleanTitle} - ${isPrep ? "دفتر تحضير سلايدات" : "دفتر مخطط فويسات"} - لمّاح.pdf`
-                      : `${cleanTitle} - ${isPrep ? "تحضير سلايدات" : "مخططة فويسات"} - لمّاح.pdf`;
+                    const filename = `${cleanTitle} - لمّاح.pdf`;
                     const downloadPath = isNotebook
                       ? `/api/v1/notebook/download/${log.metadata?.job_id || log.id}.pdf?download=true&title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`
                       : `/api/v1/summarize/download/${log.metadata?.job_id || log.id}.pdf?title=${encodeURIComponent(cleanTitle)}&is_prep=${isPrep}`;

@@ -116,6 +116,7 @@ function DashboardContent() {
 
   // PDF Viewer Navigation States
   const [pdfPage, setPdfPage] = useState(1);
+  const [pdfJumpNonce, setPdfJumpNonce] = useState(0);
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const [pdfFlash, setPdfFlash] = useState<number | null>(null);
 
@@ -304,13 +305,21 @@ function DashboardContent() {
     }
 
     setPdfPage(targetPage);
+    setPdfJumpNonce((n) => n + 1);
 
     if (pdfContainerRef.current) {
-      pdfContainerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      const rect = pdfContainerRef.current.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const targetY = rect.top + scrollTop - 75;
+      window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+      try {
+        pdfContainerRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch {}
+
       setPdfFlash(targetPage);
       setTimeout(() => {
         setPdfFlash(null);
-      }, 2500);
+      }, 3000);
     }
   };
 
@@ -780,8 +789,20 @@ function DashboardContent() {
     }
   }, [user, loading, session, router]);
 
+  const lastLoadedHistoryIdRef = useRef<string | null>(null);
+  const hasLoadedContentRef = useRef<boolean>(false);
+  const sessionRef = useRef(session);
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+
   // Unified Instant Lecture Loader (Direct Handoff & SWR Cache)
-  const loadLectureById = useCallback(async (historyId: string, preloadedMeta?: any) => {
+  const loadLectureById = useCallback(async (historyId: string, preloadedMeta?: any, forceRefresh: boolean = false) => {
+    if (!historyId) return;
+    if (!forceRefresh && lastLoadedHistoryIdRef.current === historyId && hasLoadedContentRef.current) {
+      return;
+    }
+    lastLoadedHistoryIdRef.current = historyId;
     if (!historyId) return;
     setCurrentHistoryId(historyId);
 
@@ -807,6 +828,7 @@ function DashboardContent() {
         : cachedMeta.annotations?.slide_explanations?.length > 0;
       selectInitialTab(cachedMeta.annotations, !!hasPdf);
       const cachedDirectUrl = cachedMeta?.downloadUrl || cachedMeta?.download_url;
+      hasLoadedContentRef.current = true;
       setResult({
         transcript: cachedMeta.transcript || "",
         downloadUrl: hasPdf
@@ -826,7 +848,7 @@ function DashboardContent() {
 
     // 2. Fetch fresh revalidated data from server
     try {
-      const token = session?.access_token;
+      const token = sessionRef.current?.access_token;
       if (token) {
         const res = await fetch(
           `${getApiBaseUrl()}/api/v1/subscription/history/${historyId}`,
@@ -860,6 +882,7 @@ function DashboardContent() {
               : (data.metadata.has_audio !== undefined ? !data.metadata.has_audio : !data.metadata.transcript?.trim());
 
             const serverDirectUrl = data.metadata.downloadUrl || data.metadata.download_url;
+            hasLoadedContentRef.current = true;
             setResult({
               transcript: data.metadata.transcript || "",
               downloadUrl: hasPdf
@@ -886,12 +909,12 @@ function DashboardContent() {
       setIsProcessing(false);
       setProgressStep("");
     }
-  }, [session, router, selectInitialTab]);
+  }, [router, selectInitialTab]);
 
   // Load lecture when history_id search param is present
   useEffect(() => {
     const historyId = searchParams.get("history_id") || searchParams.get("id");
-    if (historyId) {
+    if (historyId && historyId !== lastLoadedHistoryIdRef.current) {
       loadLectureById(historyId);
     }
   }, [searchParams, loadLectureById]);
@@ -1434,6 +1457,7 @@ function DashboardContent() {
                       pdfFlash={pdfFlash}
                       downloadUrl={result.downloadUrl}
                       pdfPage={pdfPage}
+                      pdfNonce={pdfJumpNonce}
                       isBasicPlan={isBasicPlan}
                       lectureTitle={lectureTitle}
                       isDocumentOnly={result?.isDocumentOnly}

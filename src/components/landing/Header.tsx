@@ -79,7 +79,7 @@ export default function Header({ user: propUser }: HeaderProps = {}) {
       setActiveHash(window.location.hash.replace("#", ""));
     }
 
-    const sections = ["features", "pricing"];
+    const sections = ["features", "reviews", "pricing"];
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -110,6 +110,7 @@ export default function Header({ user: propUser }: HeaderProps = {}) {
   // Navigation Items (Pure and Clean - Guest Conversion Focused)
   const navItems = [
     { label: "المميزات", href: "/#features", badge: "" },
+    { label: "التقييمات", href: "/#reviews", badge: "" },
     { label: "الأسعار", href: "/#pricing", badge: "" },
     { label: "الأسئلة الشائعة", href: "/faq", badge: "" },
   ];

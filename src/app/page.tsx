@@ -1,7 +1,7 @@
 import Header from "@/components/landing/Header";
 import HeroSection from "@/components/landing/HeroSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
-import HeroSimulation from "@/components/landing/HeroSimulation";
+import ReviewsSection from "@/components/landing/ReviewsSection";
 import PricingSection from "@/components/landing/PricingSection";
 import FaqSection from "@/components/landing/FaqSection";
 
@@ -25,8 +25,8 @@ export default function Home() {
       {/* Pure React Server Component (Zero Client JavaScript Shipped) */}
       <FeaturesSection />
 
-      {/* Interactive Free Trial / Simulation Island (Lazy-loaded Demo Modal) */}
-      <HeroSimulation />
+      {/* Real Student Reviews & Social Proof */}
+      <ReviewsSection />
 
       {/* Pricing Section Island */}
       <PricingSection />
