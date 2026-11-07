@@ -199,7 +199,7 @@ export default function HistoryPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-indigo-500/20 selection:text-indigo-600 transition-colors duration-300" dir="rtl">
+    <main className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-clip selection:bg-indigo-500/20 selection:text-indigo-600 transition-colors duration-300" dir="rtl">
       
       {/* Unified App Header */}
       <AppHeader quota={userQuota} activePage="history" />

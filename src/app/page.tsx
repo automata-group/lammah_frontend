@@ -7,7 +7,7 @@ import FaqSection from "@/components/landing/FaqSection";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 selection:bg-indigo-500/30 overflow-x-hidden relative transition-colors duration-300" dir="rtl">
+    <main className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 selection:bg-indigo-500/30 overflow-x-clip relative transition-colors duration-300" dir="rtl">
 
       {/* Decorative Grids and Light Beams (Static Server Rendered for 0ms Hydration Overhead) */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">

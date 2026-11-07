@@ -320,7 +320,7 @@ export default function Header({ user: propUser }: HeaderProps = {}) {
                   </>
                 ) : (
                   <>
-                    <span>ابدأ مجاناً</span>
+                    <span>ابدأ الآن</span>
                     <Sparkles className="w-3.5 h-3.5" />
                   </>
                 )}
@@ -425,7 +425,7 @@ export default function Header({ user: propUser }: HeaderProps = {}) {
                     onClick={() => setMobileMenuOpen(false)}
                     className="py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center text-xs shadow-md shadow-indigo-500/20 active:scale-95 transition-transform flex items-center justify-center gap-1.5"
                   >
-                    <span>ابدأ مجاناً</span>
+                    <span>ابدأ الآن</span>
                     <Sparkles className="w-3.5 h-3.5" />
                   </Link>
                 </div>

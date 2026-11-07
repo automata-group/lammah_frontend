@@ -149,7 +149,7 @@ export default function PlansPage() {
 
   return (
     <main 
-      className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-indigo-500/20 selection:text-indigo-600 transition-colors duration-300" 
+      className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-clip selection:bg-indigo-500/20 selection:text-indigo-600 transition-colors duration-300" 
       dir="rtl"
     >
       {/* Unified App Header */}
@@ -358,11 +358,11 @@ export default function PlansPage() {
                               <FileText className="w-3 h-3" />
                             </div>
                             <span className="font-black text-slate-900 dark:text-white text-[10px] sm:text-[11px]">
-                              {isGoldPlan ? "حتى 300 ملف سلايدات PDF" : isMidPlan ? "حتى 150 ملف سلايدات PDF" : "حتى 50 ملف سلايدات PDF"}
+                              {isGoldPlan ? "حتى 4,500 شريحة سلايدات" : isMidPlan ? "حتى 2,200 شريحة سلايدات" : "حتى 800 شريحة سلايدات"}
                             </span>
                           </div>
                           <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
-                            أو دمج حر مع الفويس
+                            1 شريحة = 1 دقيقة ذكية
                           </span>
                         </div>
                       </div>
@@ -548,10 +548,10 @@ export default function PlansPage() {
                   <td className="p-3.5 sm:p-4 text-center font-black text-emerald-600 dark:text-emerald-400">100 محاضرة كاملة</td>
                 </tr>
                 <tr>
-                  <td className="p-3.5 sm:p-4 font-bold">ملفات سلايدات PDF بدون صوت</td>
-                  <td className="p-3.5 sm:p-4 text-center">حتى 50 ملف سلايدات</td>
-                  <td className="p-3.5 sm:p-4 text-center">حتى 150 ملف سلايدات</td>
-                  <td className="p-3.5 sm:p-4 text-center font-black text-amber-600 dark:text-amber-400">حتى 300 ملف سلايدات</td>
+                  <td className="p-3.5 sm:p-4 font-bold">شرائح السلايدات PDF (شرح وتلخيص)</td>
+                  <td className="p-3.5 sm:p-4 text-center">حتى 800 شريحة (1 شريحة = 1 دقيقة)</td>
+                  <td className="p-3.5 sm:p-4 text-center">حتى 2,200 شريحة (1 شريحة = 1 دقيقة)</td>
+                  <td className="p-3.5 sm:p-4 text-center font-black text-amber-600 dark:text-amber-400">حتى 4,500 شريحة (1 شريحة = 1 دقيقة)</td>
                 </tr>
                 <tr>
                   <td className="p-3.5 sm:p-4 font-bold">تخطيط وتظليل السلايدات (بريكورد أو ملف فقط)</td>

@@ -227,11 +227,11 @@ export default function PricingSection() {
                             <FileText className="w-3 h-3" />
                           </div>
                           <span className="font-black text-slate-900 dark:text-white text-[11px]">
-                            {isGoldPlan ? "حتى 300 ملف سلايدات PDF" : isMidPlan ? "حتى 150 ملف سلايدات PDF" : "حتى 50 ملف سلايدات PDF"}
+                            {isGoldPlan ? "حتى 4,500 شريحة سلايدات" : isMidPlan ? "حتى 2,200 شريحة سلايدات" : "حتى 800 شريحة سلايدات"}
                           </span>
                         </div>
                         <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                          أو دمج حر مع الفويس
+                          1 شريحة = 1 دقيقة ذكية
                         </span>
                       </div>
                     </div>

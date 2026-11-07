@@ -427,7 +427,7 @@ export default function ReviewsSection() {
                 href="/auth"
                 className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black text-xs sm:text-sm shadow-lg shadow-indigo-600/25 transition-all hover:scale-105 active:scale-95"
               >
-                <span>ابدأ تجربتك الآن مجاناً</span>
+                <span>ابدأ دراستك الآن</span>
                 <Sparkles className="w-4 h-4" />
               </a>
             </div>

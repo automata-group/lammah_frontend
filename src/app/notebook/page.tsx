@@ -24,7 +24,7 @@ const StudyFocusTimer = dynamic(() => import("@/components/dashboard/StudyFocusT
 
 function NotebookSkeleton() {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-hidden" dir="rtl">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-clip" dir="rtl">
       <AppHeader activePage="notebook" />
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center select-none relative z-10">
         <div className="w-16 h-16 rounded-3xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-4 shadow-sm animate-pulse">
@@ -624,7 +624,7 @@ function NotebookCreatorContent() {
   // 2. GUEST PAYWALL (FOR NOT LOGGED IN USERS)
   if (!session) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-white flex flex-col font-sans relative overflow-x-hidden" dir="rtl">
+      <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-white flex flex-col font-sans relative overflow-x-clip" dir="rtl">
         <AppHeader activePage="notebook" />
         <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
           <div className="max-w-xl w-full text-center space-y-6 bg-white dark:bg-[#0b0f19] p-7 sm:p-10 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -690,7 +690,7 @@ function NotebookCreatorContent() {
   // 3. SUBSCRIBED USERS ON LOWER TIERS (FREE, 25 ILS, 60 ILS) PAYWALL
   if (session && !is100Plan && !result) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-hidden" dir="rtl">
+      <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-clip" dir="rtl">
         <AppHeader quota={quota} activePage="notebook" />
 
         <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 relative z-10">
@@ -749,7 +749,7 @@ function NotebookCreatorContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-hidden selection:bg-indigo-500/20 selection:text-indigo-600 transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-900 dark:text-slate-100 flex flex-col font-sans relative overflow-x-clip selection:bg-indigo-500/20 selection:text-indigo-600 transition-colors duration-300">
       {/* Floating Header */}
       <AppHeader quota={quota} activePage="notebook" />
 

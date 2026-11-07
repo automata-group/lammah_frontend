@@ -46,7 +46,7 @@ function AuthForm() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 selection:bg-indigo-500/30 overflow-x-hidden relative transition-colors duration-300 flex flex-col" dir="rtl">
+    <main className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 selection:bg-indigo-500/30 overflow-x-clip relative transition-colors duration-300 flex flex-col" dir="rtl">
       
       {/* Decorative Grids and Light Beams */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">

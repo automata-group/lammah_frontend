@@ -112,7 +112,7 @@ export default function FAQPage() {
 
   return (
     <main
-      className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 selection:bg-indigo-500/30 overflow-x-hidden relative transition-colors duration-300 flex flex-col justify-between"
+      className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 selection:bg-indigo-500/30 overflow-x-clip relative transition-colors duration-300 flex flex-col justify-between"
       dir="rtl"
     >
       {/* Decorative Grids and Light Beams */}
